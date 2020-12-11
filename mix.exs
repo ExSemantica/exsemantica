@@ -1,4 +1,4 @@
-defmodule Eactivitypub.MixProject do
+defmodule ExSemantica.MixProject do
   use Mix.Project
 
   def project do
