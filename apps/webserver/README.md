@@ -1,6 +1,6 @@
 # Webserver
 
-**TODO: Add description**
+The API gateway for `eactivitypub`.
 
 ## Installation
 
