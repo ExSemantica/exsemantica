@@ -13,19 +13,19 @@
 # limitations under the License.
 defmodule ExTimeAgo do
   @moduledoc """
-  Documentation for `Extimeago`.
+  "xxx ago" past indicator from a previous project in 2019, ported to Elixir.
   """
 
   defmodule Timespan do
     @moduledoc """
     Millisecond-precise date and timespan
     """
-    @enforce_keys [:dt, :ms]
-    defstruct dt: {{0, 0, 0}, {0, 0, 0}}, ms: 0
+    @enforce_keys [:dt]
+    defstruct dt: {{0, 0, 0}, {0, 0, 0}}, ms: nil
 
     @type t :: %__MODULE__{
             dt: {{integer, integer, integer}, {integer, integer, integer}},
-            ms: integer
+            ms: nil | integer
           }
   end
 
@@ -43,7 +43,7 @@ defmodule ExTimeAgo do
   end
 
   # 1sec > n > 1ms (or if we bail out)
-  defp string(%Timespan{dt: {{0, 1, 1}, {0, 0, 0}}, ms: 0}, true) do
+  defp string(%Timespan{dt: {{0, 1, 1}, {0, 0, 0}}, ms: ms}, true) when ms == 0 or ms == nil do
     ""
   end
 
@@ -106,5 +106,58 @@ defmodule ExTimeAgo do
   # n > 1y
   defp string(span = %Timespan{dt: {{dy, dm, dd}, {dhr, dmin, dsec}}, ms: _}, _) when dy > 0 do
     "#{dy}yr" <> string(%{span | dt: {{0, dm, dd}, {dhr, dmin, dsec}}}, true)
+  end
+
+  @spec unix_span!(Timespan.t(), Timespan.t()) :: Timespan.t()
+  def unix_span!(d1, d0) when d1.ms >= d0.ms do
+    sc = :calendar.datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}})
+    s1 = :calendar.datetime_to_gregorian_seconds(d1.dt)
+    s0 = :calendar.datetime_to_gregorian_seconds(d0.dt)
+    %Timespan{dt: :calendar.gregorian_seconds_to_datetime(s1 - s0 - sc), ms: d1.ms - d0.ms}
+  end
+
+  def unix_span!(d1, d0) when d1.ms < d0.ms do
+    sc = :calendar.datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}})
+    s1 = :calendar.datetime_to_gregorian_seconds(d1.dt)
+    s0 = :calendar.datetime_to_gregorian_seconds(d0.dt)
+
+    %Timespan{
+      dt: :calendar.gregorian_seconds_to_datetime(s1 - s0 - sc - 1),
+      ms: d1.ms - d0.ms + 1000
+    }
+  end
+
+  def unix_span!(d1, d0) do
+    sc = :calendar.datetime_to_gregorian_seconds({{1970, 1, 1}, {0, 0, 0}})
+    s1 = :calendar.datetime_to_gregorian_seconds(d1.dt)
+    s0 = :calendar.datetime_to_gregorian_seconds(d0.dt)
+    %Timespan{dt: :calendar.gregorian_seconds_to_datetime(s1 - s0 - sc)}
+  end
+
+  @spec span!(Timespan.t(), Timespan.t()) :: Timespan.t()
+  def span!(d1, d0) when d1.ms >= d0.ms do
+    s1 = :calendar.datetime_to_gregorian_seconds(d1.dt)
+    s0 = :calendar.datetime_to_gregorian_seconds(d0.dt)
+    %Timespan{dt: :calendar.gregorian_seconds_to_datetime(s1 - s0), ms: d1.ms - d0.ms}
+  end
+
+  def span!(d1, d0) when d1.ms < d0.ms do
+    s1 = :calendar.datetime_to_gregorian_seconds(d1.dt)
+    s0 = :calendar.datetime_to_gregorian_seconds(d0.dt)
+    %Timespan{dt: :calendar.gregorian_seconds_to_datetime(s1 - s0 - 1), ms: d1.ms - d0.ms + 1000}
+  end
+
+  def span!(d1, d0) do
+    s1 = :calendar.datetime_to_gregorian_seconds(d1.dt)
+    s0 = :calendar.datetime_to_gregorian_seconds(d0.dt)
+    %Timespan{dt: :calendar.gregorian_seconds_to_datetime(s1 - s0)}
+  end
+
+  @spec now :: Timespan.t()
+  def now do
+    ts = :erlang.timestamp()
+    tsd = :calendar.now_to_datetime(ts)
+    {_, _, tsu} = ts
+    %Timespan{dt: tsd, ms: div(tsu, 1000)}
   end
 end
