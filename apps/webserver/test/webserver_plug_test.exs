@@ -1,4 +1,4 @@
-defmodule Webserver.PlugTest do
+defmodule WebserverTest.Plug do
   use ExUnit.Case, async: true
   use Plug.Test
   doctest Webserver.Plug

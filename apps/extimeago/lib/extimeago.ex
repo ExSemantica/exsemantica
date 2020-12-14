@@ -13,7 +13,7 @@
 # limitations under the License.
 defmodule ExTimeAgo do
   @moduledoc """
-  "xxx ago" past indicator from a previous project in 2019, ported to Elixir.
+  "xxx ago" past indicator from a previous project in 2019, ported to Elixir
   """
 
   defmodule Timespan do
