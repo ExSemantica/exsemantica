@@ -5,5 +5,5 @@ defmodule LdGraphstore.Native do
   """
 
   def db_create(), do: :erlang.nif_error(:nif_not_loaded)
-  def db_test(), do: :erlang.nif_error(:nif_not_loaded)
+  def db_test(_stress), do: :erlang.nif_error(:nif_not_loaded)
 end

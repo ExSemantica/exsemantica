@@ -156,6 +156,74 @@ impl Tree {
         );
         self.hint_idx
     }
+    unsafe fn delete_sibling(&mut self, idx: u64) -> bool {
+        assert_ne!(idx, 0);
+        match Tree::get_sibling(self.children[&idx]) {
+            0x0000_0000_0000_0000_u64 => false,
+            sibling => {
+                match Tree::get_sibling(self.children[&sibling]) {
+                    0x0000_0000_0000_0000_u64 => {
+                        self.children.insert(
+                            idx,
+                            _mm256_xor_si256(
+                                self.children[&idx],
+                                _mm256_set_epi64x(
+                                    IGNORE as i64,
+                                    IGNORE as i64,
+                                    sibling as i64,
+                                    IGNORE as i64,
+                                ),
+                            ),
+                        );
+                    }
+                    grandsibling => {
+                        self.children.insert(
+                            idx,
+                            _mm256_or_si256(
+                                _mm256_xor_si256(
+                                    self.children[&idx],
+                                    _mm256_set_epi64x(
+                                        IGNORE as i64,
+                                        IGNORE as i64,
+                                        sibling as i64,
+                                        IGNORE as i64,
+                                    ),
+                                ),
+                                _mm256_set_epi64x(
+                                    IGNORE as i64,
+                                    IGNORE as i64,
+                                    grandsibling as i64,
+                                    IGNORE as i64,
+                                ),
+                            ),
+                        );
+                        self.children.insert(
+                            grandsibling,
+                            _mm256_or_si256(
+                                _mm256_xor_si256(
+                                    self.children[&idx],
+                                    _mm256_set_epi64x(
+                                        sibling as i64,
+                                        IGNORE as i64,
+                                        IGNORE as i64,
+                                        IGNORE as i64,
+                                    ),
+                                ),
+                                _mm256_set_epi64x(
+                                    idx as i64,
+                                    IGNORE as i64,
+                                    IGNORE as i64,
+                                    IGNORE as i64,
+                                ),
+                            ),
+                        );
+                    }
+                }
+                self.children.remove(&sibling);
+                true
+            }
+        }
+    }
     unsafe fn delete_child(&mut self, idx: u64) -> bool {
         assert_ne!(idx, 0);
         match Tree::get_child(self.children[&idx]) {
@@ -165,33 +233,30 @@ impl Tree {
                 match Tree::get_child(self.children[&child]) {
                     0x0000_0000_0000_0000_u64 => {
                         // None
-                        self.children.insert(idx, _mm256_xor_si256(
-                            self.children[&idx],
-                            _mm256_set_epi64x(
-                                IGNORE as i64,
-                                child as i64,
-                                IGNORE as i64,
-                                IGNORE as i64,
+                        self.children.insert(
+                            idx,
+                            _mm256_xor_si256(
+                                self.children[&idx],
+                                _mm256_set_epi64x(
+                                    IGNORE as i64,
+                                    child as i64,
+                                    IGNORE as i64,
+                                    IGNORE as i64,
+                                ),
                             ),
-                        ));
+                        );
                     }
                     grandchild => {
-                        // TODO
+                        // TODO: Optimize the below routine to adequately utilize SIMD and Rust features
+                        // Perhaps a self.delete_all_siblings call to implement later :)
+                        while self.delete_sibling(grandchild) {}
+                        self.delete_child(grandchild);
                     }
                 };
-                // let child_pivot = self.children.get_mut(&);
-                // *pivot = ;
+                self.children.remove(&child);
                 true
             }
         }
-        // let parent = self.children.get_mut(&Tree::get_parent(*pivot)).unwrap();
-        // std::mem::swap(_mm256_xor_si256(*pivot, _mm256_set_epi64x(
-        //     IGNORE as i64,
-        //     idx as i64,
-        //     IGNORE as i64,
-        //     IGNORE as i64,
-        // )));
-        // Get the child
     }
 }
 
@@ -199,7 +264,7 @@ rustler::rustler_export_nifs! {
     "Elixir.LdGraphstore.Native",
     [
         ("db_create", 0, db_create),
-        ("db_test", 0, db_test)
+        ("db_test", 1, db_test)
     ],
     Some(on_load)
 }
@@ -218,12 +283,27 @@ fn db_create<'a>(env: Env<'a>, _args: &[Term<'a>]) -> Result<Term<'a>, Error> {
     }
 }
 
-fn db_test<'a>(env: Env<'a>, _args: &[Term<'a>]) -> Result<Term<'a>, Error> {
+fn db_test<'a>(env: Env<'a>, args: &[Term<'a>]) -> Result<Term<'a>, Error> {
     unsafe {
         let mut tree = Tree::new();
+
+        println!("Logical testing...");
         assert_eq!(tree.construct_child(1_u64).unwrap(), 2);
         assert_eq!(tree.construct_child(2_u64).unwrap(), 3);
         assert_eq!(tree.construct_sibling(2_u64), 4);
+        tree.delete_child(2_u64);
+        let stress: u64 = args[0].decode()?;
+        let mut interval = 0_u64;
+        println!("Stress testing... {:?}", stress);
+        for _ in 0..stress {
+            interval = tree.construct_sibling(4_u64);
+        }
+        tree.delete_child(2_u64);
+        println!("Passed sibling construction/destruction without catching fire (at {})", interval);
+        for _ in 0..stress {
+            interval = tree.construct_child(interval).expect("test failed");
+        }
+        println!("Passed child-sibling construction without catching fire (at {})", interval);
     }
     Ok(atoms::ok().encode(env))
 }
