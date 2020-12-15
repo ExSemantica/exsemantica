@@ -30,6 +30,7 @@ mod atoms {
     }
 }
 
+#[derive(Clone)]
 struct Tree {
     hint_idx: u64,
     children: HashMap<u64, __m256i>,
@@ -80,99 +81,117 @@ impl Tree {
         let relationships: [u64; 4] = Tree::unpacked_values(parent);
         relationships[1]
     }
-    unsafe fn match_child(parent: __m256i, child: __m256i) -> bool {
-        // Take the child from the passed parent
-        let extracted: __m256i = _mm256_permute4x64_epi64(parent, 0b10_10_10_10);
-
-        // Check: Does the passed child equal the passed parent's child?
-        let packed_relationships: __m256i = _mm256_cmpeq_epi64(extracted, child);
-
+    unsafe fn get_self(parent: __m256i) -> u64 {
         // Extract results
-        let relationships: [u64; 4] = Tree::unpacked_values(packed_relationships);
-        relationships[0] == ALLHOT
+        let relationships: [u64; 4] = Tree::unpacked_values(parent);
+        relationships[0]
     }
-    unsafe fn match_sibling(lhs: __m256i, sibling: __m256i) -> bool {
-        // Take the sibling from the passed lefthand
-        let extracted: __m256i = _mm256_permute4x64_epi64(lhs, 0b01_01_01_01);
-
-        // Check: Does the passed sibling equal the passed left side's sibling?
-        let packed_relationships: __m256i = _mm256_cmpeq_epi64(extracted, sibling);
-
-        // Extract results
-        let relationships: [u64; 4] = Tree::unpacked_values(packed_relationships);
-        relationships[0] == ALLHOT
-    }
-    unsafe fn match_self(lhs: __m256i, rhs: u64) -> bool {
-        // Set everything in a vector to the right hand side
-        let broadcasted: __m256i = _mm256_set1_epi64x(rhs as i64);
-
-        // Check: Is anything equal to the right hand we just set?
-        let packed_relationships: __m256i = _mm256_cmpeq_epi64(lhs, broadcasted);
-
-        // Extract result of self
-        let relationships: [u64; 4] = Tree::unpacked_values(packed_relationships);
-        relationships[0] != ALLHOT
-    }
-    unsafe fn construct_child_or_sibling(&mut self, idx: u64) -> u64 {
-        let mut pivot = self.children.get_mut(&idx).unwrap();
-        let insertee: &mut __m256i = &mut _mm256_setzero_si256();
-        match Tree::get_child(*pivot) {
+    unsafe fn construct_child(&mut self, idx: u64) -> Result<u64, &'static str> {
+        assert_ne!(idx, 0);
+        match Tree::get_child(self.children[&idx]) {
             0x0000_0000_0000_0000_u64 => {
-                // Construct a child
                 self.hint_idx += 1;
-                std::mem::swap(
-                    insertee,
-                    &mut _mm256_set_epi64x(
+
+                self.children.insert(
+                    idx,
+                    _mm256_or_si256(
+                        self.children[&idx],
+                        _mm256_set_epi64x(
+                            IGNORE as i64,
+                            self.hint_idx as i64,
+                            IGNORE as i64,
+                            IGNORE as i64,
+                        ),
+                    ),
+                );
+                self.children.insert(
+                    self.hint_idx,
+                    _mm256_set_epi64x(
                         idx as i64,
                         IGNORE as i64,
                         IGNORE as i64,
                         self.hint_idx as i64,
                     ),
                 );
-                *pivot = _mm256_or_si256(
-                    *pivot,
-                    _mm256_set_epi64x(
-                        IGNORE as i64,
-                        self.hint_idx as i64,
-                        IGNORE as i64,
-                        IGNORE as i64,
-                    ),
-                );
+                Ok(self.hint_idx)
             }
-            _ => loop {
-                // Construct a sibling
-                match Tree::get_sibling(*pivot) {
+            _ => Err("tree node already has child, try adding it as a sibling"),
+        }
+    }
+    unsafe fn construct_sibling(&mut self, idx: u64) -> u64 {
+        assert_ne!(idx, 0);
+        let mut pivot = self.children[&idx];
+        loop {
+            // Construct a sibling
+            match Tree::get_sibling(pivot) {
+                0x0000_0000_0000_0000_u64 => {
+                    self.hint_idx += 1;
+                    // NOTE: The parent of a sibling will be its last sibling
+                    pivot = _mm256_or_si256(
+                        pivot,
+                        _mm256_set_epi64x(
+                            IGNORE as i64,
+                            IGNORE as i64,
+                            self.hint_idx as i64,
+                            IGNORE as i64,
+                        ),
+                    );
+                    break;
+                }
+                next => {
+                    pivot = self.children[&next];
+                    continue;
+                }
+            }
+        }
+        // Finally insert the sibling
+        self.children.insert(
+            self.hint_idx,
+            _mm256_set_epi64x(
+                Tree::get_self(pivot) as i64,
+                IGNORE as i64,
+                IGNORE as i64,
+                self.hint_idx as i64,
+            ),
+        );
+        self.hint_idx
+    }
+    unsafe fn delete_child(&mut self, idx: u64) -> bool {
+        assert_ne!(idx, 0);
+        match Tree::get_child(self.children[&idx]) {
+            0x0000_0000_0000_0000_u64 => false,
+            child => {
+                // Get grandchild
+                match Tree::get_child(self.children[&child]) {
                     0x0000_0000_0000_0000_u64 => {
-                        self.hint_idx += 1;
-                        std::mem::swap(
-                            insertee,
-                            &mut _mm256_set_epi64x(
-                                IGNORE as i64,
-                                IGNORE as i64,
-                                IGNORE as i64,
-                                self.hint_idx as i64,
-                            ),
-                        );
-                        *pivot = _mm256_or_si256(
-                            *pivot,
+                        // None
+                        self.children.insert(idx, _mm256_xor_si256(
+                            self.children[&idx],
                             _mm256_set_epi64x(
                                 IGNORE as i64,
+                                child as i64,
                                 IGNORE as i64,
-                                self.hint_idx as i64,
                                 IGNORE as i64,
                             ),
-                        );
-                        break;
+                        ));
                     }
-                    next => {
-                        pivot = self.children.get_mut(&next).unwrap();
-                        continue;
+                    grandchild => {
+                        // TODO
                     }
-                }
-            },
+                };
+                // let child_pivot = self.children.get_mut(&);
+                // *pivot = ;
+                true
+            }
         }
-        self.children.insert(self.hint_idx, *insertee);
-        self.hint_idx
+        // let parent = self.children.get_mut(&Tree::get_parent(*pivot)).unwrap();
+        // std::mem::swap(_mm256_xor_si256(*pivot, _mm256_set_epi64x(
+        //     IGNORE as i64,
+        //     idx as i64,
+        //     IGNORE as i64,
+        //     IGNORE as i64,
+        // )));
+        // Get the child
     }
 }
 
@@ -202,9 +221,9 @@ fn db_create<'a>(env: Env<'a>, _args: &[Term<'a>]) -> Result<Term<'a>, Error> {
 fn db_test<'a>(env: Env<'a>, _args: &[Term<'a>]) -> Result<Term<'a>, Error> {
     unsafe {
         let mut tree = Tree::new();
-        assert_eq!(tree.construct_child_or_sibling(1_u64), 2);
-        assert_eq!(tree.construct_child_or_sibling(2_u64), 3);
-        assert_eq!(tree.construct_child_or_sibling(2_u64), 4);
+        assert_eq!(tree.construct_child(1_u64).unwrap(), 2);
+        assert_eq!(tree.construct_child(2_u64).unwrap(), 3);
+        assert_eq!(tree.construct_sibling(2_u64), 4);
     }
     Ok(atoms::ok().encode(env))
 }
