@@ -9,4 +9,6 @@ defmodule LdGraphstore.Native do
 
   def db_get(_db, _idx), do: :erlang.nif_error(:nif_not_loaded)
   def db_put(_db, _idx), do: :erlang.nif_error(:nif_not_loaded)
+  def db_del(_db, _idx), do: :erlang.nif_error(:nif_not_loaded)
+  def db_gc(_db), do: :erlang.nif_error(:nif_not_loaded)
 end
