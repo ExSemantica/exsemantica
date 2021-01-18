@@ -220,7 +220,6 @@ impl Tree {
                 );
             }
             [obj, sibling, child, parent] => {
-                println!("CONCERN POINT 1\r");
                 self.remove(sibling);
                 self.remove(child);
                 self.children.insert(obj, zeroes);
