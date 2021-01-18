@@ -1,4 +1,4 @@
-// Copyright 2020 Roland Metivier
+// Copyright 2020-2021 Roland Metivier
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -190,10 +190,20 @@ impl Tree {
         assert_ne!(idx, 1);
         let zeroes = _mm256_setzero_si256();
         match Tree::unpacked_values(self.children[&idx]) {
-            [obj, 0_u64, 0_u64, _parent] => {
+            [obj, 0_u64, 0_u64, 0_u64] => {
                 self.children.insert(obj, zeroes);
             }
-            [obj, sibling, 0_u64, _parent] => {
+            [obj, 0_u64, 0_u64, parent] => {
+                self.children.insert(obj, zeroes);
+                self.children.insert(
+                    parent,
+                    _mm256_xor_si256(
+                        self.children[&parent],
+                        _mm256_set_epi64x(IGNORE as i64, IGNORE as i64, obj as i64, IGNORE as i64),
+                    ),
+                );
+            }
+            [obj, sibling, 0_u64, parent] => {
                 // Since parent(s) are zeroed, we will automatically GC it later
                 let mut next = Tree::wrap(sibling);
                 while let Some(next_unwrapped) = next {
@@ -201,11 +211,26 @@ impl Tree {
                     self.children.insert(next_unwrapped, zeroes);
                 }
                 self.children.insert(obj, zeroes);
+                self.children.insert(
+                    parent,
+                    _mm256_xor_si256(
+                        self.children[&parent],
+                        _mm256_set_epi64x(IGNORE as i64, IGNORE as i64, obj as i64, IGNORE as i64),
+                    ),
+                );
             }
-            [obj, sibling, child, _parent] => {
+            [obj, sibling, child, parent] => {
+                println!("CONCERN POINT 1\r");
                 self.remove(sibling);
                 self.remove(child);
                 self.children.insert(obj, zeroes);
+                self.children.insert(
+                    parent,
+                    _mm256_xor_si256(
+                        self.children[&parent],
+                        _mm256_set_epi64x(IGNORE as i64, IGNORE as i64, obj as i64, IGNORE as i64),
+                    ),
+                );
             }
         }
     }
@@ -254,7 +279,14 @@ fn db_get<'a>(env: Env<'a>, args: &[Term<'a>]) -> Result<Term<'a>, Error> {
     let resource: ResourceArc<TreeResource> = args[0].decode()?;
     let item = resource.rw.read().expect("can't lock for reading");
     let idx: u64 = args[1].decode()?;
-    if item.children.contains_key(&idx) {
+    let exists = {
+        if item.children.contains_key(&idx) {
+            0_u64 != unsafe { Tree::get_self(item.children[&idx]) }
+        } else {
+            false
+        }
+    };
+    if exists {
         let vals = unsafe { Tree::unpacked_values(item.children[&idx]) };
         Ok((
             atoms::ok(),
@@ -275,7 +307,14 @@ fn db_put<'a>(env: Env<'a>, args: &[Term<'a>]) -> Result<Term<'a>, Error> {
     let resource: ResourceArc<TreeResource> = args[0].decode()?;
     let mut item = resource.rw.write().expect("can't lock for writing");
     let idx: u64 = args[1].decode()?;
-    if item.children.contains_key(&idx) {
+    let exists = {
+        if item.children.contains_key(&idx) {
+            0_u64 != unsafe { Tree::get_self(item.children[&idx]) }
+        } else {
+            false
+        }
+    };
+    if exists {
         let child_idx: u64 = unsafe { item.construct(idx) };
         Ok((atoms::ok(), child_idx).encode(env))
     } else {
@@ -287,7 +326,15 @@ fn db_del<'a>(env: Env<'a>, args: &[Term<'a>]) -> Result<Term<'a>, Error> {
     let resource: ResourceArc<TreeResource> = args[0].decode()?;
     let mut item = resource.rw.write().expect("can't lock for writing");
     let idx: u64 = args[1].decode()?;
-    if item.children.contains_key(&idx) {
+
+    let exists = {
+        if item.children.contains_key(&idx) {
+            0_u64 != unsafe { Tree::get_self(item.children[&idx]) }
+        } else {
+            false
+        }
+    };
+    if exists {
         unsafe { item.remove(idx) };
         Ok(atoms::ok().encode(env))
     } else {
@@ -299,31 +346,31 @@ fn db_test<'a>(env: Env<'a>, args: &[Term<'a>]) -> Result<Term<'a>, Error> {
     unsafe {
         let mut tree = Tree::new();
 
-        println!("Logical testing...");
+        println!("Logical testing...\r");
         assert_eq!(tree.construct(1_u64), 2);
         assert_eq!(tree.construct(2_u64), 3);
         assert_eq!(tree.construct(2_u64), 4);
         let stress: u64 = args[0].decode()?;
         let mut interval = 4_u64;
-        println!("Stress testing... {:?}", stress);
+        println!("Stress testing... {:?}\r", stress);
         for _ in 0..stress {
             interval = tree.construct(4_u64);
         }
         println!(
-            "Passed sibling construction/destruction without catching fire (at {})",
+            "Passed sibling construction/destruction without catching fire (at {})\r",
             interval
         );
         for _ in 0..stress {
             interval = tree.construct(interval);
         }
         println!(
-            "Passed child-sibling construction without catching fire (at {})",
+            "Passed child-sibling construction without catching fire (at {})\r",
             interval
         );
         tree.remove(2_u64);
-        println!("Passed removal of all elements");
+        println!("Passed removal of all elements\r");
         tree.collect();
-        println!("GC all good");
+        println!("GC all good\r");
     }
     Ok(atoms::ok().encode(env))
 }
