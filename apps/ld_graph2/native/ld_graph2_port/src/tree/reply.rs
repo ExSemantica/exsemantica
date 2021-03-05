@@ -11,26 +11,39 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+use crate::tree::{Valid, node::Node};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize)]
-pub struct Reply<T: crate::tree::Valid> {
-    pub idx: T,
-    pub child: T,
-    pub parent: T,
-    pub sibling: T
+pub struct Reply<T: Valid> {
+    pub content: Vec<Node<T>>
 }
 
-// u8 not implemented yet
-// u16 not implemented yet
-impl Reply<u32> {
-    pub fn from() -> Reply<u32> {
-        Reply::<u32> {
-            idx: 0_u32,
-            child: 0_u32,
-            parent: 0_u32,
-            sibling: 0_u32
+impl Reply<u8> {
+    pub fn new() -> Reply<u8> {
+        Reply::<u8> {
+            content: vec![]
         }
     }
 }
-// u64 not implemented yet
+impl Reply<u16> {
+    pub fn new() -> Reply<u16> {
+        Reply::<u16> {
+            content: vec![]
+        }
+    }
+}
+impl Reply<u32> {
+    pub fn new() -> Reply<u32> {
+        Reply::<u32> {
+            content: vec![]
+        }
+    }
+}
+impl Reply<u64> {
+    pub fn new() -> Reply<u64> {
+        Reply::<u64> {
+            content: vec![]
+        }
+    }
+}

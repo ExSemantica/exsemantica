@@ -11,23 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-mod tree;
-type TreeQu = tree::query::Query<u32>;
-type TreeRe = tree::reply::Reply<u32>;
+use crate::tree::Valid;
+use serde::{Deserialize, Serialize};
 
-fn main() {
-    use erlang_port::{PortReceive, PortSend};
-
-    let mut port = unsafe {
-        use erlang_port::PacketSize;
-        erlang_port::nouse_stdio(PacketSize::Four)
-    };
-
-    println!("Hello, world!");
-
-    for inp in port.receiver.iter::<TreeQu>() {
-        let input: TreeQu = inp;
-        port.sender
-            .reply::<Result<TreeRe, TreeRe>, TreeRe, TreeRe>(Ok(TreeRe::new()))
-    }
+#[derive(Deserialize, Serialize)]
+pub struct Node<T: Valid> {
+    pub idx: T,
+    pub child: T,
+    pub parent: T,
+    pub sibling: T,
 }
