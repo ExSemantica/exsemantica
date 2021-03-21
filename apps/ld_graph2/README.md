@@ -1,2 +1,2 @@
 # LdGraph2
-Graph storage with Rust.
+Graph storage.

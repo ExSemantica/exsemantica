@@ -9,4 +9,4 @@ Builds upon [the previous eactivitypub](https://github.com/Chlorophytus/eactivit
 ## TODOs
 
 - [ ] JSON-LD handling?
-- [ ] Featherweight graph database in Rust (can we do this separately? what architecture are we going for?)
+- [ ] Graph database
