@@ -25,13 +25,18 @@ defmodule LdGraph2.Heap do
   Deletes the maximum (root) value of a heap.
   """
   def delete_max(heap) do
-    merge_pairs(heap.children, %LdGraph2.Heap{})
+    merge_pairs(heap.children)
   end
 
-  def merge_pairs([head | tail], heap) do
-    merge_pairs(tail, meld(head, heap))
+  def merge_pairs([head1 | []]) do
+    head1
   end
-  def merge_pairs([], heap) do
-    heap
+
+  def merge_pairs([head1 | [head2 | []]]) do
+    meld(head1, head2)
+  end
+
+  def merge_pairs([head1 | [head2 | tail]]) do
+    meld(meld(head1, head2), merge_pairs(tail))
   end
 end
