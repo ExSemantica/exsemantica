@@ -28,7 +28,7 @@ defmodule LdGraph2.Graph do
 
   @spec put_edge(%LdGraph2.Graph{}, any, any) :: %LdGraph2.Graph{}
   def put_edge(graph = %{nodes: nodes}, from, to) when is_map_key(nodes, from) do
-    node_at = nodes[from]
+    node_at = nodes.from
     %LdGraph2.Graph{graph | nodes: %{nodes | from => node_at |> MapSet.put(to)}}
   end
 end
