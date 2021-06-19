@@ -4,7 +4,7 @@ defmodule Webserver.MixProject do
   def project do
     [
       app: :webserver,
-      version: "0.1.0",
+      version: "0.2.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
@@ -30,8 +30,10 @@ defmodule Webserver.MixProject do
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
       # {:sibling_app_in_umbrella, in_umbrella: true}
       {:extimeago, in_umbrella: true},
-      {:plug_cowboy, "~> 2.4"},
-      {:jason, "~> 1.2"}
+      {:plug_cowboy, "~> 2.5"},
+      {:jason, "~> 1.2"},
+      {:dialyxir, "~> 1.1", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.24", only: :dev, runtime: false}
     ]
   end
 end

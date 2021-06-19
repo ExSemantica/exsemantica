@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-defmodule LdGraph2Test do
+defmodule LdGraph2GraphTest do
   use ExUnit.Case, async: true
-  doctest LdGraph2
+  doctest LdGraph2.Graph
 end

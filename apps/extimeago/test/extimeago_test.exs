@@ -1,4 +1,4 @@
 defmodule ExTimeAgoTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest ExTimeAgo
 end

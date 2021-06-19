@@ -13,7 +13,7 @@
 # limitations under the License.
 defmodule LdGraph2.Graph do
   @moduledoc """
-  A graph based on `LdGraph2.Heap` pairing heaps.
+  A directed graph.
   """
   # NOTE: There may be a time where we start doing fancy stuff in graphs.
   # EXAMPLE: Compressing graphs
@@ -21,14 +21,96 @@ defmodule LdGraph2.Graph do
   # For now, we'll store a graph as a struct with only a map.
   defstruct nodes: %{}
 
+  ### =========================================================================
+  ###  Putting new nodes and edges
+  ### =========================================================================
   @spec put_node(%LdGraph2.Graph{}, any) :: %LdGraph2.Graph{}
-  def put_node(graph, at) do
-    %LdGraph2.Graph{graph | nodes: graph.nodes |> Map.put_new(at, MapSet.new())}
+  @doc """
+  Creates a node with the specified key, not connected to any other nodes.
+
+  ## Examples
+  ```elixir
+      iex> %LdGraph2.Graph{} |> LdGraph2.Graph.put_node(0) ===
+      ...> %LdGraph2.Graph{nodes: %{0 => []}}
+      true
+  ```
+  """
+  def put_node(graph = %{nodes: nodes}, at) do
+    %LdGraph2.Graph{graph | nodes: nodes |> Map.put_new(at, [])}
   end
 
   @spec put_edge(%LdGraph2.Graph{}, any, any) :: %LdGraph2.Graph{}
+  @doc """
+  Creates an edge pointing from the specified key to another specified key.
+
+  Note that each edge points to and from nodes that already exist, and each
+  edge must be unique.
+
+  ## Examples
+  ```elixir
+      iex> %LdGraph2.Graph{}
+      ...> |> LdGraph2.Graph.put_node(0)
+      ...> |> LdGraph2.Graph.put_node(1)
+      ...> |> LdGraph2.Graph.put_edge(0, 1)
+      %LdGraph2.Graph{nodes: %{0 => [1], 1 => []}}
+  ```
+  """
   def put_edge(graph = %{nodes: nodes}, from, to) when is_map_key(nodes, from) do
-    node_at = nodes.from
-    %LdGraph2.Graph{graph | nodes: %{nodes | from => node_at |> MapSet.put(to)}}
+    node_at = nodes[from]
+
+    %LdGraph2.Graph{
+      graph
+      | nodes: %{nodes | from => node_at |> MapSet.new() |> MapSet.put(to) |> MapSet.to_list()}
+    }
+  end
+
+  ### =========================================================================
+  ###  Deleting old nodes and edges
+  ### =========================================================================
+  @spec del_node(%LdGraph2.Graph{}, any) :: %LdGraph2.Graph{}
+  @doc """
+  Deletes the specified node if it exists. Otherwise, the graph is left as is.
+  ## Examples
+  ```elixir
+      iex> %LdGraph2.Graph{}
+      ...> |> LdGraph2.Graph.put_node(0)
+      ...> |> LdGraph2.Graph.del_node(0)
+      %LdGraph2.Graph{nodes: %{}}
+  ```
+  """
+  def del_node(graph = %{nodes: nodes}, at) do
+    %LdGraph2.Graph{graph | nodes: nodes |> Map.delete(at)}
+  end
+
+  @spec del_edge(%LdGraph2.Graph{}, any, any) :: %LdGraph2.Graph{}
+  @doc """
+  Deletes the specified edge connection, if the connection to the destination
+  exists. Otherwise, the graph is left as is.
+
+  If the node we are connecting from does not exist, an error will be thrown.
+  ## Examples
+  ```elixir
+      iex> %LdGraph2.Graph{}
+      ...> |> LdGraph2.Graph.put_node(0)
+      ...> |> LdGraph2.Graph.put_node(1)
+      ...> |> LdGraph2.Graph.put_edge(0, 1)
+      ...> |> LdGraph2.Graph.del_edge(0, 1)
+      %LdGraph2.Graph{nodes: %{0 => [], 1 => []}}
+  ```
+  """
+  def del_edge(graph = %{nodes: nodes}, from, to) when is_map_key(nodes, from) do
+    node_at = nodes[from]
+
+    %LdGraph2.Graph{
+      graph
+      | nodes: %{
+          nodes
+          | from =>
+              node_at
+              |> MapSet.new()
+              |> MapSet.delete(to)
+              |> MapSet.to_list()
+        }
+    }
   end
 end
