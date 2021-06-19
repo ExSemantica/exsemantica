@@ -1,4 +1,4 @@
-# Copyright 2020 Roland Metivier
+# Copyright 2020-2021 Roland Metivier
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,9 +17,6 @@ defmodule Webserver.Plug do
   plug(Plug.Logger)
   plug(:match)
   plug(:dispatch)
-
-  # https://docs.joinmastodon.org/client/intro/
-  # https://docs.joinmastodon.org/spec/webfinger/
 
   get "/" do
     {:ok, json} = Jason.encode(%{"object" => []})
