@@ -15,10 +15,6 @@ defmodule LdGraph2.Graph do
   @moduledoc """
   A directed graph.
   """
-  # NOTE: There may be a time where we start doing fancy stuff in graphs.
-  # EXAMPLE: Compressing graphs
-  # EXAMPLE: Caching in graphs
-  # For now, we'll store a graph as a struct with only a map.
   defstruct nodes: %{}
 
   ### =========================================================================
