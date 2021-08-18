@@ -20,61 +20,37 @@ defmodule LdGraph2.Agent do
   yet.
   """
   use Agent
+  require Logger
 
-  @spec start_link(binary) :: {:error, any} | {:ok, pid}
+  # Increment when adding backward-incompatible version changes to the
+  # database delta format.
+  @curr_db_ver 1
+
+  @spec start_link(atom) :: {:error, any} | {:ok, pid}
   @doc """
   Starts the agent, loading the specified graph off the `LdGraph2`
   application's priv directory.
   """
   def start_link(name) do
     Agent.start_link(fn ->
-      candidates =
-        Path.wildcard(
-          Path.join([
-            Application.app_dir(:ld_graph2, "priv"),
-            name,
-            "*.ld2"
-          ])
-        )
-        |> Enum.map(fn file ->
-          {:ok, date, _} = Path.basename(file, ".ld2") |> DateTime.from_iso8601()
-          date
-        end)
-        |> Enum.sort(DateTime)
+      store =
+        Path.join([
+          Application.app_dir(:ld_graph2, "priv"),
+          to_string(name) <> ".ld2"
+        ])
 
-      {name,
-       case candidates do
-         [] ->
-           File.mkdir(
-             Path.join([
-               Application.app_dir(:ld_graph2, "priv"),
-               name
-             ])
-           )
+      {:ok, table} =
+        case File.exists?(store) do
+          true -> :ets.file2tab(to_charlist(store), [])
+          false -> {:ok, :ets.new(name, [:ordered_set, :private])}
+        end
 
-           {%LdGraph2.Graph{}, nil}
+      {_, graph} =
+        :ets.match_object(table, {:_, :_, :_})
+        |> Enum.map(&check_version!/1)
+        |> Enum.reduce({table, %LdGraph2.Graph{}}, &apply_delta/2)
 
-         _ ->
-           candidates
-           |> Enum.reduce([], fn sorted, acc ->
-             date = DateTime.to_iso8601(sorted)
-
-             {:ok, terms} =
-               :file.consult(
-                 to_charlist(
-                   Path.join([
-                     Application.app_dir(:ld_graph2, "priv"),
-                     name,
-                     "#{date}.ld2"
-                   ])
-                 )
-               )
-
-             [terms | acc]
-           end)
-       end
-       |> List.flatten()
-       |> Enum.reduce(%LdGraph2.Graph{}, &apply_delta/2)}
+      {name, table, graph}
     end)
   end
 
@@ -83,7 +59,7 @@ defmodule LdGraph2.Agent do
   Gets the current graph data.
   """
   def get(agent) do
-    Agent.get(agent, fn {_name, graph} ->
+    Agent.get(agent, fn {_name, _table, graph} ->
       graph
     end)
   end
@@ -103,35 +79,52 @@ defmodule LdGraph2.Agent do
   ```
   """
   def update(agent, transactions) do
-    Agent.update(agent, fn {name, graph} ->
-      date = DateTime.to_iso8601(DateTime.utc_now())
+    Agent.update(agent, fn {name, table, graph} ->
+      {_, graph} =
+        transactions
+        |> Enum.reduce({table, graph}, &apply_delta/2)
 
-      File.write(
-        Path.join([
-          Application.app_dir(:ld_graph2, "priv"),
-          name,
-          "#{date}.ld2"
-        ]),
-        :io_lib.fwrite('~p.\n', transactions, encoding: :utf8)
+      :ets.tab2file(
+        table,
+        to_charlist(
+          Path.join([Application.app_dir(:ld_graph2, "priv"), to_string(name) <> ".ld2"])
+        ),
+        []
       )
 
-      {name, transactions |> Enum.reduce(graph, &apply_delta/2)}
+      {name, table, graph}
     end)
   end
 
-  defp apply_delta(delta, graph) do
-    case delta do
-      {:add, what} ->
-        case what do
-          {:node, at} -> LdGraph2.Graph.put_node(graph, at)
-          {:edge, from, to} -> LdGraph2.Graph.put_edge(graph, from, to)
-        end
+  defp check_version!({_index, major, content}) when major === @curr_db_ver do
+    content
+  end
 
-      {:del, what} ->
-        case what do
-          {:node, at} -> LdGraph2.Graph.del_node(graph, at)
-          {:edge, from, to} -> LdGraph2.Graph.del_edge(graph, from, to)
-        end
-    end
+  defp check_version!({index, major, _content}) do
+    raise Version.InvalidVersionError,
+          "At graph ETS index #{index}: version '#{major}' isn't the " <>
+            "supported version '#{@curr_db_ver}'"
+  end
+
+  defp do_predelta(:"$end_of_table"), do: 1
+  defp do_predelta(verb), do: verb + 1
+
+  defp apply_delta(delta, {table, graph}) do
+    :ets.insert_new(table, {do_predelta(:ets.last(table)), @curr_db_ver, delta})
+
+    {table,
+     case delta do
+       {:add, what} ->
+         case what do
+           {:node, at} -> LdGraph2.Graph.put_node(graph, at)
+           {:edge, from, to} -> LdGraph2.Graph.put_edge(graph, from, to)
+         end
+
+       {:del, what} ->
+         case what do
+           {:node, at} -> LdGraph2.Graph.del_node(graph, at)
+           {:edge, from, to} -> LdGraph2.Graph.del_edge(graph, from, to)
+         end
+     end}
   end
 end
