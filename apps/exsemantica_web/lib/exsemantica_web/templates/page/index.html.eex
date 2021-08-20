@@ -1,6 +1,10 @@
 <main>
+  <img src="images/exsemantica.png" class="centered" width="128px" alt="ExSemantica Logo">
   <p>
   Welcome to ExSemantica, a work-in-progress FOSS microblogging platform for
   people with mutual interests.
+  </p>
+  <p>
+  Please click a button on the sidebar.
   </p>
 </main>

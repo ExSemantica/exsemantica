@@ -41,8 +41,16 @@ module.exports = (env, options) => {
             'css-loader',
             'sass-loader',
           ],
-        }
-      ]
+        },
+        {
+          test: /\.woff2$/,
+          use: [
+            {
+              loader: 'file-loader',
+            },
+          ],
+        },
+      ],
     },
     plugins: [
       new MiniCssExtractPlugin({ filename: '../css/app.css' }),

@@ -10,9 +10,12 @@
   </head>
   <body>
     <nav role="navbar">
-      <span class="bar-button"><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></span>
+      <div class="bar-button">Test</div>
       <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-        <span class="bar-button"><%= link "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home) %></span>
+        <div class="bar-button">
+          <span class="material-icons">dashboard</span>
+          <span class="nav-info"><%= link "Live Dashboard", to: Routes.live_dashboard_path(@conn, :home) %></span>
+        </div>
       <% end %>
     </nav>
     <%= @inner_content %>
