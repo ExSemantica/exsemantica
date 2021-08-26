@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <%= csrf_meta_tag() %>
+    <%= live_title_tag assigns[:page_title] || "ExsemanticaPhx", suffix: " · Phoenix Framework" %>
+    <link phx-track-static rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
+    <script defer phx-track-static type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  </head>
+  <body class="bg-indigo-100" x-data="{ open: false }">
+    <nav class="fixed flex w-1/5 flex-col" role="navigation">
+      <button @click="open = true" class="flex-1 text-center mt-4 mb-2 p-2 rounded-r-md bg-indigo-400 shadow-lg">Find Hub</button>
+      <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
+        <%= button "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home), method: "get", class: "flex-1 text-center mt-2 mb-2 p-2 rounded-r-md bg-indigo-400 shadow-lg" %>
+      <% end %>
+    </nav>
+    <%= @inner_content %>
+    <div x-show.transition="open" x-transition:enter-start="opacity-0" x-transition:leave-end="opacity-0" x-transition:enter-end="opacity-25" class="absolute w-screen h-screen opacity-25 bg-purple-200"></div>
+    <div x-show="open" class="absolute flex w-screen h-screen justify-center items-center">
+      <span @click.away="open = false" class="bg-purple-400 rounded-full p-4 shadow-lg">Oh no, this is unimplemented! Want a prize?</span>
+    </div>
+  </body>
+</html>

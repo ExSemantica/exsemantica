@@ -6,7 +6,18 @@ defmodule ExSemantica.MixProject do
       apps_path: "apps",
       version: "0.5.0",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      releases: [
+        exsemantica: [
+          include_executables_for: [:unix],
+          applications: [ 
+            runtime_tools: :permanent,
+            exsemantica_phx: :permanent,
+            ld_graph2: :permanent,
+            extimeago: :permanent
+          ]
+        ]
+      ]
     ]
   end
 

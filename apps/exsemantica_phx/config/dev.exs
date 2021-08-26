@@ -5,7 +5,7 @@ config :exsemantica_phx, ExsemanticaPhx.Repo,
   username: "postgres",
   password: "postgres",
   database: "exsemantica_phx_dev",
-  hostname: "127.0.0.1",
+  hostname: "localhost",
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
@@ -26,10 +26,9 @@ config :exsemantica_phx, ExsemanticaPhxWeb.Endpoint,
       "--mode",
       "development",
       "--watch-stdin",
-      cd: Path.expand("../apps/exsemantica_phx/assets", __DIR__)
+      cd: Path.expand("../assets", __DIR__)
     ]
-  ],
-  server: true
+  ]
 
 # ## SSL Support
 #

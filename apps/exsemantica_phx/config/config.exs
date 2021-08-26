@@ -13,10 +13,10 @@ config :exsemantica_phx,
 # Configures the endpoint
 config :exsemantica_phx, ExsemanticaPhxWeb.Endpoint,
   url: [host: "localhost"],
-  secret_key_base: "p1peLoj+pYjgOQNCp1wzw/0igaVtg7vo6maBWaG45GGqGUcTUR6OjW8Mp2T/x0Vk",
+  secret_key_base: "gTa5wZD8eeE52Bk96neSoChF3Pv5PkDS06vQsKWVEIHeGnkX5mwfT5nD2qIwYPK7",
   render_errors: [view: ExsemanticaPhxWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: ExsemanticaPhx.PubSub,
-  live_view: [signing_salt: "oaarpDx3"]
+  live_view: [signing_salt: "zGm5KaLp"]
 
 # Configures Elixir's Logger
 config :logger, :console,
