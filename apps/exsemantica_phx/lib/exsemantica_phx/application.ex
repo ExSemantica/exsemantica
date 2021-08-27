@@ -14,7 +14,9 @@ defmodule ExsemanticaPhx.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: ExsemanticaPhx.PubSub},
       # Start the Endpoint (http/https)
-      ExsemanticaPhxWeb.Endpoint
+      ExsemanticaPhxWeb.Endpoint,
+      # Start the Graph Database
+      {LdGraph2.Agent, [:exsemantica, [name: ExsemanticaPhx.GraphStore]]}
       # Start a worker by calling: ExsemanticaPhx.Worker.start_link(arg)
       # {ExsemanticaPhx.Worker, arg}
     ]

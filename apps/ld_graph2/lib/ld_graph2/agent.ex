@@ -26,12 +26,12 @@ defmodule LdGraph2.Agent do
   # database delta format.
   @curr_db_ver 1
 
-  @spec start_link(atom) :: {:error, any} | {:ok, pid}
+  @spec start_link(list) :: {:error, any} | {:ok, pid}
   @doc """
   Starts the agent, loading the specified graph off the `LdGraph2`
   application's priv directory.
   """
-  def start_link(name) do
+  def start_link([name, opts]) do
     Agent.start_link(fn ->
       store =
         Path.join([
@@ -51,7 +51,7 @@ defmodule LdGraph2.Agent do
         |> Enum.reduce({table, %LdGraph2.Graph{}}, &apply_delta/2)
 
       {name, table, graph}
-    end)
+    end, opts)
   end
 
   @spec get(atom | pid | {atom, any} | {:via, atom, any}) :: any
