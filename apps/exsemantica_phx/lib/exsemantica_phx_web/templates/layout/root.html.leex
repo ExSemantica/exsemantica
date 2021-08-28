@@ -10,17 +10,21 @@
     <script defer phx-track-static type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
   </head>
-  <body class="bg-indigo-100" x-data="{ open: false }">
-    <nav class="fixed flex w-1/5 flex-col" role="navigation">
-      <button @click="open = true" class="flex-1 text-center mt-4 mb-2 p-2 rounded-r-md bg-indigo-400 shadow-lg">Find Hub</button>
+  <body class="bg-blue-100">
+  <div class="grid grid-cols-4 gap-4" x-data="{ open: false }">
+    <nav class="col-start-1 col-end-2" role="navigation">
+      <button @click="open = true" class="text-center mt-4 mb-2 p-2 rounded-r-md bg-indigo-400 shadow-lg w-full hover:bg-indigo-500">Log in/Register</button><br>
       <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-        <%= button "LiveDashboard", to: Routes.live_dashboard_path(@conn, :home), method: "get", class: "flex-1 text-center mt-2 mb-2 p-2 rounded-r-md bg-indigo-400 shadow-lg" %>
+        <%= button "Administrate", to: Routes.live_dashboard_path(@conn, :home), method: "get", class: "text-center mb-2 p-2 rounded-r-md bg-indigo-400 shadow-lg w-full hover:bg-indigo-500" %>
       <% end %>
     </nav>
-    <%= @inner_content %>
-    <div x-show.transition="open" x-transition:enter-start="opacity-0" x-transition:leave-end="opacity-0" x-transition:enter-end="opacity-25" class="absolute w-screen h-screen opacity-25 bg-purple-200"></div>
-    <div x-show="open" class="absolute flex w-screen h-screen justify-center items-center">
-      <span @click.away="open = false" class="bg-purple-400 rounded-full p-4 shadow-lg">Oh no, this is unimplemented! Want a prize?</span>
+    <div class="col-start-2 col-span-3">
+      <%= @inner_content %>
     </div>
+    <div x-show.transition="open" x-transition:enter-start="opacity-0" x-transition:leave-end="opacity-0" x-transition:enter-end="opacity-25" class="absolute w-screen h-screen opacity-25 bg-purple-500"></div>
+    <div x-show="open" class="absolute flex w-screen h-screen justify-center items-center">
+      <span @click.away="open = false" class="bg-purple-400 rounded-full p-4 shadow-xl">Oh no, this is unimplemented.</span>
+    </div>
+  </div>
   </body>
 </html>

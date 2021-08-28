@@ -1,10 +1,14 @@
-<section class="fixed w-4/5 ml-36 mr-0 mt-4 p-4 rounded-l-md bg-indigo-300 shadow-lg">
-  <p>
-    Welcome to ExSemantica, a work-in-progress FOSS microblogging platform for
-    people with mutual interests.
-  </p>
+<section class="mt-4 p-4 rounded-l-md bg-indigo-300 shadow-lg">
+  <h1 class="text-xl"><b>Search interests and posts</b></h1>
   <br>
-  <p>
-    Please click a button on the sidebar.
-  </p>
+  <%= f = form_for @search_query, "#", [phx_change: :suggest, phx_submit: :search] %>
+  <%= search_input f, :search_input, [class: "rounded-full shadow-lg p-2 bg-blue-200"] %>
+  </form>
+  <br>
+  <%= @search_results %>
+  <br>
+  <br>
+  <div class="grid grid-cols-3 gap-8 m-0">
+    <%= @search_pagey %>
+  </div>
 </section>
