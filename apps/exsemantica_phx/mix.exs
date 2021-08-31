@@ -52,6 +52,7 @@ defmodule ExsemanticaPhx.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
+      {:joken, "~> 2.4"},
 
       {:extimeago, in_umbrella: true},
       {:ld_graph2, in_umbrella: true}

@@ -20,6 +20,12 @@ defmodule ExsemanticaPhxWeb.Router do
     live "/", PageLive, :index
   end
 
+  scope "/api" do
+    pipe_through [:api]
+
+    forward "/v0", ExsemanticaPhxWeb.ApiV0.Plug
+  end
+
   # Other scopes may use custom stacks.
   # scope "/api", ExsemanticaPhxWeb do
   #   pipe_through :api

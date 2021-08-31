@@ -1,3 +1,4 @@
+// var argon2 = require('argon2-browser');
 // We need to import the CSS so that webpack will load it.
 // The MiniCssExtractPlugin is used to separate it out into
 // its own CSS file.
@@ -17,6 +18,8 @@ import {Socket} from "phoenix"
 import topbar from "topbar"
 import {LiveSocket} from "phoenix_live_view"
 
+import 'jsonwebtoken'
+
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
 
@@ -33,4 +36,36 @@ liveSocket.connect()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
+
+// TODO: Email is currently unimplemented.
+window.createContract = function(email, username) {
+  window.crypto.subtle.generateKey({
+      name: "RSASSA-PKCS1-v1_5",
+      modulusLength: 4096,
+      hash: "SHA-512",
+      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+    }, true, ['sign', 'verify']
+  ).then((contract) => {
+    return Promise.all([
+      window.crypto.subtle.exportKey('jwk', contract.privateKey),
+      window.crypto.subtle.exportKey('jwk', contract.publicKey)
+    ])
+  }).then((keys, error) => {
+    window.localStorage.setItem('contractPrivateKey', keys[0]);
+
+    return fetch('/api/v0/contract', {
+      method: 'PUT',
+
+      body: JSON.stringify({
+        'email': email,
+        'username': username,
+        'contractPublicKey': keys[1],
+      }),
+
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+  });
+}
 

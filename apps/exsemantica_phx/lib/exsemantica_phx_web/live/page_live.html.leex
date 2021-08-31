@@ -1,5 +1,5 @@
 <section class="mt-4 p-4 rounded-l-md bg-indigo-300 shadow-lg">
-  <h1 class="text-xl"><b>Search interests and posts</b></h1>
+  <h1 class="text-xl"><b>Search interests and users</b></h1>
   <br>
   <%= f = form_for @search_query, "#", [phx_change: :suggest, phx_submit: :search] %>
   <%= search_input f, :search_input, [class: "rounded-full shadow-lg p-2 bg-blue-200"] %>
