@@ -38,34 +38,51 @@ liveSocket.connect()
 window.liveSocket = liveSocket
 
 // TODO: Email is currently unimplemented.
-window.createContract = function(email, username) {
-  window.crypto.subtle.generateKey({
-      name: "RSASSA-PKCS1-v1_5",
-      modulusLength: 4096,
-      hash: "SHA-512",
-      publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-    }, true, ['sign', 'verify']
-  ).then((contract) => {
-    return Promise.all([
-      window.crypto.subtle.exportKey('jwk', contract.privateKey),
-      window.crypto.subtle.exportKey('jwk', contract.publicKey)
-    ])
-  }).then((keys, error) => {
-    window.localStorage.setItem('contractPrivateKey', keys[0]);
-
-    return fetch('/api/v0/contract', {
+window.contractRegisterUnverified = function(email, username) {
+  fetch('/api/v0/registration', {
       method: 'PUT',
 
       body: JSON.stringify({
         'email': email,
         'username': username,
-        'contractPublicKey': keys[1],
       }),
 
       headers: {
         'Content-Type': 'application/json'
       }
+  })
+    .then((_) => { return true })
+    .catch((e) => {
+      console.error(e);
+      return false
     })
-  });
+}
+
+window.contractCheck = function(username, password) {
+  fetch('/api/v0/registration?user="' + username + '"', {
+    method: 'GET',
+
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+    .then(result => {return result.json(); })
+    .then(jsonResult => {
+      console.log(jsonResult);
+      // NOTE to self: Do not make this a boolean, it shall be either a contract or not.
+      if(!jsonResult.fulfilledContract) {
+        document.getElementById('motd').innerText = jsonResult.msg; 
+      }
+    }).catch(e => {
+      console.error(e);
+      document.getElementById('motd').innerText = "An unknown error occured in your browser.";
+    });
+}
+
+window.checkLogin = function() {
+  contractCheck(
+    document.getElementById('email').innerText,
+    document.getElementById('password').innerText,
+  );
 }
 

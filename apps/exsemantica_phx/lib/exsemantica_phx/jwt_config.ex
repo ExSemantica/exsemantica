@@ -4,7 +4,7 @@ defmodule ExsemanticaPhx.JwtConfig do
   def token_config do
     default_claims(skip: [:exp, :iss, :nbf, :aud])
     # Expires in 5mins
-    |> add_claim("exp", fn -> Joken.current_time() + (60 * 5) end, &(&1 > Joken.current_time()))
+    |> add_claim("exp", nil, &(&1 > Joken.current_time()))
     # ExSemantica's token
     |> add_claim("iss", fn -> "ExSemantica" end, &(&1 == "ExSemantica"))
 

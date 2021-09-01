@@ -4,6 +4,8 @@ defmodule ExsemanticaPhx.Site.User do
 
   schema "site_users" do
     field :biography, :string
+    field :contract, :binary
+    field :email, :string
     field :node_corresponding, :integer
     field :password, :binary
     field :username, :string
@@ -14,8 +16,11 @@ defmodule ExsemanticaPhx.Site.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:node_corresponding, :username, :password, :biography])
-    |> validate_required([:node_corresponding, :username, :password, :biography])
+    |> cast(attrs, [:node_corresponding, :username, :biography, :email, :password, :contract])
+    |> validate_required([:node_corresponding, :username, :biography, :email, :password, :contract])
     |> unique_constraint(:node_corresponding)
+    |> unique_constraint(:username)
+    |> unique_constraint(:email)
+    |> unique_constraint(:contract)
   end
 end
