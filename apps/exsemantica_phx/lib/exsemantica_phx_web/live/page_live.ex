@@ -6,7 +6,9 @@ defmodule ExsemanticaPhxWeb.PageLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, %{search_query: :search, search_results: "", search_pagey: ""})}
+    {:ok, assign(socket, %{search_query: :search, search_results: "", search_pagey: "", user_advertisement: ~E"""
+      <img class="p-4 rounded-md bg-indigo-300 shadow-lg max-w-full" src="images/bannerpls.png">
+      """, page_title: "Home"})}
   end
 
   @impl true
@@ -41,14 +43,14 @@ defmodule ExsemanticaPhxWeb.PageLive do
           {:noreply, assign(socket, %{search_results: ~E"""
             <i>Query for interests containing <b>"<%= nonblank |> String.replace_prefix("#", "") %>"</b> returned <b><%= prequery |> ExsemanticaPhx.Search.interests([], :count) %></b> hits.<br>Results from <b><%= DateTime.utc_now |> DateTime.truncate(:second) %></b> shown.</i>
             """,
-            search_pagey: prequery |> ExsemanticaPhx.Search.interests([], :query) |> Enum.take(15) |> handle_interest})}
+            search_pagey: prequery |> ExsemanticaPhx.Search.interests([], :query) |> Enum.take(15) |> handle_interest, page_title: "Interest Query: '#{nonblank}'"})}
              
         "@" ->
           prequery = "%" <> String.replace_prefix(nonblank, "@", "") <> "%"
           {:noreply, assign(socket, %{search_results: ~E"""
             <i>Query for usernames containing <b>"<%= nonblank |> String.replace_prefix("@", "") %>"</b> returned <b><%= prequery |> ExsemanticaPhx.Search.users([], :count) %></b> hits.<br>Results from <b><%= DateTime.utc_now |> DateTime.truncate(:second) %></b>.</i>
             """,
-            search_pagey: prequery |> ExsemanticaPhx.Search.users([], :query) |> Enum.take(15) |> handle_user})}
+            search_pagey: prequery |> ExsemanticaPhx.Search.users([], :query) |> Enum.take(15) |> handle_user, page_title: "User Query: '#{nonblank}'"})}
         _other -> {:noreply, assign(socket, %{search_results: ~E"""
             <i>Try using <b>@</b> or <b>#</b> before your query.</i>
             """})}

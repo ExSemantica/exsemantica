@@ -1,5 +1,5 @@
 <div class="grid grid-cols-3 gap-4">
-  <section class="col-start-1 col-span-2 mt-4 p-4 rounded-md bg-indigo-300 shadow-lg">
+  <section class="col-start-1 col-span-2 mt-4 p-4 rounded-md bg-indigo-300 shadow-lg" role="search">
     <h1 class="text-xl"><b>Search interests and users</b></h1>
     <br>
     <%= f = form_for @search_query, "#", [phx_change: :suggest, phx_submit: :search] %>
@@ -14,8 +14,18 @@
     </div>
   </section>
 
-  <span class="text-center p-4">
-    Advertisement
-    <img class="col-start-3 p-4 rounded-md bg-indigo-300 shadow-lg max-w-full" src="images/bannerpls.png">
+  <!--
+    Advertisements by fellow users...
+
+    Clients may block these; in the end, they will anyways.
+
+    Assign ARIA role to make the process easier for an extension. All ads shall
+    start with "AD-" in the role.
+
+    Note that other users may pay for these impressions. Again, many people are
+    blocking ads.
+  -->
+  <span class="col-start-3 text-center p-4" role="AD-banner-side">
+    <%= @user_advertisement %>
   </span>
 </div>
