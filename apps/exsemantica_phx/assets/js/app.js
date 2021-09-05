@@ -81,8 +81,8 @@ window.contractCheck = function(username, password) {
 
 window.checkLogin = function() {
   contractCheck(
-    document.getElementById('email').innerText,
-    document.getElementById('password').innerText,
+    document.getElementById('email').value,
+    document.getElementById('password').value,
   );
 }
 

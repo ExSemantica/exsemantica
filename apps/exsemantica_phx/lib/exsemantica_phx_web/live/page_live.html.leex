@@ -1,14 +1,21 @@
-<section class="mt-4 p-4 rounded-l-md bg-indigo-300 shadow-lg">
-  <h1 class="text-xl"><b>Search interests and users</b></h1>
-  <br>
-  <%= f = form_for @search_query, "#", [phx_change: :suggest, phx_submit: :search] %>
-  <%= search_input f, :search_input, [class: "rounded-full shadow-lg p-2 bg-blue-200"] %>
-  </form>
-  <br>
-  <%= @search_results %>
-  <br>
-  <br>
-  <div class="grid grid-cols-3 gap-8 m-0">
-    <%= @search_pagey %>
-  </div>
-</section>
+<div class="grid grid-cols-3 gap-4">
+  <section class="col-start-1 col-span-2 mt-4 p-4 rounded-md bg-indigo-300 shadow-lg">
+    <h1 class="text-xl"><b>Search interests and users</b></h1>
+    <br>
+    <%= f = form_for @search_query, "#", [phx_change: :suggest, phx_submit: :search] %>
+    <%= search_input f, :search_input, [class: "rounded-full shadow-lg p-2 bg-blue-200 w-full"] %>
+    </form>
+    <br>
+    <%= @search_results %>
+    <br>
+    <br>
+    <div class="grid grid-cols-1 gap-8 m-0">
+      <%= @search_pagey %>
+    </div>
+  </section>
+
+  <span class="text-center p-4">
+    Advertisement
+    <img class="col-start-3 p-4 rounded-md bg-indigo-300 shadow-lg max-w-full" src="images/bannerpls.png">
+  </span>
+</div>

@@ -2,7 +2,7 @@ defmodule ExsemanticaPhx.Posting do
   require LdGraph2.Agent
 
   def new_interest(user, title, content) do
-    valid = Regex.match?(~r/[^A-Za-z0-9\_]/, title)
+    valid = not Regex.match?(~r/[^A-Za-z0-9\_]/, title)
 
     cond do
       valid ->
@@ -45,7 +45,7 @@ defmodule ExsemanticaPhx.Posting do
              String.starts_with?(email_ir0.host, ".") or
              String.ends_with?(email_ir0.host, "."))
 
-    username_valid = Regex.match?(~r/[^A-Za-z0-9\_]/, raw_username)
+    username_valid = not Regex.match?(~r/[^A-Za-z0-9\_]/, raw_username)
 
     cond do
       email_valid and username_valid ->
