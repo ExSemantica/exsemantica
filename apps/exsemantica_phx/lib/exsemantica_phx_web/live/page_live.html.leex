@@ -1,9 +1,9 @@
 <nav class="fixed h-16 w-full bg-white shadow-lg">
   <img class="float-left mt-2 ml-4 line-height-1 max-h-12" src="images/logo.png">
-  <%= live_component ExsemanticaPhxWeb.Components.PageHeader, users_mutable: false %>
+  <%= live_component ExsemanticaPhxWeb.Components.PageHeader, users_mutable: true %>
 </nav>
 <div class="pl-8 pr-8 pt-20 pb-16 flex items-center justify-center w-screen">
   <div class="grid grid-cols-3 gap-4 lg:w-2/3">
-    <%= live_component ExsemanticaPhxWeb.Components.PageMain, advertise: false, banner: "You're using a dev build of ExSemantica!", search_query: @search_query, search_pagey: @search_pagey, search_results: @search_results %>
+    <%= live_component ExsemanticaPhxWeb.Components.PageMain, advertise: false, banner: ~L"<b>Notice:</b> Registration is disabled.", search_query: @search_query, search_pagey: @search_pagey, search_results: @search_results %>
   </div>
 </div>

@@ -23,7 +23,10 @@ defmodule LdGraph2.Application do
     children = [
       # Starts a worker by calling: LdGraph2.Worker.start_link(arg)
       # {LdGraph2.Worker, arg}
+      {Redix, {Application.get_env(:ld_graph2, :endpoint), [name: LdGraph2.Redix]}}
     ]
+
+    :ok = Redix.Telemetry.attach_default_handler()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options

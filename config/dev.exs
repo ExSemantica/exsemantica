@@ -75,3 +75,5 @@ config :phoenix, :stacktrace_depth, 20
 
 # Initialize plugs at runtime for faster development compilation
 config :phoenix, :plug_init_mode, :runtime
+
+config :ld_graph2, endpoint: "redis://127.0.0.1"

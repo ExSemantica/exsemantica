@@ -1,18 +1,5 @@
 defmodule LdGraph2 do
   @moduledoc """
-  Documentation for `LdGraph2`.
+  `LdGraph2` stores graph-type interconnections on a key-value store like Redis.
   """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> LdGraph2.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
 end

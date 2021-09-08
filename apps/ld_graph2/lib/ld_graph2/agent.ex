@@ -28,30 +28,62 @@ defmodule LdGraph2.Agent do
 
   @spec start_link(list) :: {:error, any} | {:ok, pid}
   @doc """
-  Starts the agent, loading the specified graph off the `LdGraph2`
-  application's priv directory.
+  Starts the agent, loading the specified graph off a Redis store.
   """
-  def start_link([name, opts]) do
-    Agent.start_link(fn ->
-      store =
-        Path.join([
-          Application.app_dir(:ld_graph2, "priv"),
-          to_string(name) <> ".ld2"
-        ])
+  def start_link(kvstore_name: name, opts: opts) do
+    Agent.start_link(
+      fn ->
+        lname = "ld2." <> name
 
-      {:ok, table} =
-        case File.exists?(store) do
-          true -> :ets.file2tab(to_charlist(store), [])
-          false -> {:ok, :ets.new(name, [:ordered_set, :private])}
-        end
+        {:ok, llength} =
+          Redix.command(LdGraph2.Redix, [
+            "LLEN",
+            lname
+          ])
 
-      {_, graph} =
-        :ets.match_object(table, {:_, :_, :_})
-        |> Enum.map(&check_version!/1)
-        |> Enum.reduce({table, %LdGraph2.Graph{}}, &apply_delta/2)
+        {:ok, version_etf} = Redix.command(LdGraph2.Redix, ["GET", lname <> ".delta_versions"])
 
-      {name, table, graph}
-    end, opts)
+        {lname, if version_etf do
+          version = check_version(:erlang.binary_to_term(version_etf, [:safe]))
+
+          cond do
+            llength < 1 ->
+              # Of course Redix can't handle null queries.
+              # Why would you do a query like that?
+              %LdGraph2.Graph{}
+
+            version ->
+              {:ok, raw_graph} =
+                Redix.transaction_pipeline(
+                  LdGraph2.Redix,
+                  Stream.repeatedly(fn ->
+                    [
+                      "LMOVE",
+                      lname,
+                      lname,
+                      "LEFT",
+                      "RIGHT"
+                    ]
+                  end)
+                  |> Enum.take(llength)
+                )
+
+              raw_graph
+              |> Stream.map(&:erlang.binary_to_term(&1, [:safe]))
+              |> Enum.reduce(%LdGraph2.Graph{}, &apply_delta/2)
+
+            true ->
+              raise Version.InvalidVersionError,
+                    "Graph cache delta version isn't the " <>
+                      "supported version '#{@curr_db_ver}'"
+          end
+        else
+          Redix.command(LdGraph2.Redix, ["SET", lname <> ".delta_versions", :erlang.term_to_binary(@curr_db_ver)])
+          %LdGraph2.Graph{}
+        end}
+      end,
+      opts
+    )
   end
 
   @spec get(atom | pid | {atom, any} | {:via, atom, any}) :: any
@@ -59,14 +91,14 @@ defmodule LdGraph2.Agent do
   Gets the current graph data.
   """
   def get(agent) do
-    Agent.get(agent, fn {_name, _table, graph} ->
+    Agent.get(agent, fn {_name, graph} ->
       graph
     end)
   end
 
   @spec update(atom | pid | {atom, any} | {:via, atom, any}, any) :: :ok
   @doc """
-  Applies a transaction/delta to a `LdGraph2.Graph`, saving to disk.
+  Applies a transaction/delta to a `LdGraph2.Graph`, saving to Redis.
 
   ## Examples
   Listed below are a few examples of possible transactions. Each tuple is
@@ -79,52 +111,48 @@ defmodule LdGraph2.Agent do
   ```
   """
   def update(agent, transactions) do
-    Agent.update(agent, fn {name, table, graph} ->
-      {_, graph} =
-        transactions
-        |> Enum.reduce({table, graph}, &apply_delta/2)
-
-      :ets.tab2file(
-        table,
-        to_charlist(
-          Path.join([Application.app_dir(:ld_graph2, "priv"), to_string(name) <> ".ld2"])
-        ),
-        []
+    Agent.update(agent, fn {name, graph} ->
+      Redix.command(
+        LdGraph2.Redix,
+        List.flatten([
+          "RPUSH",
+          name,
+          transactions
+          |> Enum.map(&:erlang.term_to_binary/1)
+        ])
       )
 
-      {name, table, graph}
+      {name,
+       transactions
+       |> Enum.reduce(graph, &apply_delta/2)}
     end)
   end
 
-  defp check_version!({_index, major, content}) when major === @curr_db_ver do
-    content
+  defp check_version(major) when major === @curr_db_ver do
+    true
   end
 
-  defp check_version!({index, major, _content}) do
-    raise Version.InvalidVersionError,
-          "At graph ETS index #{index}: version '#{major}' isn't the " <>
-            "supported version '#{@curr_db_ver}'"
+  defp check_version(major) do
+    Logger.error(
+      "LdGraph2 delta storage encoder #{major} isn't supported. Yours is #{@curr_db_ver}."
+    )
+
+    false
   end
 
-  defp do_predelta(:"$end_of_table"), do: 1
-  defp do_predelta(verb), do: verb + 1
+  defp apply_delta(delta, graph) do
+    case delta do
+      {:add, what} ->
+        case what do
+          {:node, at} -> LdGraph2.Graph.put_node(graph, at)
+          {:edge, from, to} -> LdGraph2.Graph.put_edge(graph, from, to)
+        end
 
-  defp apply_delta(delta, {table, graph}) do
-    :ets.insert_new(table, {do_predelta(:ets.last(table)), @curr_db_ver, delta})
-
-    {table,
-     case delta do
-       {:add, what} ->
-         case what do
-           {:node, at} -> LdGraph2.Graph.put_node(graph, at)
-           {:edge, from, to} -> LdGraph2.Graph.put_edge(graph, from, to)
-         end
-
-       {:del, what} ->
-         case what do
-           {:node, at} -> LdGraph2.Graph.del_node(graph, at)
-           {:edge, from, to} -> LdGraph2.Graph.del_edge(graph, from, to)
-         end
-     end}
+      {:del, what} ->
+        case what do
+          {:node, at} -> LdGraph2.Graph.del_node(graph, at)
+          {:edge, from, to} -> LdGraph2.Graph.del_edge(graph, from, to)
+        end
+    end
   end
 end

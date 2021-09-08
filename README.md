@@ -6,12 +6,16 @@ Open-source microblogging for people with mutual interests.
 
 Builds upon [the previous eactivitypub](https://github.com/Chlorophytus/eactivitypub-legacy-0.2) repository.
 
+## How to use this?
+
+Have a PostgreSQL database for long data storage, and an AOF Redis store for graph nodes.
+
 ## TODOs
 
 - [ ] Actual API JSON-LD handling
 - [ ] Interests chaining interests
-- [ ] Graph database should be backupable
-- [ ] Graph database should not be in priv directory; try Mnesia or Redis
+- [x] Graph database should be backupable
+- [x] Graph database should not be in priv directory; try Mnesia or Redis
 - [x] Graph database
 - [ ] Microblogging posting in interests
 - [ ] T&S (Trust and Safety)

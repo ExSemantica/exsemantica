@@ -30,9 +30,11 @@ defmodule ExsemanticaPhx.Protect do
     ExsemanticaPhx.Repo.one(from(u in ExsemanticaPhx.Site.User, where: u.username == ^username))
   end
 
-  def find_contract(user) when not is_nil(user) do
+  def find_contract(user) when not is_nil(user.contract) do
     {%{kty: :jose_jwk_kty_rsa}, user.contract}
     |> JOSE.JWK.from_der()
     |> JOSE.JWK.to_public()
   end
+
+  def find_contract(_user), do: nil
 end
