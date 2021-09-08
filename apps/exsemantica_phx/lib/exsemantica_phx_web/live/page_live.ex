@@ -6,9 +6,7 @@ defmodule ExsemanticaPhxWeb.PageLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, %{search_query: :search, search_results: "", search_pagey: "", user_advertisement: ~E"""
-      <img class="p-4 rounded-md bg-indigo-300 shadow-lg max-w-full" src="images/bannerpls.png">
-      """, page_title: "Home"})}
+    {:ok, assign(socket, %{page_title: "Home", search_query: :search, search_results: "", search_pagey: ""})}
   end
 
   @impl true
@@ -109,6 +107,4 @@ defmodule ExsemanticaPhxWeb.PageLive do
     <%= handle_user(pagey_tail, html) %>
     """
   end
-
-
 end

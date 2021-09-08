@@ -10,38 +10,7 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
   </head>
   <body class="bg-blue-100">
-    <nav class="fixed h-16 w-full bg-white shadow-lg">
-      <img class="float-left mt-2 ml-4 line-height-1 max-h-12" src="images/logo.png">
-      <button class="float-right text-center m-2 p-3 w-1/6 bg-indigo-100 rounded-full">Log in</button>
-    </nav>
-  <div class="pl-8 pr-8 pt-20 pb-16 flex items-center justify-center" x-data="{ open: false }">
-    
-    <!-- <nav class="col-start-1 col-end-2" role="navigation">
-     <%= if function_exported?(Routes, :live_dashboard_path, 2) do %>
-        <%= button "Administrate", to: Routes.live_dashboard_path(@conn, :home), method: "get", class: "text-center mt-4 p-2 rounded-r-md bg-indigo-400 shadow-lg w-full hover:bg-indigo-500" %>
-      <% end %>
-      <template x-if="!loggedIn">
-        <button @click="open = true" class="text-center mt-4 p-2 rounded-r-md bg-indigo-400 shadow-lg w-full hover:bg-indigo-500">Log in</button><br>
-      </template>
-      <template x-if="loggedIn">
-        <button class="text-center mt-4 p-2 rounded-r-md bg-indigo-400 shadow-lg w-full hover:bg-indigo-500">Log out</button><br>
-      </template>
-    </nav> -->
     <%= @inner_content %>
-    <div x-show.transition="open" x-transition:enter-start="opacity-0" x-transition:leave-end="opacity-0" x-transition:enter-end="opacity-25" class="absolute w-screen h-screen opacity-25 bg-purple-500"></div>
-    <div x-show="open" class="absolute flex w-screen h-screen justify-center items-center">
-      <span @click.away="open = false" class="bg-purple-400 rounded-xl p-8 shadow-xl w-1/2 items-center">
-        <div id="motd" class="text-center w-full rounded-lg shadow-lg bg-red-500"></div><br>
-        <form>
-          <label class="m-2" for="email">Email</label><br>
-          <input id="email" class="w-full rounded-full shadow-lg p-2 bg-blue-100" type="email"><br>
-          <label class="m-2" for="password">Password</label><br>
-          <input id="password" class="w-full rounded-full shadow-lg p-2 bg-blue-100" type="password"><br><br>
-          <button type="button" class="w-full rounded-full shadow-lg p-4 bg-indigo-400 hover:bg-indigo-500" onclick="checkLogin()">Log in</button>
-        </form>
-      </span>
-    </div>
-  </div>
-  <footer class="text-sm text-center"><i>ExSemantica by Chlorophytus ~ <u><a href="https://github.com/Chlorophytus/exsemantica">Fork me on GitHub!</a></u></i></footer>
+    <footer class="text-sm text-center"><i>ExSemantica v<%= Application.spec(:exsemantica_phx, :vsn) %> by Chlorophytus ~ <u><a href="https://github.com/Chlorophytus/exsemantica">Fork me on GitHub!</a></u></i></footer>
   </body>
 </html>

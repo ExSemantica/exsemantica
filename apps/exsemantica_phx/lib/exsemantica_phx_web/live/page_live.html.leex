@@ -1,31 +1,9 @@
-<div class="grid grid-cols-3 gap-4">
-  <section class="col-start-1 col-span-2 mt-4 p-4 rounded-md bg-indigo-300 shadow-lg" role="search">
-    <h1 class="text-xl"><b>Search interests and users</b></h1>
-    <br>
-    <%= f = form_for @search_query, "#", [phx_change: :suggest, phx_submit: :search] %>
-    <%= search_input f, :search_input, [class: "rounded-full shadow-lg p-2 bg-blue-200 w-full"] %>
-    </form>
-    <br>
-    <%= @search_results %>
-    <br>
-    <br>
-    <div class="grid grid-cols-1 gap-8 m-0">
-      <%= @search_pagey %>
-    </div>
-  </section>
-
-  <!--
-    Advertisements by fellow users...
-
-    Clients may block these; in the end, they will anyways.
-
-    Assign ARIA role to make the process easier for an extension. All ads shall
-    start with "AD-" in the role.
-
-    Note that other users may pay for these impressions. Again, many people are
-    blocking ads.
-  -->
-  <span class="col-start-3 text-center p-4" role="AD-banner-side">
-    <%= @user_advertisement %>
-  </span>
+<nav class="fixed h-16 w-full bg-white shadow-lg">
+  <img class="float-left mt-2 ml-4 line-height-1 max-h-12" src="images/logo.png">
+  <%= live_component ExsemanticaPhxWeb.Components.PageHeader, user_mutability: :login_open %>
+</nav>
+<div class="pl-8 pr-8 pt-20 pb-16 flex items-center justify-center w-screen">
+  <div class="grid grid-cols-3 gap-4 lg:w-2/3">
+    <%= live_component ExsemanticaPhxWeb.Components.PageMain, advertise: false, banner: "You're using a dev build of ExSemantica!", search_query: @search_query, search_pagey: @search_pagey, search_results: @search_results %>
+  </div>
 </div>

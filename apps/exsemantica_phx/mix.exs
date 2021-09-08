@@ -4,7 +4,7 @@ defmodule ExsemanticaPhx.MixProject do
   def project do
     [
       app: :exsemantica_phx,
-      version: "0.1.0",
+      version: "0.5.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
