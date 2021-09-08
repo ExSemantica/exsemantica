@@ -39,14 +39,14 @@ defmodule ExsemanticaPhxWeb.PageLive do
         "#" -> 
           prequery = "%" <> String.replace_prefix(nonblank, "#", "") <> "%"
           {:noreply, assign(socket, %{search_results: ~E"""
-            <i>Query for interests containing <b>"<%= nonblank |> String.replace_prefix("#", "") %>"</b> returned <b><%= prequery |> ExsemanticaPhx.Search.interests([], :count) %></b> hits.<br>Results from <b><%= DateTime.utc_now |> DateTime.truncate(:second) %></b> shown.</i>
+            <i>Query for interests containing <b>"<%= nonblank |> String.replace_prefix("#", "") %>"</b> returned <b><%= prequery |> ExsemanticaPhx.Search.interests([], :count) %></b> hits.<br>Results from <b><%= DateTime.utc_now |> DateTime.truncate(:second) %></b> UTC shown.</i>
             """,
             search_pagey: prequery |> ExsemanticaPhx.Search.interests([], :query) |> Enum.take(15) |> handle_interest, page_title: "Interest Query: '#{nonblank}'"})}
              
         "@" ->
           prequery = "%" <> String.replace_prefix(nonblank, "@", "") <> "%"
           {:noreply, assign(socket, %{search_results: ~E"""
-            <i>Query for usernames containing <b>"<%= nonblank |> String.replace_prefix("@", "") %>"</b> returned <b><%= prequery |> ExsemanticaPhx.Search.users([], :count) %></b> hits.<br>Results from <b><%= DateTime.utc_now |> DateTime.truncate(:second) %></b>.</i>
+            <i>Query for usernames containing <b>"<%= nonblank |> String.replace_prefix("@", "") %>"</b> returned <b><%= prequery |> ExsemanticaPhx.Search.users([], :count) %></b> hits.<br>Results from <b><%= DateTime.utc_now |> DateTime.truncate(:second) %></b> UTC shown.</i>
             """,
             search_pagey: prequery |> ExsemanticaPhx.Search.users([], :query) |> Enum.take(15) |> handle_user, page_title: "User Query: '#{nonblank}'"})}
         _other -> {:noreply, assign(socket, %{search_results: ~E"""
