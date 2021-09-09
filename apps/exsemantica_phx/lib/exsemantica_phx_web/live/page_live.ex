@@ -6,9 +6,12 @@ defmodule ExsemanticaPhxWeb.PageLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, %{page_title: "Home", search_query: :search, search_results: "", search_pagey: ""})}
+    {:ok, assign(socket, %{page_title: "Home", search_query: :search, search_results: "", search_pagey: "", show: false, login_form: :login_req, login_response: nil})}
   end
 
+  # ============================================================================
+  # Search bar handler
+  # ============================================================================
   @impl true
   def handle_event("suggest", %{"search" => query}, socket) do
     case query do
@@ -55,8 +58,48 @@ defmodule ExsemanticaPhxWeb.PageLive do
       end
     end
   end
+  # ============================================================================
+  # Menu Handling
+  # ============================================================================
+  @impl true
+  def handle_event("menu", _, socket) do
+    {:noreply, assign(socket, %{show: true})}
+  end
+  @impl true
+  def handle_event("go_away", _, socket) do
+    {:noreply, assign(socket, %{show: false})}
+  end
 
- # Interests
+  @impl true
+  def handle_event("do_login", %{"login_req" => %{"username" => ""}}, socket) do
+              {:noreply, assign(socket, %{login_response: ~E"""
+              <div class="text-center rounded-lg m-auto bg-red-500 p-1 mb-3 shadow-xl w-full">You need to specify a username to log in or register with.</div> 
+    """})}
+  end
+
+  @impl true
+  def handle_event("do_login", %{"login_req" => %{"username" => username}}, socket) do
+    user = ExsemanticaPhx.Protect.find_user(username)
+    contract = user |> ExsemanticaPhx.Protect.find_contract()
+    case {user, contract} do 
+      {nil, _} ->
+    {:noreply, assign(socket, %{login_response: ~E"""
+              <div class="text-center rounded-lg m-auto bg-red-500 p-1 mb-3 shadow-xl w-full"><b>@<%= username %></b> does not exist. Unimplemented.</div>
+      """})}
+      {_u, nil} ->
+    {:noreply, assign(socket, %{login_response: ~E"""
+                <div class="text-center rounded-lg m-auto bg-red-500 p-1 mb-3 shadow-xl w-full"><b>@<%= username %></b> has not validated their e-mail. Unimplemented.</div>
+      """})}
+      {_u, _c} ->
+    {:noreply, assign(socket, %{login_response: ~E"""
+                <div class="text-center rounded-lg m-auto bg-red-500 p-1 mb-3 shadow-xl w-full">Logging in is unimplemented.</div>
+      """})}
+    end
+  end
+  # ============================================================================
+  # Private Functions
+  # ============================================================================
+  # Interests
   defp handle_interest(pagey), do: handle_interest(pagey, "")
 
   defp handle_interest([pagey_head | pagey_tail], html) do

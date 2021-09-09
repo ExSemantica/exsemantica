@@ -4,9 +4,7 @@ defmodule ExsemanticaPhxWeb.Components.PageHeader do
   @impl true
   def render(assigns) do 
     ~L"""
-    <%= if @users_mutable do %>
-      <button class="float-right text-center m-2 p-3 w-1/6 bg-indigo-100 rounded-full">Log in</button>
-    <% end %>
+    <button phx-click="menu" class="float-right text-center m-2 p-3 w-1/6 bg-indigo-100 rounded-full hover:bg-indigo-200">Login</button>
     """
   end
 end
