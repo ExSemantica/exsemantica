@@ -2,6 +2,10 @@
 
 Open-source microblogging for people with mutual interests.
 
+## Hacktoberfest
+
+Yes, I am open for collaboration with other fellow programmers! Have fun!
+
 ## Guidance
 
 Builds upon [the previous eactivitypub](https://github.com/Chlorophytus/eactivitypub-legacy-0.2) repository.
