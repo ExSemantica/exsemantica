@@ -9,6 +9,7 @@ defmodule ExsemanticaPhx.Repo.Migrations.CreateSiteUsers do
       add :email, :text
       add :password, :binary
       add :contract, :binary
+      add :privmask, :binary
 
       timestamps()
     end

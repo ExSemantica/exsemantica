@@ -73,7 +73,7 @@ defmodule ExsemanticaPhxWeb.PageLive do
   @impl true
   def handle_event("do_login", %{"login_req" => %{"username" => ""}}, socket) do
               {:noreply, assign(socket, %{login_response: ~E"""
-              <div class="text-center rounded-lg m-auto bg-red-500 p-1 mb-3 shadow-xl w-full">You need to specify a username to log in or register with.</div> 
+              <div class="text-center rounded-lg m-auto bg-red-500 p-1 mb-3 shadow-xl w-full">You need to specify a username to log into.</div> 
     """})}
   end
 
@@ -116,8 +116,8 @@ defmodule ExsemanticaPhxWeb.PageLive do
 
     ~E"""
     <div class="rounded-lg bg-green-300 hover:bg-green-400 shadow-lg w-full h-full p-4">
-    <h1 class="text-sm"><b>#<%= utitle %></b></h1>
-    <p class="text-xs"><%= ucontent %></p><br><br>
+      <h1 class="text-sm"><b>#<%= utitle %></b></h1><br>
+    <p class="text-xs"><%= ExsemanticaPhx.Sanitize.truncate_string(ucontent, 200) %></p><br>
     <i><p class="text-xs">Last modified <%= dspanm %> ago</p></i>
     <i><p class="text-xs">Created <%= dspanc %> ago by @<%= iuser %></p></i>
     </div>
@@ -143,11 +143,12 @@ defmodule ExsemanticaPhxWeb.PageLive do
 
     ~E"""
     <div class="rounded-lg bg-yellow-300 hover:bg-yellow-400 shadow-lg w-full h-full p-4">
-    <h1 class="text-sm"><b>@<%= uname %></b></h1>
-    <p class="text-xs"><%= ubio %></p><br><br>
+    <h1 class="text-sm"><b>@<%= uname %></b></h1><br>
+    <p class="text-xs"><%= ExsemanticaPhx.Sanitize.truncate_string(ubio, 200) %></p><br>
     <i><p class="text-xs">Registered <%= dspan %> ago</p></i>
     </div>
     <%= handle_user(pagey_tail, html) %>
     """
   end
+
 end

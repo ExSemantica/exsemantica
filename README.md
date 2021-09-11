@@ -14,6 +14,11 @@ Builds upon [the previous eactivitypub](https://github.com/Chlorophytus/eactivit
 
 Have a PostgreSQL database for long data storage, and an AOF Redis store for graph nodes.
 
+```shell
+$ docker run --name exsemantica-postgres -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
+$ docker run --name exsemantica-redis -p 6379:6379 -d redis redis-server --appendonly yes
+```
+
 ## TODOs
 
 - [ ] Actual API JSON-LD handling
@@ -24,3 +29,5 @@ Have a PostgreSQL database for long data storage, and an AOF Redis store for gra
 - [ ] Microblogging posting in interests
 - [ ] T&S (Trust and Safety)
 - [ ] Authentication probably shouldn't be RSA 4096, puts too much burden on the server.
+- [ ] ejabberd or IRC protocol based chat system
+- 

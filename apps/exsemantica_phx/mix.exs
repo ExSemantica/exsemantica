@@ -53,6 +53,7 @@ defmodule ExsemanticaPhx.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:joken, "~> 2.4"},
+      {:email_checker, "~> 0.2.1"},
 
       {:extimeago, in_umbrella: true},
       {:ld_graph2, in_umbrella: true}

@@ -1,68 +1,118 @@
 defmodule ExsemanticaPhx.Posting do
   require LdGraph2.Agent
+  import Ecto.Query
 
   def new_interest(user, title, content) do
-    valid = not Regex.match?(~r/[^A-Za-z0-9\_]/, title)
+    valid = ExsemanticaPhx.Sanitize.valid_interest(title)
 
     cond do
       valid ->
-        ExsemanticaPhx.Repo.transaction(fn ->
-          max_id = ExsemanticaPhx.Search.max_id() + 1
+        max_id = ExsemanticaPhx.Search.max_id() + 1
 
-          ExsemanticaPhx.Repo.insert(%ExsemanticaPhx.Site.Post{
-            content: content,
-            title: title,
-            is_interest: true,
-            node_corresponding: max_id,
-            poster: user
-          })
+        {:ok, _} =
+          ExsemanticaPhx.Repo.transaction(fn ->
+            response = ExsemanticaPhx.Repo.insert(%ExsemanticaPhx.Site.Post{
+              content: content,
+              title: title,
+              is_interest: true,
+              node_corresponding: max_id,
+              poster: user
+            })
 
-          LdGraph2.Agent.update(ExsemanticaPhx.GraphStore, [
-            {:add, {:node, max_id}},
-            {:add, {:edge, user, max_id}}
-          ])
-        end)
+            :ok = LdGraph2.Agent.update(ExsemanticaPhx.GraphStore, [
+              {:add, {:node, max_id}},
+              {:add, {:edge, user, max_id}}
+            ])
+
+            response
+          end)
+
+        {:ok, max_id}
 
       true ->
         nil
     end
   end
 
-  def new_user(raw_username, raw_email, hash) do
-    email_valid = not Regex.match?(~r/\//, raw_email)
+  def update_bio(user_nodeid, biography) do
+    ExsemanticaPhx.Repo.one(
+      from(u in ExsemanticaPhx.Site.User, where: u.node_corresponding == ^user_nodeid)
+    )
+    |> Ecto.Changeset.change(biography: biography)
+    |> ExsemanticaPhx.Repo.update()
+  end
 
-    email_ir0 =
-      cond do
-        email_valid -> URI.parse("//" <> raw_email)
-        true -> nil
-      end
+  def update_interest(post_nodeid, interest_text) do
+    ExsemanticaPhx.Repo.one(
+      from(p in ExsemanticaPhx.Site.Post,
+        where: p.node_corresponding == ^post_nodeid and p.is_interest
+      )
+    )
+    |> Ecto.Changeset.change(content: interest_text)
+    |> ExsemanticaPhx.Repo.update()
+  end
 
-    email_valid =
-      not (Regex.match?(~r/\@/, email_ir0.userinfo) or
-             Regex.match?(~r/\@/, email_ir0.host) or
-             String.starts_with?(email_ir0.userinfo, ".") or
-             String.ends_with?(email_ir0.userinfo, ".") or
-             String.starts_with?(email_ir0.host, ".") or
-             String.ends_with?(email_ir0.host, "."))
+  @doc """
+  Add a user without an e-mail and password. They are only for testing.
 
-    username_valid = not Regex.match?(~r/[^A-Za-z0-9\_]/, raw_username)
+  Not to be used in production.
+  """
+  def new_test_user(raw_username) do
+    username_valid = ExsemanticaPhx.Sanitize.valid_username(raw_username)
 
-    cond do
-      email_valid and username_valid ->
+    if username_valid do
+      max_id = ExsemanticaPhx.Search.max_id() + 1
+
+      {:ok, _} =
         ExsemanticaPhx.Repo.transaction(fn ->
-          max_id = ExsemanticaPhx.Search.max_id() + 1
-
-          ExsemanticaPhx.Repo.insert(%ExsemanticaPhx.Site.User{
+          response = ExsemanticaPhx.Repo.insert(%ExsemanticaPhx.Site.User{
             username: String.downcase(raw_username),
-            email: raw_email,
-            password: hash,
+            biography: "",
             node_corresponding: max_id
           })
 
-          LdGraph2.Agent.update(ExsemanticaPhx.GraphStore, [
+          :ok = LdGraph2.Agent.update(ExsemanticaPhx.GraphStore, [
             {:add, {:node, max_id}}
           ])
+
+          response
         end)
+
+      {:ok, max_id}
+    end
+  end
+
+  @doc """
+  Add a user with an e-mail and password.
+
+  This is production-called code, and may send network activity. Not to be used
+  in testing/dev.
+  """
+  def new_user(raw_username, raw_email, hash) do
+    email_valid = ExsemanticaPhx.Sanitize.valid_email(raw_email)
+    username_valid = ExsemanticaPhx.Sanitize.valid_username(raw_username)
+
+    cond do
+      email_valid and username_valid ->
+        max_id = ExsemanticaPhx.Search.max_id() + 1
+
+        {:ok, _} =
+          ExsemanticaPhx.Repo.transaction(fn ->
+            response = ExsemanticaPhx.Repo.insert(%ExsemanticaPhx.Site.User{
+              username: String.downcase(raw_username),
+              email: raw_email,
+              password: hash,
+              node_corresponding: max_id
+            })
+
+            :ok = LdGraph2.Agent.update(ExsemanticaPhx.GraphStore, [
+              {:add, {:node, max_id}}
+            ])
+
+            response
+          end)
+
+        {:ok, max_id}
 
       true ->
         nil
