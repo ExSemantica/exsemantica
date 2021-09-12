@@ -4,7 +4,7 @@ defmodule ExsemanticaPhx.MixProject do
   def project do
     [
       app: :exsemantica_phx,
-      version: "0.6.0",
+      version: "0.7.0",
       build_path: "../../_build",
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
@@ -55,6 +55,7 @@ defmodule ExsemanticaPhx.MixProject do
       {:joken, "~> 2.4"},
       {:email_checker, "~> 0.2.1"},
 
+      {:exsemantica_api, in_umbrella: true},
       {:extimeago, in_umbrella: true},
       {:ld_graph2, in_umbrella: true}
     ]
