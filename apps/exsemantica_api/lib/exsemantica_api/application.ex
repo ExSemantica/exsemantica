@@ -10,7 +10,8 @@ defmodule ExsemanticaApi.Application do
     children = [
       # Starts a worker by calling: ExsemanticaApi.Worker.start_link(arg)
       # {ExsemanticaApi.Worker, arg}
-      {ExsemanticaApi.Unimplemented, name: ExsemanticaApi.Endpoint.Unimplemented}
+      {ExsemanticaApi.Interests, name: ExsemanticaApi.Endpoint.Interests},
+      {ExsemanticaApi.Users, name: ExsemanticaApi.Endpoint.Users}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

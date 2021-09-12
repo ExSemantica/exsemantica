@@ -23,7 +23,8 @@ defmodule ExsemanticaPhxWeb.Router do
   scope "/api" do
     pipe_through [:api]
 
-    forward "/v0", ExsemanticaPhxWeb.ApiV0.Plug
+    forward "/v0/interests", ExsemanticaPhxWeb.ApiV0.Interests
+    forward "/v0/users", ExsemanticaPhxWeb.ApiV0.Users
   end
 
   # Other scopes may use custom stacks.
