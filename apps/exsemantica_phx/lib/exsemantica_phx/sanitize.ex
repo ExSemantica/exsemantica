@@ -1,13 +1,13 @@
 defmodule ExsemanticaPhx.Sanitize do
-  def valid_interest(title) do
+  def valid_interest?(title) do
     not Regex.match?(~r/[^A-Za-z0-9\_]/, title)
   end
 
-  def valid_username(username) do
+  def valid_username?(username) do
     not Regex.match?(~r/[^A-Za-z0-9\_]/, username)
   end
 
-  def valid_email(email) do
+  def valid_email?(email) do
     # Regular filtering right now.
     if EmailChecker.valid?(email) do
       # Abuse testing, this e-mail is valid but a script kiddie may be abusing

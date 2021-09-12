@@ -3,7 +3,7 @@ defmodule ExsemanticaPhx.Posting do
   import Ecto.Query
 
   def new_interest(user, title, content) do
-    valid = ExsemanticaPhx.Sanitize.valid_interest(title)
+    valid = ExsemanticaPhx.Sanitize.valid_interest?(title)
 
     cond do
       valid ->
@@ -58,7 +58,7 @@ defmodule ExsemanticaPhx.Posting do
   Not to be used in production.
   """
   def new_test_user(raw_username) do
-    username_valid = ExsemanticaPhx.Sanitize.valid_username(raw_username)
+    username_valid = ExsemanticaPhx.Sanitize.valid_username?(raw_username)
 
     if username_valid do
       max_id = ExsemanticaPhx.Search.max_id() + 1
@@ -89,8 +89,8 @@ defmodule ExsemanticaPhx.Posting do
   in testing/dev.
   """
   def new_user(raw_username, raw_email, hash) do
-    email_valid = ExsemanticaPhx.Sanitize.valid_email(raw_email)
-    username_valid = ExsemanticaPhx.Sanitize.valid_username(raw_username)
+    email_valid = ExsemanticaPhx.Sanitize.valid_email?(raw_email)
+    username_valid = ExsemanticaPhx.Sanitize.valid_username?(raw_username)
 
     cond do
       email_valid and username_valid ->

@@ -29,5 +29,4 @@ $ docker run --name exsemantica-redis -p 6379:6379 -d redis redis-server --appen
 - [ ] Microblogging posting in interests
 - [ ] T&S (Trust and Safety)
 - [ ] Authentication probably shouldn't be RSA 4096, puts too much burden on the server.
-- [ ] ejabberd or IRC protocol based chat system
-- 
+- [ ] ejabberd or IRC protocol based chat system 
