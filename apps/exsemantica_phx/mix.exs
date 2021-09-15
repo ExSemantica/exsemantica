@@ -55,7 +55,6 @@ defmodule ExsemanticaPhx.MixProject do
       {:joken, "~> 2.4"},
       {:email_checker, "~> 0.2.1"},
 
-      {:exsemantica_api, in_umbrella: true},
       {:extimeago, in_umbrella: true},
       {:ld_graph2, in_umbrella: true}
     ]

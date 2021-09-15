@@ -16,9 +16,12 @@ defmodule ExsemanticaPhx.Application do
       # Start the Endpoint (http/https)
       ExsemanticaPhxWeb.Endpoint,
       # Start the Graph Database
-      {LdGraph2.Agent, [kvstore_name: "exsemantica", opts: [name: ExsemanticaPhx.GraphStore]]}
+      {LdGraph2.Agent, [kvstore_name: "exsemantica", opts: [name: ExsemanticaPhx.GraphStore]]},
       # Start a worker by calling: ExsemanticaPhx.Worker.start_link(arg)
       # {ExsemanticaPhx.Worker, arg}
+      #
+      {ExsemanticaApi.Interests, name: ExsemanticaApi.Endpoint.Interests},
+      {ExsemanticaApi.Users, name: ExsemanticaApi.Endpoint.Users},
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
