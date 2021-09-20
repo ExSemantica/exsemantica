@@ -3,6 +3,7 @@ defmodule ExsemanticaPhxWeb.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
+    plug ExsemanticaApi.RateLimited
     plug :fetch_session
     plug :fetch_live_flash
     plug :put_root_layout, {ExsemanticaPhxWeb.LayoutView, :root}
@@ -12,6 +13,7 @@ defmodule ExsemanticaPhxWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug ExsemanticaApi.RateLimited
   end
 
   scope "/", ExsemanticaPhxWeb do

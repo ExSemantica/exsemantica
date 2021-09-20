@@ -19,9 +19,7 @@ defmodule ExsemanticaPhx.Application do
       {LdGraph2.Agent, [kvstore_name: "exsemantica", opts: [name: ExsemanticaPhx.GraphStore]]},
       # Start a worker by calling: ExsemanticaPhx.Worker.start_link(arg)
       # {ExsemanticaPhx.Worker, arg}
-      #
-      {ExsemanticaApi.Interests, name: ExsemanticaApi.Endpoint.Interests},
-      {ExsemanticaApi.Users, name: ExsemanticaApi.Endpoint.Users},
+      ExsemanticaApi.RateLimitCache
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
