@@ -1,7 +1,7 @@
 defmodule ExsemanticaApi.RateLimitCache do
   require Logger
   use GenServer
-  @brutal_limit 600
+  @brutal_limit 3600
 
   # ============================================================================
   # Behavioral Callbacks
