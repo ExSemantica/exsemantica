@@ -13,13 +13,21 @@ defmodule ExsemanticaPhxWeb.ApiV0.Login do
 
     {status, response} =
       if valid do
-        unverified = uquery |> ExsemanticaPhx.Protect.find_contract() |> is_nil
+        unverified =
+          uquery
+          |> ExsemanticaPhx.Protect.find_user()
+          |> ExsemanticaPhx.Protect.find_contract()
+          |> is_nil
 
         if unverified do
           {:ok, json} =
             Jason.encode(%{e: true, msg: "This user has not verified their registration."})
 
           {200, json}
+        else
+          {:ok, json} = Jason.encode(%{e: true, msg: "Unimplemented."})
+
+          {501, json}
         end
       else
         {:ok, whoops} =

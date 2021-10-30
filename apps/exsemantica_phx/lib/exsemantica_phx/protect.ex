@@ -11,18 +11,36 @@ defmodule ExsemanticaPhx.Protect do
 
     cond do
       is_nil(user_struct) ->
-        nil
+        {:error, :enoent}
 
       true ->
         jwk = JOSE.JWK.generate_key({:rsa, @paranoia})
 
         {_kty, bin} = JOSE.JWK.to_der(jwk)
 
-        ExsemanticaPhx.Repo.update(
-          Ecto.Changeset.change(user_struct, %{contract: bin})
-        )
+        Ecto.Changeset.change(user_struct, %{contract: bin})
+        |> ExsemanticaPhx.Repo.update()
 
-        jwk |> JOSE.JWK.to_public()
+        {:ok, jwk |> JOSE.JWK.to_public()}
+    end
+  end
+
+  def remove_contract(username) do
+    user_struct =
+      ExsemanticaPhx.Repo.one(
+        from(u in ExsemanticaPhx.Site.User,
+          where: u.username == ^username and not is_nil(u.contract)
+        )
+      )
+
+    cond do
+      is_nil(user_struct) ->
+        {:error, :enoent}
+
+      true ->
+        Ecto.Changeset.change(user_struct, %{contract: nil})
+        |> ExsemanticaPhx.Repo.update()
+        :ok
     end
   end
 
