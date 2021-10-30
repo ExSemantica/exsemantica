@@ -10,7 +10,7 @@ defmodule ExSemantica.MixProject do
       releases: [
         exsemantica: [
           include_executables_for: [:unix],
-          applications: [ 
+          applications: [
             runtime_tools: :permanent,
             exsemantica_phx: :permanent,
             ld_graph2: :permanent,

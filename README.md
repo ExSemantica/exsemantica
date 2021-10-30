@@ -19,6 +19,11 @@ $ docker run --name exsemantica-postgres -p 5432:5432 -e POSTGRES_PASSWORD=postg
 $ docker run --name exsemantica-redis -p 6379:6379 -d redis redis-server --appendonly yes
 ```
 
+If you want to fetch packages for frontend, use NodeJS NPM.
+```shell
+$ npm install tailwindcss postcss autoprefixer topbar phoenix phoenix_live_view phoenix_html jsrsasign jsrsasign-util --save-dev
+```
+
 ## TODOs
 
 - [ ] Actual API JSON-LD handling

@@ -16,20 +16,22 @@ config :exsemantica_phx, ExsemanticaPhx.Repo,
 # watchers to your application. For example, we use it
 # with webpack to recompile .js and .css sources.
 config :exsemantica_phx, ExsemanticaPhxWeb.Endpoint,
-  http: [port: 4000],
-  debug_errors: true,
-  code_reloader: true,
-  check_origin: false,
+http: [port: 4000],
+debug_errors: true,
+code_reloader: true,
+check_origin: false,
   watchers: [
-    node: [
-      "node_modules/webpack/bin/webpack.js",
-      "--mode",
-      "development",
-      "--watch-stdin",
+    # Start the esbuild watcher by calling Esbuild.install_and_run(:default, args)
+    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
+    npx: [
+      "tailwindcss",
+      "--input=css/app.css",
+      "--output=../priv/static/assets/app.css",
+      "--postcss",
+      "--watch",
       cd: Path.expand("../apps/exsemantica_phx/assets", __DIR__)
     ]
-  ],
-  server: true
+  ]
 
 # ## SSL Support
 #

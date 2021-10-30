@@ -3,8 +3,8 @@
   <%= live_component ExsemanticaPhxWeb.Components.PageHeader, users_mutable: true %>
 </nav>
 <div class="pl-8 pr-8 pt-20 pb-16 flex items-center justify-center w-screen">
-  <div class="grid grid-cols-3 gap-4 w-full md:w-2/3 xl:w-1/3">
-    <%= live_component ExsemanticaPhxWeb.Components.PageMain, advertise: false, banner: ~L"<b>Notice:</b> Registration is disabled.", search_query: @search_query, search_pagey: @search_pagey, search_results: @search_results %>
+  <div class="grid grid-cols-3 gap-4 w-full lg:w-2/3 2xl:w-1/3">
+    <%= live_component ExsemanticaPhxWeb.Components.PageMain, advertise: false, banner: ~H"<b>Notice:</b> Registration is disabled.", search_query: @search_query, search_pagey: @search_pagey, search_results: @search_results %>
   </div>
 </div>
 <%= live_component ExsemanticaPhxWeb.Components.PageDialog, show: @show, login_form: @login_form, login_response: @login_response %>

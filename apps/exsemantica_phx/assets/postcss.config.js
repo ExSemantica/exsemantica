@@ -1,6 +1,10 @@
 module.exports = {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  }
-}
+  mode: 'jit',
+  purge: [
+    './js/**/*.js',
+    '../lib/*_web/**/*.*ex'
+  ],
+  theme: {},
+  variants: {},
+  plugins: []
+};
