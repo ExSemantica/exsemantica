@@ -1,4 +1,4 @@
-defmodule ExSemantica.MixProject do
+defmodule ExsemanticaUmbrella.MixProject do
   use Mix.Project
 
   def project do

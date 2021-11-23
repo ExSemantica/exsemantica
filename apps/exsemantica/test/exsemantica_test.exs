@@ -1,8 +1,6 @@
 defmodule ExsemanticaTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest Exsemantica
 
-  test "greets the world" do
-    assert Exsemantica.hello() == :world
-  end
+  # TODO
 end

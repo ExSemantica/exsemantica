@@ -29,6 +29,10 @@ defmodule Exsemantica.MixProject do
       # RATIONALE: Needed for the HTTP endpoints
       {:plug_cowboy, "~> 2.5"},
 
+      # RATIONALE: Needed for the HTTP API
+      {:absinthe, "~> 1.6"},
+      {:absinthe_plug, "~> 1.5"},
+
       # All dependencies here are already in the project :P
       {:cloudclone, in_umbrella: true},
       {:extimeago, in_umbrella: true},
