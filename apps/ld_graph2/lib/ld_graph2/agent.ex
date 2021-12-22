@@ -43,44 +43,50 @@ defmodule LdGraph2.Agent do
 
         {:ok, version_etf} = Redix.command(LdGraph2.Redix, ["GET", lname <> ".delta_versions"])
 
-        {lname, if version_etf do
-          version = check_version(:erlang.binary_to_term(version_etf, [:safe]))
+        {lname,
+         if version_etf do
+           version = check_version(:erlang.binary_to_term(version_etf, [:safe]))
 
-          cond do
-            llength < 1 ->
-              # Of course Redix can't handle null queries.
-              # Why would you do a query like that?
-              %LdGraph2.Graph{}
+           cond do
+             llength < 1 ->
+               # Of course Redix can't handle null queries.
+               # Why would you do a query like that?
+               %LdGraph2.Graph{}
 
-            version ->
-              {:ok, raw_graph} =
-                Redix.transaction_pipeline(
-                  LdGraph2.Redix,
-                  Stream.repeatedly(fn ->
-                    [
-                      "LMOVE",
-                      lname,
-                      lname,
-                      "LEFT",
-                      "RIGHT"
-                    ]
-                  end)
-                  |> Enum.take(llength)
-                )
+             version ->
+               {:ok, raw_graph} =
+                 Redix.transaction_pipeline(
+                   LdGraph2.Redix,
+                   Stream.repeatedly(fn ->
+                     [
+                       "LMOVE",
+                       lname,
+                       lname,
+                       "LEFT",
+                       "RIGHT"
+                     ]
+                   end)
+                   |> Enum.take(llength)
+                 )
 
-              raw_graph
-              |> Stream.map(&:erlang.binary_to_term(&1, [:safe]))
-              |> Enum.reduce(%LdGraph2.Graph{}, &apply_delta/2)
+               raw_graph
+               |> Stream.map(&:erlang.binary_to_term(&1, [:safe]))
+               |> Enum.reduce(%LdGraph2.Graph{}, &apply_delta/2)
 
-            true ->
-              raise Version.InvalidVersionError,
-                    "Graph cache delta version isn't the " <>
-                      "supported version '#{@curr_db_ver}'"
-          end
-        else
-          Redix.command(LdGraph2.Redix, ["SET", lname <> ".delta_versions", :erlang.term_to_binary(@curr_db_ver)])
-          %LdGraph2.Graph{}
-        end}
+             true ->
+               raise Version.InvalidVersionError,
+                     "Graph cache delta version isn't the " <>
+                       "supported version '#{@curr_db_ver}'"
+           end
+         else
+           Redix.command(LdGraph2.Redix, [
+             "SET",
+             lname <> ".delta_versions",
+             :erlang.term_to_binary(@curr_db_ver)
+           ])
+
+           %LdGraph2.Graph{}
+         end}
       end,
       opts
     )

@@ -38,9 +38,13 @@ defmodule Cloudclone.RateLimited do
     encoded_ip =
       case conn.remote_ip do
         # IPv4
-        {i0, i1, i2, i3} -> <<i0, i1, i2, i3>>
+        {i0, i1, i2, i3} ->
+          <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, i0, i1, i2, i3>>
+
         # IPv6
-        {i0, i1, i2, i3, i4, i5, i6, i7} -> <<i0, i1, i2, i3, i4, i5, i6, i7>>
+        {i0, i1, i2, i3, i4, i5, i6, i7} ->
+          <<i0::big-16, i1::big-16, i2::big-16, i3::big-16, i4::big-16, i5::big-16, i6::big-16,
+            i7::big-16>>
       end
 
     my_bucket = Base.url_encode64(:crypto.hash(:sha256, encoded_ip))

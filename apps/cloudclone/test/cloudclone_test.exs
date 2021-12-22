@@ -6,7 +6,6 @@ defmodule CloudcloneTest do
   def handle_429(conn, _seconds) do
     conn = conn |> send_chunked(429)
     Task.async(fn -> conn |> chunk("429 Rate Limited\r\n") end)
-
   end
 
   def handle_403(conn) do
@@ -89,5 +88,6 @@ defmodule CloudcloneTest do
 
     :ok = stop_supervised(Cloudclone.RateLimitCache)
   end
+
   # ============================================================================
 end

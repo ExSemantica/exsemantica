@@ -34,4 +34,4 @@ $ npm install tailwindcss postcss autoprefixer topbar phoenix phoenix_live_view 
 - [ ] Microblogging posting in interests
 - [ ] T&S (Trust and Safety)
 - [ ] Authentication probably shouldn't be RSA 4096, puts too much burden on the server.
-- [ ] ejabberd or IRC protocol based chat system 
+- [ ] IRC protocol based chat system

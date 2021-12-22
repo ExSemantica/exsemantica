@@ -33,6 +33,12 @@ defmodule Exsemantica.MixProject do
       {:absinthe, "~> 1.6"},
       {:absinthe_plug, "~> 1.5"},
 
+      # RATIONALE: Handle128s are ASCII only.
+      # > This simplifies typing on a US keyboard.
+      # > This also opens doors to using IRC
+      # > This also eliminates a **security risk** of skids using weird chars.
+      {:unidecode, "~> 1.0"},
+
       # All dependencies here are already in the project :P
       {:cloudclone, in_umbrella: true},
       {:extimeago, in_umbrella: true},
