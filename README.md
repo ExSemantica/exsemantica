@@ -2,22 +2,17 @@
 
 Open-source microblogging for people with mutual interests.
 
-## Hacktoberfest
+## Hacktoberfest/other collaboration.
 
 Yes, I am open for collaboration with other fellow programmers! Have fun!
 
 ## Guidance
 
-Builds upon [the previous eactivitypub](https://github.com/Chlorophytus/eactivitypub-legacy-0.2) repository.
+Builds upon [the previous eactivitypub][eactivitypub] repository.
 
 ## How to use this?
 
-Have a PostgreSQL database for long data storage, and an AOF Redis store for graph nodes.
-
-```shell
-$ docker run --name exsemantica-postgres -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
-$ docker run --name exsemantica-redis -p 6379:6379 -d redis redis-server --appendonly yes
-```
+Have a persistent Redis store for graph nodes. [You may use Docker for this.][redis-on-docker]
 
 If you want to fetch packages for frontend, use NodeJS NPM.
 ```shell
@@ -26,12 +21,19 @@ $ npm install tailwindcss postcss autoprefixer topbar phoenix phoenix_live_view 
 
 ## TODOs
 
-- [ ] Actual API JSON-LD handling
+- [ ] API JSON-LD handling
+- [ ] API GraphQL handling
+- [ ] Federation: is it possible?
 - [ ] Interests chaining interests
-- [x] Graph database should be backupable
+- [x] Graph database should be archivable, able to be backed up
 - [x] Graph database should not be in priv directory; try Mnesia or Redis
 - [x] Graph database
 - [ ] Microblogging posting in interests
 - [ ] T&S (Trust and Safety)
 - [ ] Authentication probably shouldn't be RSA 4096, puts too much burden on the server.
 - [ ] IRC protocol based chat system
+- [ ] Reimplement frontend/middleware from v0.7, reusing Phoenix.
+- [ ] Redo backend from v0.7.
+
+[redis-on-docker]: https://hub.docker.com/_/redis
+[eactivitypub]: https://github.com/Chlorophytus/eactivitypub-legacy-0.2
