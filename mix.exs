@@ -13,7 +13,7 @@ defmodule ExsemanticaUmbrella.MixProject do
           applications: [
             runtime_tools: :permanent,
             exsemantica: :permanent,
-            ld_graph2: :permanent,
+            # ld_graph2: :permanent,
             extimeago: :permanent,
             cloudclone: :permanent
           ]
