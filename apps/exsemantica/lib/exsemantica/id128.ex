@@ -47,7 +47,7 @@ defmodule Exsemantica.Id128 do
 
     case base64 do
       {:ok, extracted} when is_valid(extracted) -> extracted
-      _error -> :error
+      _ -> :error
     end
   end
 end

@@ -39,9 +39,6 @@ defmodule Exsemantica.MixProject do
       # > This also eliminates a **security risk** of skids using weird chars.
       {:unidecode, "~> 1.0"},
 
-      # RATIONALE: Backpressure is the enemy.
-      {:gen_stage, "~> 1.1"},
-
       # All dependencies here are already in the project :P
       {:cloudclone, in_umbrella: true},
       {:extimeago, in_umbrella: true}

@@ -13,13 +13,27 @@
 # limitations under the License.
 defmodule Exsemantica.Database do
   @moduledoc """
-  The ExSemantica Mnesia server, a `Consumer`.
+  The ExSemantica Mnesia server.
   """
   require Logger
   use GenServer
 
+  @doc """
+  Starts the Mnesia server for this application instance.
+
+  TODO: Document the Mnesia server nodes' autojoining mechanism, and also give
+  an option for making the nodes not autojoin.
+  """
   @spec start_link(any) :: :ignore | {:error, any} | {:ok, pid}
   def start_link(args), do: GenServer.start_link(__MODULE__, args, name: __MODULE__)
+
+  @doc """
+  Makes the Mnesia server process a list of transactions, reading and/or writing.
+  """
+  @spec transaction(any) :: any
+  def transaction(transactions) do
+    GenServer.call(__MODULE__, {:transaction, transactions})
+  end
 
   # ============================================================================
   # Callbacks
@@ -37,7 +51,7 @@ defmodule Exsemantica.Database do
 
     :mnesia.start()
 
-    {:ok, %{tables: try_make_tables(tables), q: :queue.new()}}
+    {:ok, %{tables: try_make_tables(tables)}}
   end
 
   @impl true
@@ -64,64 +78,46 @@ defmodule Exsemantica.Database do
   end
 
   @impl true
-  def handle_events(events, _from, state) do
+  def handle_call({:transaction, events}, _from, state) do
     pending =
       events
       |> Enum.map(fn oper ->
         case oper do
-          %{operation: :get, source: source, table: table, info: info} ->
+          %{operation: :get, table: table, info: info} ->
             fn ->
-              Process.send(
-                source,
-                {Exsemantica.DatabasePacket,
-                 %{
-                   table: table,
-                   info: info,
-                   operation: :get,
-                   content: :mnesia.read(table, info),
-                   timestamp: DateTime.utc_now()
-                 }},
-                []
-              )
-
-              true
+              %{
+                table: table,
+                info: info,
+                operation: :get,
+                response: :mnesia.read(table, info),
+                timestamp: DateTime.utc_now()
+              }
             end
 
-          %{operation: :put, source: source, table: table, info: info} ->
+          %{operation: :put, table: table, info: info} ->
             fn ->
               # for distribution's sake
               # ALSO: make unsticky if it's causing problems...
-
-              Process.send(
-                source,
-                {Exsemantica.DatabasePacket,
-                 %{
-                   table: table,
-                   info: info,
-                   operation: :put,
-                   content: :mnesia.write(table, info, :sticky_write),
-                   timestamp: DateTime.utc_now()
-                 }},
-                []
-              )
-
-              true
+              %{
+                table: table,
+                info: info,
+                operation: :put,
+                response: :mnesia.write(table, info, :sticky_write),
+                timestamp: DateTime.utc_now()
+              }
             end
         end
       end)
 
     Logger.debug("#{length(pending)} transactions will execute now")
 
-    :mnesia.transaction(fn ->
-      # Pending transactions
-      pending
-      # Execute the anonymous functions...each success is truthy and rejected.
-      |> Enum.reject(& &1.())
-      # Check if the enum is empty. It should always be empty.
-      |> Enum.empty?()
-    end)
-
-    {:noreply, [], state}
+    {:reply,
+     :mnesia.transaction(fn ->
+       # Pending transactions
+       pending
+       # Execute their anonymous functions...
+       |> Enum.map(& &1.())
+     end), state}
   end
 
   # ============================================================================
@@ -152,6 +148,7 @@ defmodule Exsemantica.Database do
 
         :mnesia.change_table_copy_type(:schema, node(), :disc_copies)
         :ok = :mnesia.wait_for_tables(table_names(tables), 3000)
+        table_names(tables) |> Enum.map(&:mnesia.change_table_copy_type(&1, node(), :disc_copies))
 
         Logger.info("tables done")
 

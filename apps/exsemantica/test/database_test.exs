@@ -11,9 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-defmodule ExsemanticaId128Test do
+defmodule Exsemantica.Database.Test do
   use ExUnit.Case, async: true
-  doctest Exsemantica.Id128
+  doctest Exsemantica.Database
 
   # TODO
 end

@@ -1,3 +1,4 @@
 import Config
 
-# config :ld_graph2, endpoint: "redis://127.0.0.1"
+config :mnesia,
+  dir: to_charlist(Path.join([Path.dirname(__DIR__), "priv", "MnesiaTEST.#{node()}"]))
