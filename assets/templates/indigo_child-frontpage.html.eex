@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/res/app.css">
+    <title>ExSemantica - Error</title>
+  </head>
+  <body class="bg-slate-700">
+    <div class="grid grid-cols-3 gap-8 m-16">
+      <main class="bg-indigo-800 col-start-1 col-end-3 rounded-lg drop-shadow-xl p-8">
+        <%= main %>
+      </main>
+      <aside class="bg-indigo-800 col-start-3 rounded-lg drop-shadow-xl p-8">
+        <%= aside %>
+      </aside>
+    </div>
+    <footer class="text-sm text-center mb-6">
+      ExSemantica v<%= Application.spec(:exsemantica, :vsn) %> with IndigoChild theme - <a href="https://github.com/Chlorophytus/exsemantica">Fork me on GitHub!</a><br>
+    </footer>
+  </body>
+</html>

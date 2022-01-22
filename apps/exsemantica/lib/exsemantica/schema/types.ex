@@ -25,29 +25,32 @@ defmodule Exsemantica.Schema.Types do
     parse(&Exsemantica.Handle128.parse/1)
     serialize(&Exsemantica.Handle128.serialize/1)
   end
+
   # ============================================================================
   # User data
   # ============================================================================
   object :user do
-    field :node, :id128
-    field :handle, :handle128
+    field(:node, :id128)
+    field(:handle, :handle128)
   end
+
   # ============================================================================
   # Post data
   # ============================================================================
   object :post do
-    field :node, :id128
-    field :title, :string
-    field :content, :string
-    field :posted_by, :id128
+    field(:node, :id128)
+    field(:title, :string)
+    field(:content, :string)
+    field(:posted_by, :id128)
   end
+
   # ============================================================================
   # Interest data
   # ============================================================================
   object :interest do
-    field :node, :id128
-    field :title, :string
-    field :content, :string
-    field :related_to, list_of(:id128)
+    field(:node, :id128)
+    field(:title, :string)
+    field(:content, :string)
+    field(:related_to, list_of(:id128))
   end
 end

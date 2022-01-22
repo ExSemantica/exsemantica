@@ -47,6 +47,7 @@ defmodule Exsemantica.Handle128 do
   ```
   """
   def parse(item) do
-    item # requires nothing, lossy conversion is done and over with.
+    # requires nothing, lossy conversion is done and over with.
+    item
   end
 end

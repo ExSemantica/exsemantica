@@ -1,2 +1,3 @@
-./*
-!.gitignore
+# Ignore the Mnesia Exsemantica Database
+MnesiaESDB/*
+static

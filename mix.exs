@@ -15,6 +15,7 @@ defmodule ExsemanticaUmbrella.MixProject do
             exsemantica: :permanent,
             # ld_graph2: :permanent,
             extimeago: :permanent,
+            exsemtheme: :permanent,
             cloudclone: :permanent
           ]
         ]

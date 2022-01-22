@@ -11,21 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-defmodule Exsemantica.Schema do
-  @moduledoc """
-  The ExSemantica GraphQL API schema.
-  """
-  use Absinthe.Schema
-
-  import_types(Exsemantica.Schema.Types)
-
-  query do
-    field :post, :post do
-      arg(:id, non_null(:id128))
-
-      # resolve fn %{id: id}, _context
-
-      # end
-    end
-  end
-end
+# Used by "mix format"
+[
+  inputs: ["{mix,.formatter}.exs", "{config,lib,test}/**/*.{ex,exs}"]
+]

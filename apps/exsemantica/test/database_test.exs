@@ -15,5 +15,19 @@ defmodule Exsemantica.Database.Test do
   use ExUnit.Case, async: true
   doctest Exsemantica.Database
 
-  # TODO
+  test "adds an object" do
+    start_supervised!({Exsemantica.Database, tables: [{:test_objs, ~w(idx str)a}]})
+
+    Exsemantica.Database.transaction([
+      %{operation: :put, table: :test_objs, info: {:test_objs, 1, "Hello, world!"}},
+      %{operation: :put, table: :test_objs, info: {:test_objs, 2, "Goodbye, Mars!"}}
+    ])
+
+    {:atomic, [response]} =
+      Exsemantica.Database.transaction([
+        %{operation: :get, table: :test_objs, info: 2}
+      ])
+
+    assert [{:test_objs, 2, "Goodbye, Mars!"}] == response.response
+  end
 end
