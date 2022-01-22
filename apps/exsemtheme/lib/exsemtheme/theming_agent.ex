@@ -13,7 +13,7 @@
 # limitations under the License.
 defmodule Exsemtheme.ThemingAgent do
   @moduledoc """
-  Applies the actual HTML theme, running first through ESBuild then TailwindCSS.
+  Applies the actual HTML theme.
   """
   require EEx
   use Agent

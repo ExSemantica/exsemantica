@@ -16,10 +16,16 @@ defmodule Exsemtheme.Application do
   # for more information on OTP Applications
   @moduledoc false
 
+  require Logger
   use Application
 
   @impl true
   def start(_type, _args) do
+    Logger.notice("Running ESBuild...")
+    Esbuild.run(:default, [])
+    Logger.notice("Running TailwindCSS...")
+    Tailwind.run(:default, [])
+
     children = [
       # Starts a worker by calling: Exsemtheme.Worker.start_link(arg)
       # {Exsemtheme.Worker, arg}
