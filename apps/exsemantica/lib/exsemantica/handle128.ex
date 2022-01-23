@@ -22,15 +22,6 @@ defmodule Exsemantica.Handle128 do
   @doc """
   Converts a 16-char handle into its Handle128.
   **THIS IS A LOSSY CONVERSION**.
-
-  ```elixir
-      iex> Exsemantica.Handle128.serialize("FooBarBaz")
-      "FooBarBaz       "
-  ```
-  ```elixir
-      iex> Exsemantica.Handle128.serialize("FooBarBazFooBarBaz")
-      :error
-  ```
   """
   def serialize(item) do
     case Unidecode.decode(item) do
@@ -41,13 +32,9 @@ defmodule Exsemantica.Handle128 do
 
   @doc """
   Converts a Handle128 into a 16-byte binary.
-
-  ```elixir
-      iex> Exsemantica.Handle128.parse("")
-  ```
   """
-  def parse(item) do
+  def parse(%Absinthe.Blueprint.Input.String{value: item}) do
     # requires nothing, lossy conversion is done and over with.
-    item
+    {:ok, item}
   end
 end

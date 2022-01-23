@@ -20,12 +20,98 @@ defmodule Exsemantica.Schema do
   import_types(Exsemantica.Schema.Types)
 
   query do
-    field :post, :post do
-      arg(:id, non_null(:id128))
+    field :posts, list_of(:post) do
+      arg(:ids, list_of(:id128))
 
-      # resolve fn %{id: id}, _context
+      complexity(fn %{ids: ids}, child_complexity ->
+        length(ids) * child_complexity
+      end)
 
-      # end
+      resolve(fn %{ids: ids}, _ ->
+        {:atomic, packets} =
+          ids
+          |> Enum.map(&Exsemantica.Database.Utils.get(:posts, &1))
+          |> Exsemantica.Database.transaction()
+
+        {:ok,
+         packets
+         |> Enum.map(fn packet ->
+           if length(packet.response) == 1 do
+             [{:posts, id, title, content, posted_by}] = packet.response
+
+             %{
+               node: Exsemantica.Id128.serialize(id),
+               title: title,
+               content: content,
+               posted_by: posted_by
+             }
+           else
+             nil
+           end
+         end)}
+      end)
+    end
+
+    field :users, list_of(:user) do
+      arg(:ids, list_of(:id128))
+
+      complexity(fn %{ids: ids}, child_complexity ->
+        length(ids) * child_complexity
+      end)
+
+      resolve(fn %{ids: ids}, _ ->
+        {:atomic, packets} =
+          ids
+          |> Enum.map(&Exsemantica.Database.Utils.get(:users, &1))
+          |> Exsemantica.Database.transaction()
+
+        {:ok,
+         packets
+         |> Enum.map(fn packet ->
+           if length(packet.response) == 1 do
+             [{:users, id, handle}] = packet.response
+
+             %{
+               node: Exsemantica.Id128.serialize(id),
+               handle: handle
+             }
+           else
+             nil
+           end
+         end)}
+      end)
+    end
+
+    field :interests, list_of(:interest) do
+      arg(:ids, list_of(:id128))
+
+      complexity(fn %{ids: ids}, child_complexity ->
+        length(ids) * child_complexity
+      end)
+
+      resolve(fn %{ids: ids}, _ ->
+        {:atomic, packets} =
+          ids
+          |> Enum.map(&Exsemantica.Database.Utils.get(:interests, &1))
+          |> Exsemantica.Database.transaction()
+
+        {:ok,
+         packets
+         |> Enum.map(fn packet ->
+           if length(packet.response) == 1 do
+             [{:interests, id, title, content, related_to}] = packet.response
+
+             %{
+               node: Exsemantica.Id128.serialize(id),
+               title: title,
+               content: content,
+               related_to: related_to
+             }
+           else
+             nil
+           end
+         end)}
+      end)
     end
   end
 end

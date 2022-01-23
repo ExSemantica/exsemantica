@@ -10,7 +10,13 @@ config :logger, :console,
 config :esbuild,
   version: "0.14.12",
   default: [
-    args: ~w(js/app.js --bundle --target=es2016 --outdir=#{assets_out}),
+    args: ~w(
+      js/app.js
+      --bundle
+      --target=es2016
+      --outdir=#{assets_out}
+      --minify
+    ),
     cd: assets_dir
   ]
 
@@ -21,6 +27,7 @@ config :tailwind,
     --config=tailwind.config.js
     --input=css/app.css
     --output=#{Path.join(assets_out, "app.css")}
+    --minify
   ),
     cd: assets_dir
   ]
@@ -32,5 +39,6 @@ config :tailwind,
 #
 # TODO: Document this more.
 config :exsemtheme, theme: :indigo_child, cd: assets_dir, port: 8080, out: assets_out
+config :exsemantica, port: 8088
 
 import_config "#{Mix.env()}.exs"

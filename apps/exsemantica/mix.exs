@@ -30,8 +30,9 @@ defmodule Exsemantica.MixProject do
       {:plug_cowboy, "~> 2.5"},
 
       # RATIONALE: Needed for the HTTP API
-      {:absinthe, "~> 1.6"},
+      {:absinthe, "~> 1.7"},
       {:absinthe_plug, "~> 1.5"},
+      {:jason, "~> 1.3"},
 
       # RATIONALE: Handle128s are ASCII only.
       # > This simplifies typing on a US keyboard.

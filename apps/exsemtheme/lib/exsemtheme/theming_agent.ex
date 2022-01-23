@@ -18,7 +18,7 @@ defmodule Exsemtheme.ThemingAgent do
   require EEx
   use Agent
 
-  @valid_modes ~w(frontpage)a
+  @valid_modes ~w(front error)a
 
   # ============================================================================
   # Callbacks

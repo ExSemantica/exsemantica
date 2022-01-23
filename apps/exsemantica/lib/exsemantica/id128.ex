@@ -36,17 +36,12 @@ defmodule Exsemantica.Id128 do
 
   @doc """
   Converts a base-64 ID128 into a 16-byte binary.
-
-  ```elixir
-      iex> Exsemantica.Id128.parse("AAECAwQFBgcICQoLDA0ODw==")
-      <<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15>>
-  ```
   """
-  def parse(item) do
+  def parse(%Absinthe.Blueprint.Input.String{value: item}) do
     base64 = Base.url_decode64(item)
 
     case base64 do
-      {:ok, extracted} when is_valid(extracted) -> extracted
+      {:ok, extracted} when is_valid(extracted) -> {:ok, extracted}
       _ -> :error
     end
   end

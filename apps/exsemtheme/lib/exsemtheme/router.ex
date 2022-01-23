@@ -48,13 +48,9 @@ defmodule Exsemtheme.Router do
     conn
     |> send_resp(
       404,
-      Exsemtheme.ThemingAgent.apply(:frontpage,
+      Exsemtheme.ThemingAgent.apply(:front,
         intent: "Home",
-        main: ~s"""
-        <p>Work-in-progress webpage. The following placeholder text is for testing the CSS flex box system.</p>
-        <p>Kitty ipsum dolor sit amet, shed everywhere shed everywhere stretching attack your ankles chase the red dot, hairball run catnip eat the grass sniff.</p>
-        """,
-        aside: get_aside()
+        trending: get_trending()
       )
     )
   end
@@ -65,18 +61,17 @@ defmodule Exsemtheme.Router do
     conn
     |> send_resp(
       404,
-      Exsemtheme.ThemingAgent.apply(:frontpage,
+      Exsemtheme.ThemingAgent.apply(:error,
         intent: "404 Not Found",
-        main: "The requested page could not be found.\r\n",
-        aside: get_aside()
+        main: "The requested page could not be found.\r\n"
       )
     )
   end
 
   # ============================================================================
-  # Handle fetching "aside" content
+  # Handle fetching "trending" content
   # ============================================================================
-  defp get_aside do
+  def get_trending do
     "This isn't implemented yet. It may be soon.\r\n"
   end
 end

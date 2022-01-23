@@ -35,8 +35,13 @@ defmodule Exsemantica.Application do
              tables: [
                {:users, ~w(node handle)a},
                {:posts, ~w(node title content posted_by)a},
-               {:interests, ~w(node title content related_to)a}
-             ]}
+               {:interests, ~w(node title content related_to)a},
+               {:counters, ~w(type count)a}
+             ]},
+            {Plug.Cowboy,
+             scheme: :http,
+             plug: Exsemantica.PlugApi,
+             port: Application.fetch_env!(:exsemantica, :port)}
           ]
       end
 
