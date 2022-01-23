@@ -30,6 +30,7 @@ defmodule Exsemantica.Schema do
       resolve(fn %{ids: ids}, _ ->
         {:atomic, packets} =
           ids
+          |> Enum.uniq()
           |> Enum.map(&Exsemantica.Database.Utils.get(:posts, &1))
           |> Exsemantica.Database.transaction()
 
@@ -37,13 +38,14 @@ defmodule Exsemantica.Schema do
          packets
          |> Enum.map(fn packet ->
            if length(packet.response) == 1 do
-             [{:posts, id, title, content, posted_by}] = packet.response
+             [{:posts, id, timestamp, title, content, posted_by}] = packet.response
 
              %{
-               node: Exsemantica.Id128.serialize(id),
+               node: id,
                title: title,
                content: content,
-               posted_by: posted_by
+               posted_by: posted_by,
+               timestamp: timestamp
              }
            else
              nil
@@ -62,6 +64,7 @@ defmodule Exsemantica.Schema do
       resolve(fn %{ids: ids}, _ ->
         {:atomic, packets} =
           ids
+          |> Enum.uniq()
           |> Enum.map(&Exsemantica.Database.Utils.get(:users, &1))
           |> Exsemantica.Database.transaction()
 
@@ -69,11 +72,12 @@ defmodule Exsemantica.Schema do
          packets
          |> Enum.map(fn packet ->
            if length(packet.response) == 1 do
-             [{:users, id, handle}] = packet.response
+             [{:users, id, timestamp, handle}] = packet.response
 
              %{
-               node: Exsemantica.Id128.serialize(id),
-               handle: handle
+               node: id,
+               handle: handle,
+               timestamp: timestamp
              }
            else
              nil
@@ -92,6 +96,7 @@ defmodule Exsemantica.Schema do
       resolve(fn %{ids: ids}, _ ->
         {:atomic, packets} =
           ids
+          |> Enum.uniq()
           |> Enum.map(&Exsemantica.Database.Utils.get(:interests, &1))
           |> Exsemantica.Database.transaction()
 
@@ -99,13 +104,46 @@ defmodule Exsemantica.Schema do
          packets
          |> Enum.map(fn packet ->
            if length(packet.response) == 1 do
-             [{:interests, id, title, content, related_to}] = packet.response
+             [{:interests, id, timestamp, title, content, related_to}] = packet.response
 
              %{
-               node: Exsemantica.Id128.serialize(id),
+               node: id,
                title: title,
                content: content,
-               related_to: related_to
+               related_to: related_to,
+               timestamp: timestamp
+             }
+           else
+             nil
+           end
+         end)}
+      end)
+    end
+
+    field :trending, list_of(:interest) do
+      arg(:count, :integer)
+
+      complexity(fn %{count: count}, child_complexity ->
+        count * child_complexity
+      end)
+
+      resolve(fn %{count: count}, _ ->
+        {:atomic, packets} =
+          [Exsemantica.Database.Utils.trending(count)]
+          |> Exsemantica.Database.transaction()
+
+        {:ok,
+         packets
+         |> Enum.map(fn packet ->
+           if length(packet.response) == 1 and packet.response != [[:"$end_of_table"]] do
+             [{:interests, id, timestamp, title, content, related_to}] = packet.response
+
+             %{
+               node: id,
+               title: title,
+               content: content,
+               related_to: related_to,
+               timestamp: timestamp
              }
            else
              nil

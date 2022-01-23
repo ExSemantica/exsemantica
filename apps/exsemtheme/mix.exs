@@ -44,7 +44,8 @@ defmodule Exsemtheme.MixProject do
       {:tailwind, "~> 0.1", runtime: Mix.env() == :dev},
 
       # RATIONALE: Needed for the HTTP endpoints
-      {:plug_cowboy, "~> 2.5"}
+      {:plug_cowboy, "~> 2.5"},
+      {:finch, "~> 0.10"}
     ]
   end
 end

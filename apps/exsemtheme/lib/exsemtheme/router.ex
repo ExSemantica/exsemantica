@@ -72,6 +72,6 @@ defmodule Exsemtheme.Router do
   # Handle fetching "trending" content
   # ============================================================================
   def get_trending do
-    "This isn't implemented yet. It may be soon.\r\n"
+    "a"
   end
 end

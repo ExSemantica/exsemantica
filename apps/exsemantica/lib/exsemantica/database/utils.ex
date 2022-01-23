@@ -23,6 +23,22 @@ defmodule Exsemantica.Database.Utils do
     <<cnt::128>>
   end
 
+  def initialize_popularity(idx) do
+    %{
+      operation: :put,
+      table: :ctrending,
+      info: {:ctrending, 0, idx}
+    }
+  end
+
+  def increment_popularity(idx) do
+    %{
+      operation: :rank,
+      table: :ctrending,
+      info: %{idx: idx, inc: 1}
+    }
+  end
+
   # ============================================================================
   # Put items
   # ============================================================================
@@ -36,7 +52,7 @@ defmodule Exsemantica.Database.Utils do
       %{
         operation: :put,
         table: :users,
-        info: {:users, id, handle}
+        info: {:users, id, DateTime.utc_now(), handle}
       }
     else
       :error
@@ -52,7 +68,7 @@ defmodule Exsemantica.Database.Utils do
     %{
       operation: :put,
       table: :posts,
-      info: {:posts, increment(:id_count), title, content, user}
+      info: {:posts, increment(:id_count), DateTime.utc_now(), title, content, user}
     }
   end
 
@@ -62,22 +78,32 @@ defmodule Exsemantica.Database.Utils do
           table: :interests
         }
   def put_interest(title, content, related_to) do
+    id = increment(:id_count)
+
     %{
       operation: :put,
       table: :interests,
-      info: {:interests, increment(:id_count), title, content, related_to}
+      info: {:interests, id, DateTime.utc_now(), title, content, related_to}
     }
   end
 
   # ============================================================================
   # Get items
   # ============================================================================
-  @spec get(atom, <<_::128>>) :: %{info: <<_::128>>, operation: :get, table: atom}
   def get(table, idx) do
     %{
       operation: :get,
       table: table,
       info: idx
+    }
+  end
+
+  @spec trending(integer) :: %{info: any, operation: :tail, table: :ctrending}
+  def trending(count) do
+    %{
+      operation: :tail,
+      table: :ctrending,
+      info: count
     }
   end
 end

@@ -14,6 +14,8 @@
 defmodule Exsemantica.Schema.Types do
   use Absinthe.Schema.Notation
 
+  import_types Absinthe.Type.Custom
+
   scalar :id128 do
     description("Unique Identifier (128-bit base64 machine-readable value)")
     parse(&Exsemantica.Id128.parse/1)
@@ -32,6 +34,7 @@ defmodule Exsemantica.Schema.Types do
   object :user do
     field(:node, :id128)
     field(:handle, :handle128)
+    field(:timestamp, :datetime)
   end
 
   # ============================================================================
@@ -42,6 +45,7 @@ defmodule Exsemantica.Schema.Types do
     field(:title, :string)
     field(:content, :string)
     field(:posted_by, :id128)
+    field(:timestamp, :datetime)
   end
 
   # ============================================================================
@@ -52,5 +56,6 @@ defmodule Exsemantica.Schema.Types do
     field(:title, :string)
     field(:content, :string)
     field(:related_to, list_of(:id128))
+    field(:timestamp, :datetime)
   end
 end

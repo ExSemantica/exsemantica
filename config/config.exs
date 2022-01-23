@@ -38,7 +38,7 @@ config :tailwind,
 # the mode of the theme engine
 #
 # TODO: Document this more.
-config :exsemtheme, theme: :indigo_child, cd: assets_dir, port: 8080, out: assets_out
-config :exsemantica, port: 8088
+config :exsemtheme, theme: :indigo_child, cd: assets_dir, port: 8080, out: assets_out, api: "http://localhost:8087/"
+config :exsemantica, port: 8087
 
 import_config "#{Mix.env()}.exs"

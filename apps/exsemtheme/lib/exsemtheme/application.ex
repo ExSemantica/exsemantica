@@ -32,6 +32,7 @@ defmodule Exsemtheme.Application do
 
       {Plug.Cowboy,
        scheme: :http, plug: Exsemtheme.Router, port: Application.fetch_env!(:exsemtheme, :port)},
+      {Finch, name: Exsemtheme.Client.Finch},
       {Exsemtheme.ThemingAgent, theme: Application.fetch_env!(:exsemtheme, :theme)}
     ]
 

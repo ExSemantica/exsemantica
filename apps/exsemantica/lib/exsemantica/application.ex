@@ -32,11 +32,20 @@ defmodule Exsemantica.Application do
             # Starts a worker by calling: Exsemantica.Worker.start_link(arg)
             # {Exsemantica.Worker, arg}
             {Exsemantica.Database,
-             tables: [
-               {:users, ~w(node handle)a},
-               {:posts, ~w(node title content posted_by)a},
-               {:interests, ~w(node title content related_to)a},
-               {:counters, ~w(type count)a}
+             [
+               tables: [
+                 {:users, ~w(node timestamp handle)a},
+                 {:posts, ~w(node timestamp title content posted_by)a},
+                 {:interests, ~w(node timestamp title content related_to)a},
+                 {:counters, ~w(type count)a}
+               ],
+               caches: [
+                 {:ctrending, ~w(count node)a}
+               ],
+               tcopts: %{
+                 extra_indexes: %{users: ~w(handle)a, ctrending: ~w(node)a},
+                 ordered_caches: ~w(ctrending)a
+               }
              ]},
             {Plug.Cowboy,
              scheme: :http,

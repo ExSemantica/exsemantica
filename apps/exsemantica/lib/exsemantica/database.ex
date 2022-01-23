@@ -39,7 +39,11 @@ defmodule Exsemantica.Database do
   # Callbacks
   # ============================================================================
   @impl true
-  def init(tables: tables) do
+  def init(
+        tables: tables,
+        caches: caches,
+        tcopts: %{extra_indexes: indices, ordered_caches: order_these}
+      ) do
     Logger.info("preparing distributed Mnesia")
     :ok = :net_kernel.monitor_nodes(true)
 
@@ -51,11 +55,22 @@ defmodule Exsemantica.Database do
 
     :mnesia.start()
 
-    {:ok, %{tables: try_make_tables(tables)}}
+    resp = %{tables: try_make_tables(tables), caches: try_make_caches(caches, order_these)}
+
+    indices |> assemble_indices
+
+    {:ok, resp}
   end
 
   @impl true
-  def handle_info({:nodeup, node}, state = %{tables: tables}) do
+  def handle_info(
+        {:nodeup, node},
+        state = %{
+          tables: tables,
+          caches: caches,
+          tcopts: %{extra_indexes: indices, ordered_caches: order_these}
+        }
+      ) do
     nodes = Node.list()
     Logger.info("node #{inspect(node)} joining #{inspect(nodes)}")
 
@@ -63,6 +78,11 @@ defmodule Exsemantica.Database do
 
     ^tables = try_make_tables(tables)
     ^tables = try_make_table_copies(tables)
+
+    ^caches = try_make_caches(caches, order_these)
+    ^caches = try_make_cache_copies(caches)
+
+    indices |> assemble_indices
 
     {:noreply, [], state}
   end
@@ -89,8 +109,7 @@ defmodule Exsemantica.Database do
                 table: table,
                 info: info,
                 operation: :get,
-                response: :mnesia.read(table, info),
-                timestamp: DateTime.utc_now()
+                response: :mnesia.read(table, info)
               }
             end
 
@@ -102,8 +121,63 @@ defmodule Exsemantica.Database do
                 table: table,
                 info: info,
                 operation: :put,
-                response: :mnesia.write(table, info, :sticky_write),
-                timestamp: DateTime.utc_now()
+                response: :mnesia.write(table, info, :sticky_write)
+              }
+            end
+
+          %{operation: :tail, table: table, info: info} ->
+            fn ->
+              %{
+                table: table,
+                info: info,
+                operation: :tail,
+                response:
+                  Stream.repeatedly(fn -> nil end)
+                  |> Stream.chunk_while(
+                    [:mnesia.last(table)],
+                    fn _, acc ->
+                      case :mnesia.prev(table, acc) do
+                        :"$end_of_table" -> {:halt, acc}
+                        prev -> {:cont, prev, acc}
+                      end
+                    end,
+                    &{:cont, &1, []}
+                  )
+                  |> Enum.take(info)
+              }
+            end
+
+          %{operation: :head, table: table, info: info} ->
+            fn ->
+              %{
+                table: table,
+                info: info,
+                operation: :head,
+                response:
+                  Stream.repeatedly(fn -> nil end)
+                  |> Stream.chunk_while(
+                    [:mnesia.first(table)],
+                    fn _, acc ->
+                      case :mnesia.next(table, acc) do
+                        :"$end_of_table" -> {:halt, acc}
+                        prev -> {:cont, prev, acc}
+                      end
+                    end,
+                    &{:cont, &1, []}
+                  )
+                  |> Enum.take(info)
+              }
+            end
+
+          %{operation: :rank, table: table, info: info} ->
+            fn ->
+              [{:ctrending, pop, idx}] = :mnesia.index_read(:ctrending, info.idx, :node)
+
+              %{
+                table: table,
+                info: info,
+                operation: :rank,
+                response: :mnesia.write({:ctrending, pop + info.inc, idx})
               }
             end
         end
@@ -183,7 +257,86 @@ defmodule Exsemantica.Database do
     end
   end
 
+  defp try_make_caches(caches, ordered_caches) do
+    cond do
+      caches
+      |> Enum.map(fn {name, attributes} ->
+        if ordered_caches |> Enum.member?(name) do
+          Logger.debug("enqueue make cache #{inspect(name)} is ORDERED")
+          {name, :mnesia.create_table(name, attributes: attributes, type: :ordered_set)}
+        else
+          Logger.debug("enqueue make cache #{inspect(name)} is UN-ORDERED")
+          {name, :mnesia.create_table(name, attributes: attributes)}
+        end
+      end)
+      |> Enum.all?(fn {name, chk} ->
+        case chk do
+          {:atomic, :ok} ->
+            Logger.debug("enqueue make cache #{inspect(name)} ok here")
+            true
+
+          {:aborted, {:already_exists, _table}} ->
+            Logger.debug("enqueue make cache #{inspect(name)} already ok in schema?")
+            true
+
+          error ->
+            Logger.error("enqueue make cache #{inspect(name)} failed: #{inspect(error)}")
+            false
+        end
+      end) ->
+        Logger.info("will make #{length(caches)} caches")
+
+        :ok = :mnesia.wait_for_tables(table_names(caches), 3000)
+        table_names(caches) |> Enum.map(&:mnesia.change_table_copy_type(&1, node(), :ram_copies))
+
+        Logger.info("caches done")
+
+        caches
+    end
+  end
+
+  defp try_make_cache_copies(tables) do
+    cond do
+      tables
+      |> Enum.map(fn {name, _attributes} ->
+        {name, :mnesia.add_table_copy(name, node(), :ram_copies)}
+      end)
+      |> Enum.all?(fn {name, chk} ->
+        case chk do
+          {:atomic, :ok} ->
+            Logger.debug("enqueue make cache copy of #{inspect(name)} ok here")
+            true
+
+          error ->
+            Logger.error("enqueue make cache copy of #{inspect(name)} failed: #{inspect(error)}")
+            false
+        end
+      end) ->
+        Logger.info("copied #{length(tables)} caches")
+
+        tables
+    end
+  end
+
   defp table_names(tables) do
     tables |> Enum.map(fn {name, _} -> name end)
+  end
+
+  defp assemble_indices(indices) do
+    indices
+    |> Map.new(fn {k, index_list} ->
+      index_list
+      |> Enum.map(fn index ->
+        case :mnesia.add_table_index(k, index) do
+          {:atomic, :ok} ->
+            Logger.debug("added secondary index #{inspect(index)} to table/cache #{inspect(k)}")
+
+          {:aborted, {:already_exists, _table, _index}} ->
+            Logger.debug(
+              "secondary index #{inspect(index)} to table/cache #{inspect(k)} is already present"
+            )
+        end
+      end)
+    end)
   end
 end
