@@ -18,6 +18,9 @@ defmodule Exsemantica.Database do
   require Logger
   use GenServer
 
+  @noboost_htimestamp_secs 5
+  @epoch ~U[1970-01-01 00:00:00Z]
+
   @doc """
   Starts the Mnesia server for this application instance.
 
@@ -127,57 +130,99 @@ defmodule Exsemantica.Database do
 
           %{operation: :tail, table: table, info: info} ->
             fn ->
+              {accum, _cnt} =
+                :mnesia.foldr(
+                  fn record, {acc, cnt} ->
+                    case record do
+                      [] -> {acc, 0}
+                      _ when cnt > 0 -> {[record | acc], cnt - 1}
+                      _ -> {acc, 0}
+                    end
+                  end,
+                  {[], info},
+                  table
+                )
+
               %{
                 table: table,
                 info: info,
                 operation: :tail,
-                response:
-                  Stream.repeatedly(fn -> nil end)
-                  |> Stream.chunk_while(
-                    [:mnesia.last(table)],
-                    fn _, acc ->
-                      case :mnesia.prev(table, acc) do
-                        :"$end_of_table" -> {:halt, acc}
-                        prev -> {:cont, prev, acc}
-                      end
-                    end,
-                    &{:cont, &1, []}
-                  )
-                  |> Enum.take(info)
+                response: accum
               }
             end
 
           %{operation: :head, table: table, info: info} ->
             fn ->
+              {accum, _cnt} =
+                :mnesia.foldl(
+                  fn record, {acc, cnt} ->
+                    IO.inspect(record)
+
+                    case record do
+                      [] -> {acc, 0}
+                      _ when cnt > 0 -> {[record | acc], cnt - 1}
+                      _ -> {acc, 0}
+                    end
+                  end,
+                  {[], info},
+                  table
+                )
+
               %{
                 table: table,
                 info: info,
                 operation: :head,
-                response:
-                  Stream.repeatedly(fn -> nil end)
-                  |> Stream.chunk_while(
-                    [:mnesia.first(table)],
-                    fn _, acc ->
-                      case :mnesia.next(table, acc) do
-                        :"$end_of_table" -> {:halt, acc}
-                        prev -> {:cont, prev, acc}
-                      end
-                    end,
-                    &{:cont, &1, []}
-                  )
-                  |> Enum.take(info)
+                response: accum
               }
             end
 
           %{operation: :rank, table: table, info: info} ->
             fn ->
-              [{:ctrending, pop, idx}] = :mnesia.index_read(:ctrending, info.idx, :node)
+              pre = :mnesia.read(table, idx = info.idx)
+
+              this =
+                {:ctrending, {pop, ^idx}, ^idx, ^table, htimestamp} =
+                case :mnesia.index_read(:ctrending, info.idx, :node) do
+                  _ when pre == [] ->
+                    Logger.debug(
+                      "Can't rank up nonexistent object #{Exsemantica.Id128.serialize(info.idx)}"
+                    )
+
+                    {:ctrending, {0, idx}, idx, table, @epoch}
+
+                  [] ->
+                    {:ctrending, {0, idx}, idx, table, @epoch}
+
+                  [exist] ->
+                    exist
+                end
+
+              now = DateTime.utc_now()
+
+              :ok =
+                case DateTime.compare(now, htimestamp) do
+                  :gt ->
+                    :mnesia.delete_object(:ctrending, this, :sticky_write)
+
+                    :mnesia.write(
+                      :ctrending,
+                      {:ctrending, {pop + info.inc, idx}, idx, table,
+                       DateTime.add(now, @noboost_htimestamp_secs)},
+                      :sticky_write
+                    )
+
+                  _ ->
+                    :ok
+                end
 
               %{
                 table: table,
                 info: info,
                 operation: :rank,
-                response: :mnesia.write({:ctrending, pop + info.inc, idx})
+                response: %{
+                  node: idx,
+                  type: table
+                }
               }
             end
         end
@@ -324,7 +369,7 @@ defmodule Exsemantica.Database do
 
   defp assemble_indices(indices) do
     indices
-    |> Map.new(fn {k, index_list} ->
+    |> Enum.map(fn {k, index_list} ->
       index_list
       |> Enum.map(fn index ->
         case :mnesia.add_table_index(k, index) do

@@ -40,7 +40,8 @@ defmodule Exsemantica.Application do
                  {:counters, ~w(type count)a}
                ],
                caches: [
-                 {:ctrending, ~w(count node)a}
+                 # This is weird. You can botch a composite key. Cool!
+                 {:ctrending, ~w(count_node node type htimestamp)a}
                ],
                tcopts: %{
                  extra_indexes: %{users: ~w(handle)a, ctrending: ~w(node)a},

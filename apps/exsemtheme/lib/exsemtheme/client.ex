@@ -15,9 +15,43 @@ defmodule Exsemtheme.Client do
   @moduledoc """
   HTTP GraphQL Client
   """
-  def fetch_users(users) do
-    # TODO
-    {:ok, reply} = Finch.build(:post, Application.fetch_env!(:exsemtheme, :api))
-    |> Finch.request(Exsemtheme.Client.Finch)
+  def fetch_trending(fields, count) do
+    {:ok, reply} =
+      Finch.build(
+        :post,
+        Application.fetch_env!(:exsemtheme, :api),
+        [
+          {"content-type", "application/graphql"}
+        ],
+        "{ trending(count: #{count}) { #{fields |> Enum.join(",")} } }"
+      )
+      |> Finch.request(Exsemtheme.Client.Finch)
+
+    {:ok, data} = reply.body |> Jason.decode()
+
+    data |> get_in(~w(data trending))
+  end
+
+  def fetch_users(fields, rids), do: fetch(:users, fields, rids)
+  def fetch_posts(fields, rids), do: fetch(:posts, fields, rids)
+  def fetch_interests(fields, rids), do: fetch(:interests, fields, rids)
+
+  defp fetch(type, fields, rids) do
+    ids = rids |> Enum.map(&"\"#{&1}\"") |> Enum.join(",")
+
+    {:ok, reply} =
+      Finch.build(
+        :post,
+        Application.fetch_env!(:exsemtheme, :api),
+        [
+          {"content-type", "application/graphql"}
+        ],
+        "{ #{type}(ids: [#{ids}]) { #{fields |> Enum.join(",")} } }"
+      )
+      |> Finch.request(Exsemtheme.Client.Finch)
+
+      {:ok, data} = reply.body |> Jason.decode()
+
+      data |> get_in(~w(data #{type}))
   end
 end

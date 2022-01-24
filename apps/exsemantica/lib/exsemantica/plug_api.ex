@@ -26,7 +26,7 @@ defmodule Exsemantica.PlugApi do
 
   forward("/",
     to: Absinthe.Plug,
-    init_opts: [schema: Exsemantica.Schema, analyze_complexity: true, max_complexity: 5]
+    init_opts: [schema: Exsemantica.Schema, analyze_complexity: true, max_complexity: 15]
   )
 
   plug(:match)

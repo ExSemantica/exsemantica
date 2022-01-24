@@ -14,7 +14,7 @@
 defmodule Exsemantica.Schema.Types do
   use Absinthe.Schema.Notation
 
-  import_types Absinthe.Type.Custom
+  import_types(Absinthe.Type.Custom)
 
   scalar :id128 do
     description("Unique Identifier (128-bit base64 machine-readable value)")
@@ -26,6 +26,11 @@ defmodule Exsemantica.Schema.Types do
     description("Handle (16-char string value)")
     parse(&Exsemantica.Handle128.parse/1)
     serialize(&Exsemantica.Handle128.serialize/1)
+  end
+
+  object :trend do
+    field(:node, :id128)
+    field(:type, :string)
   end
 
   # ============================================================================

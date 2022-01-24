@@ -45,7 +45,8 @@ defmodule Exsemtheme.MixProject do
 
       # RATIONALE: Needed for the HTTP endpoints
       {:plug_cowboy, "~> 2.5"},
-      {:finch, "~> 0.10"}
+      {:finch, "~> 0.10"},
+      {:jason, "~> 1.3"}
     ]
   end
 end

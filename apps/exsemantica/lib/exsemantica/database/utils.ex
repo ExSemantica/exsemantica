@@ -23,18 +23,10 @@ defmodule Exsemantica.Database.Utils do
     <<cnt::128>>
   end
 
-  def initialize_popularity(idx) do
-    %{
-      operation: :put,
-      table: :ctrending,
-      info: {:ctrending, 0, idx}
-    }
-  end
-
-  def increment_popularity(idx) do
+  def increment_popularity(table, idx) do
     %{
       operation: :rank,
-      table: :ctrending,
+      table: table,
       info: %{idx: idx, inc: 1}
     }
   end
@@ -59,8 +51,8 @@ defmodule Exsemantica.Database.Utils do
     end
   end
 
-  @spec put_post(binary, binary, <<_::128>>) :: %{
-          info: {:posts, <<_::128>>, binary, binary, <<_::128>>},
+  @spec put_post(any, any, any) :: %{
+          info: {:posts, <<_::128>>, DateTime.t(), any, any, any},
           operation: :put,
           table: :posts
         }
@@ -72,8 +64,8 @@ defmodule Exsemantica.Database.Utils do
     }
   end
 
-  @spec put_interest(binary, binary, [binary]) :: %{
-          info: {:interests, <<_::128>>, binary, binary, [binary]},
+  @spec put_interest(any, any, any) :: %{
+          info: {:interests, <<_::128>>, DateTime.t(), any, any, any},
           operation: :put,
           table: :interests
         }
