@@ -1,2 +1,0 @@
-# Exsemantica
-Main Exsemantica endpoint
