@@ -1,11 +1,5 @@
 import Config
 
-# Configure your database
-config :exsemantica, Exsemantica.Repo,
-  database: Path.expand("../exsemantica_dev.db", Path.dirname(__ENV__.file)),
-  pool_size: 5,
-  show_sensitive_data_on_connection_error: true
-
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
@@ -19,7 +13,7 @@ config :exsemantica, ExsemanticaWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "RCk9qOhQlL0gWLym3QCHjLM8suPnVQAKO+8Qz0RonDNpgl0glUpvYUcQFBJEm6Ph",
+  secret_key_base: "ClsDxuvE3wuXcb01wsYeKagsF15cZbY1FbtT/A4pgO0laLV36dO+VlmZEfhJ8dCh",
   watchers: [
     # Start the esbuild watcher by calling Esbuild.install_and_run(:default, args)
     esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
@@ -36,7 +30,6 @@ config :exsemantica, ExsemanticaWeb.EndpointApi,
   code_reloader: false,
   debug_errors: true
 # Exsemantica-special stuff goes here ABOVE
-
 # ## SSL Support
 #
 # In order to use HTTPS in development, a self-signed

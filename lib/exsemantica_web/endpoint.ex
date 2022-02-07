@@ -1,6 +1,5 @@
 defmodule ExsemanticaWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :exsemantica
-  use Absinthe.Phoenix.Endpoint
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
@@ -8,7 +7,7 @@ defmodule ExsemanticaWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_exsemantica_key",
-    signing_salt: "1RyCumZG"
+    signing_salt: "iEMYWBRd"
   ]
 
   socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
@@ -29,7 +28,6 @@ defmodule ExsemanticaWeb.Endpoint do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader
     plug Phoenix.CodeReloader
-    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :exsemantica
   end
 
   plug Phoenix.LiveDashboard.RequestLogger,

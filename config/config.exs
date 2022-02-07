@@ -7,15 +7,12 @@
 # General application configuration
 import Config
 
-config :exsemantica,
-  ecto_repos: [Exsemantica.Repo]
-
 # Configures the endpoint
 config :exsemantica, ExsemanticaWeb.Endpoint,
   url: [host: "localhost"],
   render_errors: [view: ExsemanticaWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: Exsemantica.PubSub,
-  live_view: [signing_salt: "KKzi5f9V"]
+  live_view: [signing_salt: "DVIwt9//"]
 
 # Configures the mailer
 #
@@ -39,6 +36,17 @@ config :esbuild,
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
 
+config :tailwind,
+  version: "3.0.18",
+  default: [
+    args: ~w(
+      --config=tailwind.config.js
+      --input=css/app.css
+      --output=../priv/static/assets/app.css
+    ),
+    cd: Path.expand("../assets", __DIR__)
+  ]
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
@@ -46,15 +54,6 @@ config :logger, :console,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
-
-config :tailwind, version: "3.0.18", default: [
-  args: ~w(
-    --config=tailwind.config.js
-    --input=css/app.css
-    --output=../priv/static/assets/app.css
-  ),
-  cd: Path.expand("../assets", __DIR__)
-]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
