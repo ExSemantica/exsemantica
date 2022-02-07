@@ -26,6 +26,17 @@ config :exsemantica, ExsemanticaWeb.Endpoint,
     tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
   ]
 
+# Exsemantica-special stuff goes here BELOW
+config :mnesia,
+  dir: to_charlist(Path.join([Path.dirname(__DIR__), "priv", "Exsemnesia_devel.#{node()}"]))
+
+config :exsemantica, ExsemanticaWeb.EndpointApi,
+  http: [ip: {127, 0, 0, 1}, port: 4007],
+  check_origin: false,
+  code_reloader: false,
+  debug_errors: true
+# Exsemantica-special stuff goes here ABOVE
+
 # ## SSL Support
 #
 # In order to use HTTPS in development, a self-signed

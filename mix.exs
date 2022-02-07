@@ -20,7 +20,7 @@ defmodule Exsemantica.MixProject do
   def application do
     [
       mod: {Exsemantica.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :mnesia]
     ]
   end
 
@@ -49,7 +49,13 @@ defmodule Exsemantica.MixProject do
       {:gettext, "~> 0.18"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:tailwind, "~> 0.1", runtime: Mix.env() == :dev}
+
+      # All external Mix deps
+      {:tailwind, "~> 0.1", runtime: Mix.env() == :dev},
+      {:absinthe, "~> 1.7"},
+      {:absinthe_phoenix, "~> 2.0"},
+      {:absinthe_plug, "~> 1.5"},
+      {:unidecode, "~> 1.0"}
     ]
   end
 

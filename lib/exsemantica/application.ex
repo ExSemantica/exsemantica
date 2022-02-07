@@ -14,8 +14,33 @@ defmodule Exsemantica.Application do
       ExsemanticaWeb.Telemetry,
       # Start the PubSub system
       {Phoenix.PubSub, name: Exsemantica.PubSub},
-      # Start the Endpoint (http/https)
-      ExsemanticaWeb.Endpoint
+      # Start the Endpoints (http/https)
+      ExsemanticaWeb.Endpoint,
+      {Absinthe.Subscription, ExsemanticaWeb.Endpoint},
+      ExsemanticaWeb.EndpointApi,
+      # Start Exsemnesia KV storage
+      {Exsemnesia.Database,
+       [
+         tables: [
+           {:users, ~w(node timestamp handle)a},
+           {:posts, ~w(node timestamp handle title content posted_by)a},
+           {:interests, ~w(node timestamp handle title content related_to)a},
+           {:counters, ~w(type count)a}
+         ],
+         caches: [
+           # This is weird. You can botch a composite key. Cool!
+           {:ctrending, ~w(count_node node type htimestamp handle)a}
+         ],
+         tcopts: %{
+           extra_indexes: %{
+             users: ~w(handle)a,
+             posts: ~w(handle)a,
+             interests: ~w(handle)a,
+             ctrending: ~w(node)a
+           },
+           ordered_caches: ~w(ctrending)a
+         }
+       ]}
       # Start a worker by calling: Exsemantica.Worker.start_link(arg)
       # {Exsemantica.Worker, arg}
     ]
@@ -26,11 +51,12 @@ defmodule Exsemantica.Application do
     Supervisor.start_link(children, opts)
   end
 
-  # Tell Phoenix to update the endpoint configuration
+  # Tell Phoenix to update the endpoint configurations
   # whenever the application is updated.
   @impl true
   def config_change(changed, _new, removed) do
     ExsemanticaWeb.Endpoint.config_change(changed, removed)
+    ExsemanticaWeb.EndpointApi.config_change(changed, removed)
     :ok
   end
 end
