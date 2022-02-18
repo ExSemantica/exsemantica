@@ -4,9 +4,10 @@ defmodule ExsemanticaWeb.Schema do
   """
   use Absinthe.Schema
 
-  import_types ExsemanticaWeb.SchemaTypes
+  import_types(ExsemanticaWeb.SchemaTypes)
 
   query do
+    # ==========================================================================
     field :posts, list_of(:post) do
       arg(:ids, list_of(:id128))
 
@@ -47,6 +48,7 @@ defmodule ExsemanticaWeb.Schema do
       end)
     end
 
+    # ==========================================================================
     field :users, list_of(:user) do
       arg(:ids, list_of(:id128))
 
@@ -85,6 +87,7 @@ defmodule ExsemanticaWeb.Schema do
       end)
     end
 
+    # ==========================================================================
     field :interests, list_of(:interest) do
       arg(:ids, list_of(:id128))
 
@@ -125,14 +128,20 @@ defmodule ExsemanticaWeb.Schema do
       end)
     end
 
+    # ==========================================================================
     field :trending, list_of(:trend) do
       arg(:count, :integer)
+      arg(:fuzzy_handle, :string)
 
       complexity(fn %{count: count}, child_complexity ->
         count * child_complexity
       end)
 
-      resolve(fn %{count: count}, _ ->
+      complexity(fn %{count: count, fuzzy_handle: _}, child_complexity ->
+        count * child_complexity * 2
+      end)
+
+      resolve(fn %{count: count}, _ when count > 0 ->
         {:atomic, [packet]} =
           [Exsemnesia.Utils.trending(count)]
           |> Exsemnesia.Database.transaction()
@@ -141,7 +150,27 @@ defmodule ExsemanticaWeb.Schema do
          Enum.reverse(
            for resp <- packet.response do
              {:ctrending, _, id, type, _, handle} = resp
-             %{node: id, type: type, handle: handle}
+             %{node: id, type: type, handle: handle, relevance_or_zero: 0.0}
+           end
+         )}
+      end)
+
+      resolve(fn %{count: count, fuzzy_handle: fuzzy_handle}, _ when count > 0 ->
+        {:atomic, [packet]} =
+          [Exsemnesia.Utils.trending(count)]
+          |> Exsemnesia.Database.transaction()
+
+        {:ok,
+         Enum.reverse(
+           for resp <- packet.response do
+             {:ctrending, _, id, type, _, handle} = resp
+
+             %{
+               node: id,
+               type: type,
+               handle: handle,
+               relevance_or_zero: String.bag_distance(handle, fuzzy_handle)
+             }
            end
          )}
       end)

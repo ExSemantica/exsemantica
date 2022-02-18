@@ -46,4 +46,8 @@ defmodule ExsemanticaWeb.Endpoint do
   plug Plug.Head
   plug Plug.Session, @session_options
   plug ExsemanticaWeb.Router
+
+  socket "/socket", ExsemanticaWeb.UserSocket,
+    websocket: true,
+    longpoll: false
 end

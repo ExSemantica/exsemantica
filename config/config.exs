@@ -14,6 +14,10 @@ config :exsemantica, ExsemanticaWeb.Endpoint,
   pubsub_server: Exsemantica.PubSub,
   live_view: [signing_salt: "DVIwt9//"]
 
+config :exsemantica, ExsemanticaWeb.EndpointApi,
+  url: [host: "localhost"],
+  pubsub_server: Exsemantica.PubSub
+
 # Configures the mailer
 #
 # By default it uses the "Local" adapter which stores the emails

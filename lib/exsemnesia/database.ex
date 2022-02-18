@@ -180,18 +180,26 @@ defmodule Exsemnesia.Database do
             fn ->
               pre = :mnesia.read(table, idx = info.idx)
 
+              pre_handle =
+                case table do
+                  :users ->
+                    {_node, _timestamp, handle} = pre
+                    handle
+
+                  :posts ->
+                    {_node, _timestamp, handle, _title, _content, _posted_by} = pre
+                    handle
+
+                  :interests ->
+                    {_node, _timestamp, handle, _title, _content, _related_to} = pre
+                    handle
+                end
+
               this =
                 {:ctrending, {pop, ^idx}, ^idx, ^table, htimestamp, handle} =
                 case :mnesia.index_read(:ctrending, info.idx, :node) do
-                  _ when pre == [] ->
-                    Logger.debug(
-                      "Can't rank up nonexistent object #{Exsemnesia.Id128.serialize(info.idx)}"
-                    )
-
-                    {:ctrending, {0, idx}, idx, table, @epoch, handle}
-
                   [] ->
-                    {:ctrending, {0, idx}, idx, table, @epoch, handle}
+                    {:ctrending, {0, idx}, idx, table, @epoch, pre_handle}
 
                   [exist] ->
                     exist

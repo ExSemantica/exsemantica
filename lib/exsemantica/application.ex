@@ -14,8 +14,9 @@ defmodule Exsemantica.Application do
       {Phoenix.PubSub, name: Exsemantica.PubSub},
       # Start the Endpoints (http/https)
       ExsemanticaWeb.Endpoint,
-      {Absinthe.Subscription, ExsemanticaWeb.Endpoint},
+
       ExsemanticaWeb.EndpointApi,
+      {Absinthe.Subscription, ExsemanticaWeb.EndpointApi},
       # Start Exsemnesia KV storage
       {Exsemnesia.Database,
        [

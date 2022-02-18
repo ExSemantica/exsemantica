@@ -18,6 +18,8 @@ defmodule ExsemanticaWeb.SchemaTypes do
   object :trend do
     field(:node, :id128)
     field(:type, :string)
+    field(:name, :handle128)
+    field(:relevance_or_zero, :float)
   end
 
   # ============================================================================
