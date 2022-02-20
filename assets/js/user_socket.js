@@ -77,6 +77,5 @@ function refreshAttrs() {
 }
 
 setInterval(refreshAttrs, 10000);
-refreshAttrs();
 
 export default socket
