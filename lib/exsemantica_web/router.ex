@@ -17,7 +17,9 @@ defmodule ExsemanticaWeb.Router do
   scope "/", ExsemanticaWeb do
     pipe_through :browser
 
-    get "/", PageController, :index
+    live_session :default, root_layout: {ExsemanticaWeb.LayoutView, :different_layout} do
+      get "/", PageController, :index
+    end
   end
 
   # Other scopes may use custom stacks.

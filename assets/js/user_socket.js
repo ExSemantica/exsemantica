@@ -58,7 +58,7 @@ socket.connect()
 // subtopic is its id - in this case 42:
 let channel = socket.channel("semantic_feed:home", {})
 channel.join()
-  .receive("ok", resp => { console.log("Joined successfully", resp) })
+  .receive("ok", resp => { console.log("Joined successfully", resp); setTimeout(refreshAttrs, 1000) })
   .receive("error", resp => { console.log("Unable to join", resp) })
 
 function refreshAttrs() {
@@ -66,7 +66,7 @@ function refreshAttrs() {
     .receive("ok", (resp) => {
       console.log("Got trends", resp);
       let json = JSON.parse(resp);
-      if(json.trending.length > 0) {
+      if (json.trending.length > 0) {
         document.getElementById("trending-items").innerText = "Please implement this.";
       } else {
         document.getElementById("trending-items").innerText = "No trends available at this time.";
@@ -76,6 +76,8 @@ function refreshAttrs() {
     .receive("error", (resp) => { console.log("Couldn't get trends", resp); })
 }
 
-setInterval(refreshAttrs, 10000);
+window.addEventListener("load", info => {
+  setInterval(refreshAttrs, 10000);
+});
 
 export default socket

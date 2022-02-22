@@ -24,6 +24,15 @@ defmodule Exsemnesia.Database do
     GenServer.call(__MODULE__, {:transaction, transactions})
   end
 
+  @doc """
+  Counts the number of items in a Mnesia table.
+
+  This is not a transactioned operation.
+  """
+  def count() do
+    length(:mnesia.index_read(table, value, key))
+  end
+
   # ============================================================================
   # Callbacks
   # ============================================================================
@@ -92,15 +101,6 @@ defmodule Exsemnesia.Database do
       events
       |> Enum.map(fn oper ->
         case oper do
-          # Item Count
-          %{operation: :count, table: table, info: info = %{key: key, value: value}} ->
-            %{
-              table: table,
-              info: info,
-              operation: :count,
-              response: length(:mnesia.index_read(table, value, key))
-            }
-
           # Item Get
           %{operation: :get, table: table, info: info} ->
             fn ->
