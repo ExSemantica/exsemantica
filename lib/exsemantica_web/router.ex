@@ -40,7 +40,7 @@ defmodule ExsemanticaWeb.Router do
     scope "/" do
       pipe_through :browser
 
-      live_dashboard "/dashboard", metrics: ExsemanticaWeb.Telemetry
+      live_dashboard "/dashboard", metrics: ExsemanticaWeb.Telemetry, additional_pages: [exsemantica: ExsemanticaWeb.AdminPage]
     end
   end
 

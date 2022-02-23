@@ -23,6 +23,7 @@ defmodule Exsemantica.Application do
            users: ~w(node timestamp handle)a,
            posts: ~w(node timestamp handle title content posted_by)a,
            interests: ~w(node timestamp handle title content related_to)a,
+           auth: ~w(handle hash login_timestamp)a,
            counters: ~w(type count)a
          },
          caches: %{
@@ -67,7 +68,11 @@ defmodule Exsemantica.Application do
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Exsemantica.Supervisor]
-    Supervisor.start_link(children, opts)
+    re = Supervisor.start_link(children, opts)
+
+    Exsemnesia.Utils.shuffle_invite()
+
+    re
   end
 
   # Tell Phoenix to update the endpoint configurations

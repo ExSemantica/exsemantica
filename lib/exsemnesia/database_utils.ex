@@ -20,24 +20,39 @@ defmodule Exsemnesia.Utils do
   # ============================================================================
   # Put items
   # ============================================================================
-  def put_user(raw_handle) do
-    if Exsemnesia.Handle128.is_valid(raw_handle) do
-      handle = Exsemnesia.Handle128.serialize(raw_handle)
+  def shuffle_invite do
+    :persistent_term.put(
+      :exsemantica_invite,
+      Base.encode64(:crypto.hash(:sha3_256, :crypto.strong_rand_bytes(32)))
+    )
+  end
 
-      if unique?(handle) do
-        id = increment(:id_count)
+  def put_user(raw_handle, invite_code) do
+    invite = :persistent_term.get(:exsemantica_invite)
 
-        %{
-          operation: :put,
-          table: :users,
-          info: {:users, id, DateTime.utc_now(), handle},
-          idh: {id, handle}
-        }
-      else
-        {:error, :eusers}
-      end
-    else
-      {:error, :einval}
+    cond do
+      invite != invite_code ->
+        {:error, :einvite}
+
+      not Exsemnesia.Handle128.is_valid(raw_handle) ->
+        {:error, :einval}
+
+      true ->
+        handle = Exsemnesia.Handle128.serialize(raw_handle)
+
+        if unique?(handle) do
+          shuffle_invite()
+          id = increment(:id_count)
+
+          %{
+            operation: :put,
+            table: :users,
+            info: {:users, id, DateTime.utc_now(), handle},
+            idh: {id, handle}
+          }
+        else
+          {:error, :eusers}
+        end
     end
   end
 
