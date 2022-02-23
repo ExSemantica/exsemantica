@@ -24,11 +24,14 @@ defmodule Exsemnesia.Utils do
     if Exsemnesia.Handle128.is_valid(raw_handle) do
       handle = Exsemnesia.Handle128.serialize(raw_handle)
 
-      if unique(handle) do
+      if unique?(handle) do
+        id = increment(:id_count)
+
         %{
           operation: :put,
           table: :users,
-          info: {:users, increment(:id_count), DateTime.utc_now(), handle}
+          info: {:users, id, DateTime.utc_now(), handle},
+          idh: {id, handle}
         }
       else
         {:error, :eusers}
@@ -42,11 +45,14 @@ defmodule Exsemnesia.Utils do
     if Exsemnesia.Handle128.is_valid(raw_handle) do
       handle = Exsemnesia.Handle128.serialize(raw_handle)
 
-      if unique(handle) do
+      if unique?(handle) do
+        id = increment(:id_count)
+
         %{
           operation: :put,
           table: :posts,
-          info: {:posts, increment(:id_count), DateTime.utc_now(), handle, title, content, user}
+          info: {:posts, id, DateTime.utc_now(), handle, title, content, user},
+          idh: {id, handle}
         }
       else
         {:error, :eusers}
@@ -60,11 +66,14 @@ defmodule Exsemnesia.Utils do
     if Exsemnesia.Handle128.is_valid(raw_handle) do
       handle = Exsemnesia.Handle128.serialize(raw_handle)
 
-      if unique(handle) do
+      if unique?(handle) do
+        id = increment(:id_count)
+
         %{
           operation: :put,
           table: :interests,
-          info: {:interests, increment(:id_count), DateTime.utc_now(), title, content, related_to}
+          info: {:interests, id, DateTime.utc_now(), title, content, related_to},
+          idh: {id, handle}
         }
       else
         {:error, :eusers}
@@ -101,7 +110,7 @@ defmodule Exsemnesia.Utils do
     }
   end
 
-  defp unique(handle) do
+  def unique?(handle) do
     {:atomic, uniqs} =
       [
         Exsemnesia.Utils.count(:users, :handle, handle),
@@ -111,8 +120,9 @@ defmodule Exsemnesia.Utils do
       |> Exsemnesia.Database.transaction()
 
     uniqs
-    |> Enum.all?(fn %{operation: :count, table: _table, info: _info, response: response} ->
-      response == 0
+    |> Enum.map(fn %{operation: :count, table: _table, info: _info, response: response} ->
+      response
     end)
+    |> Enum.sum() == 0
   end
 end

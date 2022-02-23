@@ -25,7 +25,7 @@ import "phoenix_html"
 import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
-import socket from "./user_socket.js"
+// import socket from "./user_socket.js"
 
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
@@ -46,3 +46,68 @@ liveSocket.connect()
 window.liveSocket = liveSocket
 window.Alpine = Alpine
 Alpine.start()
+
+window.exSemFeedChannel = window.liveSocket.channel("lv_semantic_feed:home", {})
+window.exSemFeedChannel.join()
+    .receive("ok", resp => { console.log("Joined successfully", resp) })
+    .receive("error", resp => { console.log("Unable to join", resp) })
+
+window.exSemFeedChannel.on("update_trends", (msg) => {
+    console.log("Trends received", msg)
+    document.getElementById("trend-summary").innerText = "";
+    msg.result.forEach(element => {
+        let node = document.createElement("div");
+        switch (element.type) {
+            case "users":
+                node.innerHTML = `<b>${element.handle}</b><br>user`;
+                node.classList.add(
+                    'text-xs',
+                    'transition',
+                    'bg-amber-200',
+                    'duration-0',
+                    'hover:bg-amber-100',
+                    'hover:duration-200',
+                    'm-1',
+                    'p-1',
+                    'rounded-xl'
+                )
+                document.getElementById("trend-summary").appendChild(node);        
+                break;
+        
+            case "interests":
+                node.innerHTML = `<b>${element.handle}</b><br>interest`;
+                node.classList.add(
+                    'text-xs',
+                    'transition',
+                    'bg-lime-200',
+                    'duration-0',
+                    'hover:bg-lime-100',
+                    'hover:duration-200',
+                    'm-1',
+                    'p-1',
+                    'rounded-xl'
+                )
+                document.getElementById("trend-summary").appendChild(node);        
+                break;
+
+            case "posts":
+                node.innerHTML = `<b>${element.handle}</b><br>post`;
+                node.classList.add(
+                    'text-xs',
+                    'transition',
+                    'bg-cyan-200',
+                    'duration-0',
+                    'hover:bg-cyan-100',
+                    'hover:duration-200',
+                    'm-1',
+                    'p-1',
+                    'rounded-xl'
+                )
+                document.getElementById("trend-summary").appendChild(node);        
+                break;
+            default:
+                break;
+        }
+    });
+    document.getElementById("trend-display-waiting").innerText = `Trends loaded on ${msg.time}`
+})

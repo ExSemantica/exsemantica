@@ -10,7 +10,7 @@ defmodule ExsemanticaWeb.Endpoint do
     signing_salt: "iEMYWBRd"
   ]
 
-  socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
+  socket "/live", ExsemanticaWeb.Live.Socket, websocket: [connect_info: [session: @session_options]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -46,8 +46,4 @@ defmodule ExsemanticaWeb.Endpoint do
   plug Plug.Head
   plug Plug.Session, @session_options
   plug ExsemanticaWeb.Router
-
-  socket "/socket", ExsemanticaWeb.UserSocket,
-    websocket: true,
-    longpoll: false
 end

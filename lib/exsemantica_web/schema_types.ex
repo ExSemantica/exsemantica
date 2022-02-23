@@ -18,8 +18,8 @@ defmodule ExsemanticaWeb.SchemaTypes do
   object :trend do
     field(:node, :id128)
     field(:type, :string)
-    field(:name, :handle128)
-    field(:relevance_or_zero, :float)
+    field(:handle, :handle128)
+    field(:relevance, :float)
   end
 
   # ============================================================================
@@ -38,7 +38,7 @@ defmodule ExsemanticaWeb.SchemaTypes do
     field(:node, :id128)
     field(:title, :string)
     field(:content, :string)
-    field(:posted_by, :id128)
+    field(:posted, :id128)
     field(:timestamp, :datetime)
   end
 
@@ -49,7 +49,7 @@ defmodule ExsemanticaWeb.SchemaTypes do
     field(:node, :id128)
     field(:title, :string)
     field(:content, :string)
-    field(:related_to, list_of(:id128))
+    field(:related, list_of(:id128))
     field(:timestamp, :datetime)
   end
 end

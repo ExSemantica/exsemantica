@@ -36,7 +36,7 @@ defmodule ExsemanticaWeb.Schema do
                  node: id,
                  title: title,
                  content: content,
-                 posted_by: posted_by,
+                 posted: posted_by,
                  timestamp: timestamp
                }
 
@@ -116,7 +116,7 @@ defmodule ExsemanticaWeb.Schema do
                  node: id,
                  title: title,
                  content: content,
-                 related_to: related_to,
+                 related: related_to,
                  timestamp: timestamp
                }
 
@@ -131,48 +131,45 @@ defmodule ExsemanticaWeb.Schema do
     # ==========================================================================
     field :trending, list_of(:trend) do
       arg(:count, :integer)
-      arg(:fuzzy_handle, :string)
+      arg(:fuzzy, :string)
 
-      complexity(fn %{count: count}, child_complexity ->
+      complexity(fn %{count: count, fuzzy: _}, child_complexity ->
         count * child_complexity
       end)
 
-      complexity(fn %{count: count, fuzzy_handle: _}, child_complexity ->
-        count * child_complexity * 2
-      end)
-
-      resolve(fn %{count: count}, _ when count > 0 ->
+      resolve(fn %{count: count, fuzzy: fuzzy_handle}, _ when count > 0 ->
         {:atomic, [packet]} =
           [Exsemnesia.Utils.trending(count)]
           |> Exsemnesia.Database.transaction()
 
         {:ok,
-         Enum.reverse(
-           for resp <- packet.response do
-             {:ctrending, _, id, type, _, handle} = resp
-             %{node: id, type: type, handle: handle, relevance_or_zero: 0.0}
-           end
-         )}
-      end)
+         if not is_nil(fuzzy_handle) do
+           Enum.reverse(
+             for resp <- packet.response do
+               {:ctrending, _, id, type, _, handle} = resp
 
-      resolve(fn %{count: count, fuzzy_handle: fuzzy_handle}, _ when count > 0 ->
-        {:atomic, [packet]} =
-          [Exsemnesia.Utils.trending(count)]
-          |> Exsemnesia.Database.transaction()
+               %{
+                 node: id,
+                 type: type,
+                 handle: handle,
+                 relevance: String.bag_distance(handle, fuzzy_handle)
+               }
+             end
+           )
+         else
+           Enum.reverse(
+             for resp <- packet.response do
+               {:ctrending, _, id, type, _, handle} = resp
 
-        {:ok,
-         Enum.reverse(
-           for resp <- packet.response do
-             {:ctrending, _, id, type, _, handle} = resp
-
-             %{
-               node: id,
-               type: type,
-               handle: handle,
-               relevance_or_zero: String.bag_distance(handle, fuzzy_handle)
-             }
-           end
-         )}
+               %{
+                 node: id,
+                 type: type,
+                 handle: handle,
+                 relevance: 1.0
+               }
+             end
+           )
+         end}
       end)
     end
   end

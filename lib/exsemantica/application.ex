@@ -14,22 +14,21 @@ defmodule Exsemantica.Application do
       {Phoenix.PubSub, name: Exsemantica.PubSub},
       # Start the Endpoints (http/https)
       ExsemanticaWeb.Endpoint,
-
       ExsemanticaWeb.EndpointApi,
       {Absinthe.Subscription, ExsemanticaWeb.EndpointApi},
       # Start Exsemnesia KV storage
       {Exsemnesia.Database,
        [
-         tables: [
-           {:users, ~w(node timestamp handle)a},
-           {:posts, ~w(node timestamp handle title content posted_by)a},
-           {:interests, ~w(node timestamp handle title content related_to)a},
-           {:counters, ~w(type count)a}
-         ],
-         caches: [
+         tables: %{
+           users: ~w(node timestamp handle)a,
+           posts: ~w(node timestamp handle title content posted_by)a,
+           interests: ~w(node timestamp handle title content related_to)a,
+           counters: ~w(type count)a
+         },
+         caches: %{
            # This is weird. You can botch a composite key. Cool!
-           {:ctrending, ~w(count_node node type htimestamp handle)a}
-         ],
+           ctrending: ~w(count_node node type htimestamp handle)a
+         },
          tcopts: %{
            extra_indexes: %{
              users: ~w(handle)a,
@@ -37,9 +36,30 @@ defmodule Exsemantica.Application do
              interests: ~w(handle)a,
              ctrending: ~w(node)a
            },
-           ordered_caches: ~w(ctrending)a
+           ordered_caches: ~w(ctrending)a,
+           seed_trends: ~w(users posts interests)a,
+           seed_seeder: fn entry ->
+             {table, id, handle} =
+               case entry do
+                 {:users, id, _timestamp, handle} ->
+                   {:users, id, handle}
+
+                 {:posts, id, _timestamp, handle, _title, _content, _posted_by} ->
+                   {:posts, id, handle}
+
+                 {:interests, id, _timestamp, handle, _title, _content, _related_to} ->
+                   {:interests, id, handle}
+               end
+
+             :mnesia.write(
+               :ctrending,
+               {:ctrending, {0, id}, id, table, DateTime.utc_now(), handle},
+               :sticky_write
+             )
+           end
          }
-       ]}
+       ]},
+       ExsemanticaWeb.AnnounceServer
       # Start a worker by calling: Exsemantica.Worker.start_link(arg)
       # {Exsemantica.Worker, arg}
     ]

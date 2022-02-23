@@ -24,15 +24,6 @@ defmodule Exsemnesia.Database do
     GenServer.call(__MODULE__, {:transaction, transactions})
   end
 
-  @doc """
-  Counts the number of items in a Mnesia table.
-
-  This is not a transactioned operation.
-  """
-  def count() do
-    length(:mnesia.index_read(table, value, key))
-  end
-
   # ============================================================================
   # Callbacks
   # ============================================================================
@@ -40,7 +31,12 @@ defmodule Exsemnesia.Database do
   def init(
         tables: tables,
         caches: caches,
-        tcopts: %{extra_indexes: indices, ordered_caches: order_these}
+        tcopts: %{
+          extra_indexes: indices,
+          ordered_caches: order_these,
+          seed_trends: seeds,
+          seed_seeder: seeder
+        }
       ) do
     Logger.info("preparing distributed Mnesia")
     :ok = :net_kernel.monitor_nodes(true)
@@ -53,9 +49,26 @@ defmodule Exsemnesia.Database do
 
     :mnesia.start()
 
-    resp = %{tables: try_make_tables(tables), caches: try_make_caches(caches, order_these)}
+    resp = %{
+      tables: tables |> Map.to_list() |> try_make_tables(),
+      caches: caches |> Map.to_list() |> try_make_caches(order_these)
+    }
 
     indices |> assemble_indices
+
+    for seed <- seeds do
+      Logger.debug("populating initial ctrending entries for #{inspect(seed)}")
+
+      :mnesia.transaction(fn ->
+        :mnesia.foldl(
+          fn entry, _acc ->
+            seeder.(entry)
+          end,
+          0,
+          seed
+        )
+      end)
+    end
 
     {:ok, resp}
   end
@@ -66,7 +79,7 @@ defmodule Exsemnesia.Database do
         state = %{
           tables: tables,
           caches: caches,
-          tcopts: %{extra_indexes: indices, ordered_caches: order_these}
+          tcopts: %{extra_indexes: indices, ordered_caches: order_these, seed_trends: _seeds}
         }
       ) do
     nodes = Node.list()
@@ -101,6 +114,17 @@ defmodule Exsemnesia.Database do
       events
       |> Enum.map(fn oper ->
         case oper do
+          # Item Count
+          %{operation: :count, table: table, info: info = %{key: key, value: value}} ->
+            fn ->
+              %{
+                table: table,
+                info: info,
+                operation: :count,
+                response: length(:mnesia.index_read(table, value, key))
+              }
+            end
+
           # Item Get
           %{operation: :get, table: table, info: info} ->
             fn ->
@@ -113,8 +137,16 @@ defmodule Exsemnesia.Database do
             end
 
           # Item Put
-          %{operation: :put, table: table, info: info} ->
+          %{operation: :put, table: table, info: info, idh: {id, handle}} ->
             fn ->
+              # Writes the ctrending entry strongly.
+              :mnesia.write(
+                :ctrending,
+                {:ctrending, {0, id}, id, table,
+                 DateTime.utc_now() |> DateTime.add(@noboost_htimestamp_secs), handle},
+                :sticky_write
+              )
+
               # for distribution's sake
               # ALSO: make unsticky if it's causing problems...
               %{
@@ -155,8 +187,6 @@ defmodule Exsemnesia.Database do
               {accum, _cnt} =
                 :mnesia.foldl(
                   fn record, {acc, cnt} ->
-                    IO.inspect(record)
-
                     case record do
                       [] -> {acc, 0}
                       _ when cnt > 0 -> {[record | acc], cnt - 1}
