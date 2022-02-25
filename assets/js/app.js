@@ -59,7 +59,7 @@ window.exSemFeedChannel.on("update_trends", (msg) => {
         let node = document.createElement("div");
         switch (element.type) {
             case "users":
-                node.innerHTML = `<b>${element.handle}</b><br>user`;
+                node.innerHTML = `<b>${element.handle}</b><br>user`
                 node.classList.add(
                     'text-xs',
                     'transition',
@@ -71,11 +71,11 @@ window.exSemFeedChannel.on("update_trends", (msg) => {
                     'p-1',
                     'rounded-xl'
                 )
-                document.getElementById("trend-summary").appendChild(node);        
+                document.getElementById("trend-summary").appendChild(node)
                 break;
-        
+
             case "interests":
-                node.innerHTML = `<b>${element.handle}</b><br>interest`;
+                node.innerHTML = `<b>${element.handle}</b><br>interest`
                 node.classList.add(
                     'text-xs',
                     'transition',
@@ -87,11 +87,11 @@ window.exSemFeedChannel.on("update_trends", (msg) => {
                     'p-1',
                     'rounded-xl'
                 )
-                document.getElementById("trend-summary").appendChild(node);        
+                document.getElementById("trend-summary").appendChild(node)
                 break;
 
             case "posts":
-                node.innerHTML = `<b>${element.handle}</b><br>post`;
+                node.innerHTML = `<b>${element.handle}</b><br>post`
                 node.classList.add(
                     'text-xs',
                     'transition',
@@ -103,7 +103,7 @@ window.exSemFeedChannel.on("update_trends", (msg) => {
                     'p-1',
                     'rounded-xl'
                 )
-                document.getElementById("trend-summary").appendChild(node);        
+                document.getElementById("trend-summary").appendChild(node)
                 break;
             default:
                 break;
@@ -111,3 +111,36 @@ window.exSemFeedChannel.on("update_trends", (msg) => {
     });
     document.getElementById("trend-display-waiting").innerText = `Trends loaded on ${msg.time}`
 })
+
+window.loginInitiate = async () => {
+    let handle = document.getElementById("loginHandle").value
+    let result = await fetch(`/api/v0/login?user=${handle}`, {})
+    let json = await result.json()
+    console.log("Got login entry", json)
+    let old = document.getElementById("loginInvite")
+
+    if (json.unique) {
+        let invite = document.createElement("input")
+        invite.type = "text"
+        invite.placeholder = "Invite code"
+        invite.classList.add(
+            'bg-indigo-200',
+            'rounded-full',
+            'w-full',
+            'mb-4',
+            'p-1/4',
+            'drop-shadow-md'
+        )
+        old.replaceWith(invite)
+        invite.id = "loginInvite"
+        document.getElementById("loginFooter").innerText = `Handle '${json.parsed.trimEnd()}' is unique and can be registered. Please enter your invite code.`
+    } else {
+
+        let invite = document.createElement("span")
+        old.replaceWith(invite)
+        invite.id = "loginInvite"
+        document.getElementById("loginFooter").innerText = `Logging in as '${json.parsed.trimEnd()}'...`
+    }
+
+    // let password = document.getElementById("loginPassword").nodeValue
+}

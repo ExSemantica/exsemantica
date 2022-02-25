@@ -47,7 +47,7 @@ defmodule Exsemnesia.Utils do
           %{
             operation: :put,
             table: :users,
-            info: {:users, id, DateTime.utc_now(), handle},
+            info: {:users, id, DateTime.utc_now(), handle, <<0::128>>},
             idh: {id, handle}
           }
         else

@@ -12,6 +12,11 @@ defmodule ExsemanticaWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+
+    scope "/api/v0", ExsemanticaWeb.APIv0 do
+      get "/login", Login, :get_attributes
+      post "/login", Login, :post_authentication
+    end
   end
 
   scope "/", ExsemanticaWeb do
@@ -40,7 +45,12 @@ defmodule ExsemanticaWeb.Router do
     scope "/" do
       pipe_through :browser
 
-      live_dashboard "/dashboard", metrics: ExsemanticaWeb.Telemetry, additional_pages: [exsemantica: ExsemanticaWeb.AdminPage]
+      live_dashboard "/dashboard",
+        metrics: ExsemanticaWeb.Telemetry,
+        additional_pages: [
+          exsem_invite_code: ExsemanticaWeb.AdminPanel.InviteCode,
+          exsem_users: ExsemanticaWeb.AdminPanel.Users
+        ]
     end
   end
 

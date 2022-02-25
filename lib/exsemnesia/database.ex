@@ -205,6 +205,16 @@ defmodule Exsemnesia.Database do
               }
             end
 
+            # Dump all entries of a table. This is an intensive operation.
+          %{operation: :dump, table: table} ->
+            fn ->
+              %{
+                table: table,
+                operation: :dump,
+                response: :mnesia.foldr(fn record, acc -> [record | acc] end, [], table)
+              }
+            end
+
           # Handles modifying the ranking of a certain ctrending entry
           %{operation: :rank, table: table, info: info} ->
             fn ->
@@ -213,7 +223,7 @@ defmodule Exsemnesia.Database do
               pre_handle =
                 case table do
                   :users ->
-                    {_node, _timestamp, handle} = pre
+                    {_node, _timestamp, handle, _privmask} = pre
                     handle
 
                   :posts ->

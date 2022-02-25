@@ -13,11 +13,13 @@
 </header>
 <div class="flex flex-row gap-8 m-16 items-start">
     <main class="basis-2/3">
-        <div class="bg-indigo-400 rounded-lg drop-shadow-xl p-8">
-            <h1 class="text-2xl">Welcome to ExSemantica!</h1>
-            <p><i>A free and open source microblogging and messaging platform for people who share interests.</i></p>
-            <br>
-            <p>Check the sidebar to see what's popular. Check below for your interest feed.</p>
+        <div class="bg-indigo-400 rounded-lg drop-shadow-xl p-8 mb-8">
+            <h1 class="text-2xl"><%= @main_hello %></h1>
+            <%= @main_text %>
+        </div>
+        <div class="bg-indigo-500 rounded-lg drop-shadow-xl p-8 mb-8">
+            <h2 class="text-xl"><%= @dyn_header %></h2>
+            <%= @dyn_text %>
         </div>
     </main>
     <aside class="basis-1/3">
@@ -27,15 +29,25 @@
             <br>
             <h2 class="text-xl">Trending interests</h2>
             <div phx-update="ignore" id="trend-summary"></div>
-            <p class="text-xs"><i phx-update="ignore" id="trend-display-waiting">Trends will load soon...</i></p>
+            <p class="text-xs"><i phx-update="ignore" id="trend-display-waiting">Trends are loading...</i></p>
         </div>
         <br>
-        <footer><small class="text-xs text-center">ExSemantica v<%= Application.spec(:exsemantica, :vsn) %> - <a href="https://github.com/Chlorophytus/exsemantica" class="underline decoration-sky-600 text-sky-600">Fork me on GitHub!</a></small></footer>
+        <footer class="text-center"><small>ExSemantica v<%= Application.spec(:exsemantica, :vsn) %> - <a href="https://github.com/Chlorophytus/exsemantica" class="underline decoration-sky-600 text-sky-600">Fork me on GitHub!</a></small></footer>
     </aside>
     <template x-if="showLogin">
         <div>
             <div class="fixed left-0 top-0 w-screen h-screen opacity-75 bg-white" @click="showLogin=false"></div>
-            <div class="fixed left-1/3 w-1/3 h-1/2 bg-slate-500 rounded-xl drop-shadow-2xl p-4"><h2 class="text-xl">test</h2></div>
+            <div class="fixed left-1/3 w-1/3 bg-blue-300 rounded-xl drop-shadow-2xl p-4">
+                <h2 class="text-xl">Log in or Register</h2>
+                <i id="loginFooter"></i>
+                <br>
+                <form id="loginForm">
+                    <input id="loginHandle" type="text" placeholder="Handle" class="bg-indigo-200 rounded-full w-full mb-4 p-1/4 drop-shadow-md">
+                    <input id="loginPassword" type="password" placeholder="Password" class="bg-indigo-200 rounded-full w-full mb-4 p-1/4 drop-shadow-md">
+                    <span id="loginInvite"></span>
+                    <button id="login" type="button" class="bg-indigo-400 rounded-full w-full mb-4 p-2 drop-shadow-md" @click="await window.loginInitiate()">Log in/Register</button>
+                </form>
+            </div>
         </div>
     </template>
 </div>
