@@ -11,9 +11,24 @@ defmodule Exsemnesia.Handle128 do
   **THIS IS A LOSSY CONVERSION**.
   """
   def serialize(item) do
-    case Unidecode.decode(item) do
-      ascii when is_valid(ascii) -> String.pad_trailing(ascii, 16)
-      _ -> :error
+    case item
+         |> Unidecode.decode()
+         |> String.trim()
+         |> String.replace(" ", "_") do
+      ascii when is_valid(ascii) ->
+        chars_ascii? =
+          ascii
+          |> to_charlist()
+          |> Enum.all?(&(&1 in 0x21..0x7E))
+
+        if chars_ascii? do
+          ascii |> String.pad_trailing(16)
+        else
+          :error
+        end
+
+      _ ->
+        :error
     end
   end
 

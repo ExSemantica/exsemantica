@@ -113,11 +113,13 @@ window.exSemFeedChannel.on("update_trends", (msg) => {
 })
 
 window.loginInitiate = async () => {
-    let handle = document.getElementById("loginHandle").value
+    let handle = document.getElementById("login-handle").value
     let result = await fetch(`/api/v0/login?user=${handle}`, {})
     let json = await result.json()
     console.log("Got login entry", json)
-    let old = document.getElementById("loginInvite")
+    let old = document.getElementById("login-invite")
+    let foot = document.getElementById("login-footer")
+    foot.classList.remove('invisible')
 
     if (json.unique) {
         let invite = document.createElement("input")
@@ -132,14 +134,13 @@ window.loginInitiate = async () => {
             'drop-shadow-md'
         )
         old.replaceWith(invite)
-        invite.id = "loginInvite"
-        document.getElementById("loginFooter").innerText = `Handle '${json.parsed.trimEnd()}' is unique and can be registered. Please enter your invite code.`
+        invite.id = "login-invite"
+        foot.innerText = `Handle '${json.parsed.trim()}' is unique and can be registered. Please enter your invite code.`
     } else {
-
         let invite = document.createElement("span")
         old.replaceWith(invite)
-        invite.id = "loginInvite"
-        document.getElementById("loginFooter").innerText = `Logging in as '${json.parsed.trimEnd()}'...`
+        invite.id = "login-invite"
+        foot.innerText = `Logging in as '${json.parsed.trim()}'...`
     }
 
     // let password = document.getElementById("loginPassword").nodeValue

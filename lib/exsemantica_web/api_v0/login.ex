@@ -13,7 +13,7 @@ defmodule ExsemanticaWeb.APIv0.Login do
           :error ->
             {:ok, json} =
               Jason.encode(%{
-                e: "E_INVALID_USERNAME",
+                error_code: "E_INVALID_USERNAME",
                 description: "The username is invalid."
               })
 
@@ -32,7 +32,7 @@ defmodule ExsemanticaWeb.APIv0.Login do
       _ ->
         {:ok, json} =
           Jason.encode(%{
-            e: "E_NO_USERNAME",
+            error_code: "E_NO_USERNAME",
             description: "The username has to be specified."
           })
 

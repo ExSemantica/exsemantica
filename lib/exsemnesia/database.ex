@@ -136,6 +136,17 @@ defmodule Exsemnesia.Database do
               }
             end
 
+          # Item Index
+          %{operation: :index, table: table, info: info = %{key: key, value: value}} ->
+            fn ->
+              %{
+                table: table,
+                info: info,
+                operation: :get,
+                response: :mnesia.index_read(table, value, key)
+              }
+            end
+
           # Item Put
           %{operation: :put, table: table, info: info, idh: {id, handle}} ->
             fn ->
@@ -205,13 +216,23 @@ defmodule Exsemnesia.Database do
               }
             end
 
-            # Dump all entries of a table. This is an intensive operation.
+          # Dump all entries of a table. This is an intensive operation.
           %{operation: :dump, table: table} ->
             fn ->
               %{
                 table: table,
                 operation: :dump,
                 response: :mnesia.foldr(fn record, acc -> [record | acc] end, [], table)
+              }
+            end
+
+          # Like Enum.map on the entire data dump
+          %{operation: :map, table: table, info: fun} ->
+            fn ->
+              %{
+                table: table,
+                operation: :dump,
+                response: :mnesia.foldr(fn record, acc -> [fun.(record) | acc] end, [], table)
               }
             end
 

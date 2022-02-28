@@ -10,6 +10,7 @@ import Config
 # which you should run after static files are built and
 # before starting your production server.
 config :exsemantica, ExsemanticaWeb.Endpoint, cache_static_manifest: "priv/static/cache_manifest.json"
+config :exsemantica, commit_sha_result: nil
 
 # Do not print debug messages in production
 config :logger, level: :info

@@ -7,6 +7,14 @@ defmodule Exsemantica.Application do
 
   @impl true
   def start(_type, _args) do
+    case Application.get_env(:exsemantica, :commit_sha_result) do
+      {sha, 0} ->
+        sha |> String.replace_trailing("\n", "")
+          :persistent_term.put(Exsemantica.Version, "#{Application.spec(:exsemantica, :vsn)}-#{sha}")
+        _ ->
+          :persistent_term.put(Exsemantica.Version, Application.spec(:exsemantica, :vsn))
+    end
+
     children = [
       # Start the Telemetry supervisor
       ExsemanticaWeb.Telemetry,
@@ -28,14 +36,16 @@ defmodule Exsemantica.Application do
          },
          caches: %{
            # This is weird. You can botch a composite key. Cool!
-           ctrending: ~w(count_node node type htimestamp handle)a
+           ctrending: ~w(count_node node type htimestamp handle)a,
+           lowercases: ~w(handle lowercase)a,
          },
          tcopts: %{
            extra_indexes: %{
              users: ~w(handle)a,
              posts: ~w(handle)a,
              interests: ~w(handle)a,
-             ctrending: ~w(node)a
+             ctrending: ~w(node)a,
+             lowercases: ~w(lowercase)a
            },
            ordered_caches: ~w(ctrending)a,
            seed_trends: ~w(users posts interests)a,
@@ -55,6 +65,12 @@ defmodule Exsemantica.Application do
              :mnesia.write(
                :ctrending,
                {:ctrending, {0, id}, id, table, DateTime.utc_now(), handle},
+               :sticky_write
+             )
+
+             :mnesia.write(
+               :lowercases,
+               {:lowercases, handle, String.downcase(handle, :ascii)},
                :sticky_write
              )
            end

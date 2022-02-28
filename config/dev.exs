@@ -21,6 +21,8 @@ config :exsemantica, ExsemanticaWeb.Endpoint,
   ]
 
 # Exsemantica-special stuff goes here BELOW
+config :exsemantica, commit_sha_result: System.cmd("git", ["rev-parse", "--short", "HEAD"])
+
 config :mnesia,
   dir: to_charlist(Path.join([Path.dirname(__DIR__), "priv", "Exsemnesia_devel.#{node()}"]))
 
