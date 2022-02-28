@@ -16,21 +16,4 @@ If you want to fetch packages for frontend, use NodeJS NPM in `assets/` to use A
 $ npm install alpinejs
 ```
 
-## TODOs
-
-- [ ] API JSON-LD handling
-- [ ] API GraphQL handling
-- [ ] Federation: is it possible?
-- [ ] Interests chaining interests
-- [x] Graph database should be archivable, able to be backed up
-- [x] Graph database should not be in priv directory; try Mnesia or Redis
-- [x] Graph database
-- [ ] Microblogging posting in interests
-- [ ] T&S (Trust and Safety)
-- [ ] Authentication probably shouldn't be RSA 4096, puts too much burden on the server.
-- [ ] IRC protocol based chat system
-- [ ] Reimplement frontend/middleware from v0.7, reusing Phoenix.
-- [ ] Redo backend from v0.7.
-
-[redis-on-docker]: https://hub.docker.com/_/redis
 [eactivitypub]: https://github.com/Chlorophytus/eactivitypub-legacy-0.2
