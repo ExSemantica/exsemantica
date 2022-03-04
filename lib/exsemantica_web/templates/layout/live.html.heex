@@ -27,12 +27,12 @@
             <.live_component module={ExsemanticaWeb.SearchComponent} id={"search"}/>
             <%= @trend_search_status %>
             <br>
-            <h2 class="text-xl">Trending interests</h2>
+            <h2 class="text-xl">Current trends</h2>
             <div phx-update="ignore" id="trend-summary"></div>
             <p class="text-xs"><i phx-update="ignore" id="trend-display-waiting">Trends are loading...</i></p>
         </div>
         <br>
-        <footer class="text-center"><small>ExSemantica v<%= :persistent_term.get(Exsemantica.Version) %> - <a href="https://github.com/Chlorophytus/exsemantica" class="underline decoration-sky-600 text-sky-600">Fork me on GitHub!</a></small></footer>
+        <footer class="text-center"><small>ExSemantica v<%= :persistent_term.get(Exsemantica.Version) %> - <a href="https://github.com/ExSemantica/ExSemantica" class="underline decoration-sky-600 text-sky-600">Fork me on GitHub!</a></small></footer>
     </aside>
     <template x-if="showLogin">
         <div>

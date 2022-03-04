@@ -152,7 +152,11 @@ defmodule ExsemanticaWeb.Schema do
                  node: id,
                  type: type,
                  handle: handle,
-                 relevance: String.bag_distance(handle, fuzzy_handle)
+                 relevance:
+                   String.bag_distance(
+                     String.downcase(handle, :ascii),
+                     String.downcase(fuzzy_handle, :ascii)
+                   )
                }
              end
            )

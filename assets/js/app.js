@@ -17,6 +17,8 @@
 //
 //     import "some-package"
 //
+import { argon2id, argon2Verify } from 'hash-wasm'
+
 import Alpine from 'alpinejs'
 
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
@@ -122,20 +124,37 @@ window.loginInitiate = async () => {
     foot.classList.remove('invisible')
 
     if (json.unique) {
-        let invite = document.createElement("input")
-        invite.type = "text"
-        invite.placeholder = "Invite code"
-        invite.classList.add(
-            'bg-indigo-200',
-            'rounded-full',
-            'w-full',
-            'mb-4',
-            'p-1/4',
-            'drop-shadow-md'
-        )
-        old.replaceWith(invite)
-        invite.id = "login-invite"
-        foot.innerText = `Handle '${json.parsed.trim()}' is unique and can be registered. Please enter your invite code.`
+        let invite = document.getElementById('login-invite')
+        if (invite.value !== undefined) {
+            foot.innerText = `Registering as '${json.parsed.trim()}'...`
+            let salsaVerde = new Uint8Array(32)
+            crypto.getRandomValues(salsaVerde)
+            let hash = await argon2id({
+                password: document.getElementById("login-handle").value,
+                salt: salsaVerde,
+                parallelism: 1,
+                iterations: 256,
+                memorySize: 512,
+                hashLength: 32,
+                outputType: 'encoded'
+            })
+            console.log("Hash slinging", hash)
+        } else {
+            let invite = document.createElement("input")
+            invite.type = "text"
+            invite.placeholder = "Invite code"
+            invite.classList.add(
+                'bg-indigo-200',
+                'rounded-full',
+                'w-full',
+                'mb-4',
+                'p-1/4',
+                'drop-shadow-md'
+            )
+            old.replaceWith(invite)
+            invite.id = "login-invite"
+            foot.innerText = `Handle '${json.parsed.trim()}' is unique and can be registered. Please enter your invite code.`
+        }
     } else {
         let invite = document.createElement("span")
         old.replaceWith(invite)

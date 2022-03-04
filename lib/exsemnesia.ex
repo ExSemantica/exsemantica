@@ -1,7 +1,6 @@
 defmodule Exsemnesia do
   @moduledoc """
-  Mnesia cache pool.
-
-  - The username/password data can be stored in a SQLite database.
+  In-house Mnesia-based data store. Very useful for direct storage of Erlang
+  terms.
   """
 end

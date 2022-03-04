@@ -44,6 +44,8 @@ defmodule ExsemanticaWeb.APIv0.Login do
     {:ok, body, conn} = conn |> read_body()
     {:ok, json} = Jason.decode(body)
 
+    IO.inspect json
+
     conn |> send_resp(501, "This endpoint is unimplemented.")
   end
 end

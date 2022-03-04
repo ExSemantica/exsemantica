@@ -53,7 +53,8 @@ defmodule Exsemantica.MixProject do
       {:absinthe_phoenix, "~> 2.0"},
       {:absinthe_plug, "~> 1.5"},
       {:unidecode, "~> 1.0"},
-      {:argon2_elixir, "~> 3.0"}
+      {:argon2_elixir, "~> 3.0"},
+      {:paseto, "~> 1.3.2"}
     ]
   end
 

@@ -79,7 +79,7 @@ defmodule Exsemnesia.Database do
         state = %{
           tables: tables,
           caches: caches,
-          tcopts: %{extra_indexes: indices, ordered_caches: order_these, seed_trends: _seeds}
+          tcopts: %{extra_indexes: indices, ordered_caches: order_these}
         }
       ) do
     nodes = Node.list()
@@ -148,8 +148,10 @@ defmodule Exsemnesia.Database do
             end
 
           # Item Put
-          %{operation: :put, table: table, info: info, idh: {id, handle}} ->
+          %{operation: :put, table: table, info: info, idh: idh} when not is_nil(idh) ->
             fn ->
+              {id, handle} = idh
+
               # Writes the ctrending entry strongly.
               :mnesia.write(
                 :ctrending,
@@ -158,8 +160,25 @@ defmodule Exsemnesia.Database do
                 :sticky_write
               )
 
+              # Writes the lowercases entry strongly.
+              :mnesia.write(
+                :lowercases,
+                {:lowercases, handle, String.downcase(handle, :ascii)},
+                :sticky_write
+              )
+
               # for distribution's sake
               # ALSO: make unsticky if it's causing problems...
+              %{
+                table: table,
+                info: info,
+                operation: :put,
+                response: :mnesia.write(table, info, :sticky_write)
+              }
+            end
+
+          %{operation: :put, table: table, info: info, idh: nil} ->
+            fn ->
               %{
                 table: table,
                 info: info,
