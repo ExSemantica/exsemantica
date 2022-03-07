@@ -9,6 +9,6 @@ defmodule ExsemanticaWeb.AdminPanel.InviteCode do
 
   @impl true
   def render_page(_assigns) do
-    card(title: "Current Invite Code", value: :persistent_term.get(:exsemantica_invite))
+    card(title: "Current Invite Code", value: "UNIMPLEMENTED")
   end
 end

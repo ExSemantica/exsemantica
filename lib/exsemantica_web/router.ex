@@ -16,6 +16,7 @@ defmodule ExsemanticaWeb.Router do
     scope "/api/v0", ExsemanticaWeb.APIv0 do
       get "/login", Login, :get_attributes
       post "/login", Login, :post_authentication
+      put "/login", Login, :put_registration
     end
   end
 

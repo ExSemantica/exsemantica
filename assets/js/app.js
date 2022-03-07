@@ -126,11 +126,11 @@ window.loginInitiate = async () => {
     if (json.unique) {
         let invite = document.getElementById('login-invite')
         if (invite.value !== undefined) {
-            foot.innerText = `Registering as '${json.parsed.trim()}'...`
+            foot.innerText = `Registering as '${json.parsed.trim()}'... [hashing password]`
             let salsaVerde = new Uint8Array(32)
             crypto.getRandomValues(salsaVerde)
             let hash = await argon2id({
-                password: document.getElementById("login-handle").value,
+                password: document.getElementById("login-password").value,
                 salt: salsaVerde,
                 parallelism: 1,
                 iterations: 256,
@@ -138,7 +138,20 @@ window.loginInitiate = async () => {
                 hashLength: 32,
                 outputType: 'encoded'
             })
-            console.log("Hash slinging", hash)
+            foot.innerText = `Registering as '${json.parsed.trim()}'... [putting registration]`
+            response = await fetch(`/api/v0/login`, {
+                method: 'PUT',
+                headers: {
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    'user': handle,
+                    'hash': hash,
+                    'nonce0': invite.value
+                })
+            })
+            response_json = response.json()
+
         } else {
             let invite = document.createElement("input")
             invite.type = "text"

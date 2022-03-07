@@ -28,10 +28,11 @@ defmodule Exsemantica.Application do
       {Exsemnesia.Database,
        [
          tables: %{
-           users: ~w(node timestamp handle privmask)a,
+           users: ~w(node timestamp handle privmask paseto)a,
            posts: ~w(node timestamp handle title content posted_by)a,
            interests: ~w(node timestamp handle title content related_to)a,
-           auth: ~w(handle hash state secret)a,
+           auth: ~w(handle secret keypair)a,
+           auth_state: ~w(handle paseto)a,
            counters: ~w(type count)a
          },
          caches: %{
@@ -52,7 +53,7 @@ defmodule Exsemantica.Application do
            seed_seeder: fn entry ->
              {table, id, handle} =
                case entry do
-                 {:users, id, _timestamp, handle, _privmask} ->
+                 {:users, id, _timestamp, handle, _privmask, _paseto} ->
                    {:users, id, handle}
 
                  {:posts, id, _timestamp, handle, _title, _content, _posted_by} ->
@@ -84,11 +85,7 @@ defmodule Exsemantica.Application do
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Exsemantica.Supervisor]
-    reply = Supervisor.start_link(children, opts)
-
-    Exsemnesia.Utils.shuffle_invite()
-
-    reply
+    Supervisor.start_link(children, opts)
   end
 
   # Tell Phoenix to update the endpoint configurations

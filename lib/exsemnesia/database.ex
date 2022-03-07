@@ -263,7 +263,7 @@ defmodule Exsemnesia.Database do
               pre_handle =
                 case table do
                   :users ->
-                    {_node, _timestamp, handle, _privmask} = pre
+                    {_node, _timestamp, handle, _privmask, _paseto} = pre
                     handle
 
                   :posts ->

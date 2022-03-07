@@ -28,6 +28,7 @@ defmodule ExsemanticaWeb.SchemaTypes do
   object :user do
     field(:node, :id128)
     field(:handle, :handle128)
+    field(:privmask, :string)
     field(:timestamp, :datetime)
   end
 

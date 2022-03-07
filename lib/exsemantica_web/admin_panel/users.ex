@@ -16,7 +16,8 @@ defmodule ExsemanticaWeb.AdminPanel.Users do
         %{field: :id, sortable: :asc},
         %{field: :timestamp},
         %{field: :handle},
-        %{field: :privmask}
+        %{field: :privmask},
+        %{field: :paseto}
       ],
       row_fetcher: &fetch_rows/2
     )

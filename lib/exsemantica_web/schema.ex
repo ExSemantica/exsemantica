@@ -72,11 +72,12 @@ defmodule ExsemanticaWeb.Schema do
          packets
          |> Enum.map(fn packet ->
            case packet.response do
-             [{:users, id, timestamp, handle}] ->
+             [{:users, id, timestamp, handle, privmask}] ->
                %{
                  node: id,
                  handle: handle,
-                 timestamp: timestamp
+                 timestamp: timestamp,
+                 privmask: Base.encode16(privmask)
                }
 
              _ ->
