@@ -73,7 +73,7 @@ defmodule ExsemanticaWeb.APIv0.Login do
           Jason.encode(%{
             success: false,
             error_code: "E_ACCESS_DENIED",
-            description: "Incorrect password."
+            description: "Authentication failed."
           })
 
         conn |> send_resp(400, json)
@@ -82,8 +82,8 @@ defmodule ExsemanticaWeb.APIv0.Login do
         {:ok, json} =
           Jason.encode(%{
             success: false,
-            error_code: "E_NO_USER",
-            description: "No such user."
+            error_code: "E_NO_USERNAME",
+            description: "The username has to be specified."
           })
 
         conn |> send_resp(400, json)
@@ -91,51 +91,52 @@ defmodule ExsemanticaWeb.APIv0.Login do
   end
 
   def put_registration(conn, _opts) do
-    case Exsemnesia.Utils.create_user(
-           conn.body_params["user"],
-           conn.body_params["pass"]
-         ) do
-      {:ok, created_user} ->
-        {:ok, json} =
-          Jason.encode(%{
-            success: true,
-            # The handle of the user.
-            handle: created_user.handle,
-            # Meant to be saved as a cookie to log in
-            paseto: created_user.paseto
-          })
+    prefs = :persistent_term.get(:exsemprefs)
 
-        conn |> send_resp(200, json)
+    if prefs.registration_enabled do
+      case Exsemnesia.Utils.create_user(
+             conn.body_params["user"],
+             conn.body_params["pass"]
+           ) do
+        {:ok, created_user} ->
+          {:ok, json} =
+            Jason.encode(%{
+              success: true,
+              # The handle of the user.
+              handle: created_user.handle
+            })
 
-      {:error, :einval} ->
-        {:ok, json} =
-          Jason.encode(%{
-            success: false,
-            error_code: "E_INVALID_USERNAME",
-            description: "The username is invalid."
-          })
+          conn |> send_resp(200, json)
 
-        conn |> send_resp(400, json)
+        {:error, :einval} ->
+          {:ok, json} =
+            Jason.encode(%{
+              success: false,
+              error_code: "E_INVALID_USERNAME",
+              description: "The username is invalid."
+            })
 
-      {:error, :eusers} ->
-        {:ok, json} =
-          Jason.encode(%{
-            success: false,
-            error_code: "E_USER_EXISTS",
-            description: "The user already exists."
-          })
+          conn |> send_resp(400, json)
 
-        conn |> send_resp(400, json)
+        {:error, :eusers} ->
+          {:ok, json} =
+            Jason.encode(%{
+              success: false,
+              error_code: "E_USER_EXISTS",
+              description: "The user already exists."
+            })
 
-      {:error, :einvite} ->
-        {:ok, json} =
-          Jason.encode(%{
-            success: false,
-            error_code: "E_INVITE_INVALID",
-            description: "Invalid invite code."
-          })
+          conn |> send_resp(400, json)
+      end
+    else
+      {:ok, json} =
+        Jason.encode(%{
+          success: false,
+          error_code: "E_NO_REGISTRATIONS",
+          description: "Registration is disabled on this instance."
+        })
 
-        conn |> send_resp(401, json)
+      conn |> send_resp(401, json)
     end
   end
 end

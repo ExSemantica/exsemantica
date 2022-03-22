@@ -177,7 +177,7 @@ defmodule Exsemnesia.Database do
               }
             end
 
-          %{operation: :put, table: table, info: info, idh: nil} ->
+          %{operation: :put, table: table, info: info} ->
             fn ->
               %{
                 table: table,
