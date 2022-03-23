@@ -17,7 +17,7 @@ defmodule ExsemanticaWeb.Router do
       get "/login", Login, :get_attributes
       post "/login", Login, :post_authentication
       put "/login", Login, :put_registration
-      put "/wants", Wants, :get_enabled
+      get "/wants", Wants, :get_enabled
     end
   end
 
@@ -50,7 +50,8 @@ defmodule ExsemanticaWeb.Router do
       live_dashboard "/dashboard",
         metrics: ExsemanticaWeb.Telemetry,
         additional_pages: [
-          exsem_users: ExsemanticaWeb.AdminPanel.Users
+          exsem_users: ExsemanticaWeb.AdminPanel.Users,
+          exsem_invite: ExsemanticaWeb.AdminPanel.InviteCode
         ]
     end
   end

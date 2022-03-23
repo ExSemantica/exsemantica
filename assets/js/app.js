@@ -117,7 +117,8 @@ window.exSemFeedChannel.on("update_trends", (msg) => {
 window.loginInitiate = async () => {
     let handle = document.getElementById("login-handle").value
     let passwd = document.getElementById("login-password").value
-    let result = await fetch(`/api/v0/login?user=${handle}`, {})
+    let invite = document.getElementById("login-invite").value
+    let result = await fetch(`/api/v0/login?user=${handle}`, { method: 'GET' })
     let json = await result.json()
 
     let foot = document.getElementById("login-footer")
@@ -131,7 +132,8 @@ window.loginInitiate = async () => {
         },
         body: JSON.stringify({
             'user': handle,
-            'pass': passwd
+            'pass': passwd,
+            'invite': invite
         })
     })
 
@@ -139,9 +141,8 @@ window.loginInitiate = async () => {
 
     if (response.ok) {
         foot.innerText = 'Please wait to be logged in...';
+        setTimeout(() => { window.location.reload() }, 1000);
     } else {
         foot.innerText = response_json.description;
     }
-
-    // let password = document.getElementById("loginPassword").nodeValue
 }

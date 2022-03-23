@@ -28,7 +28,7 @@ defmodule Exsemantica.Application do
       {Exsemnesia.Database,
        [
          tables: %{
-           users: ~w(node timestamp handle privmask paseto)a,
+           users: ~w(node timestamp handle privmask)a,
            posts: ~w(node timestamp handle title content posted_by)a,
            interests: ~w(node timestamp handle title content related_to)a,
            auth: ~w(handle secret keypair)a,
@@ -53,7 +53,7 @@ defmodule Exsemantica.Application do
            seed_seeder: fn entry ->
              {table, id, handle} =
                case entry do
-                 {:users, id, _timestamp, handle, _privmask, _paseto} ->
+                 {:users, id, _timestamp, handle, _privmask} ->
                    {:users, id, handle}
 
                  {:posts, id, _timestamp, handle, _title, _content, _posted_by} ->
@@ -82,7 +82,8 @@ defmodule Exsemantica.Application do
       # {Exsemantica.Worker, arg}
     ]
 
-    :persistent_term.put(:exsemprefs, %{registration_enabled: false})
+    :persistent_term.put(:exseminvite, :crypto.strong_rand_bytes(24))
+    :persistent_term.put(:exsemprefs, %{registration_enabled: true})
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options

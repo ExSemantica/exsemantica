@@ -44,7 +44,7 @@
                 <form id="login-form">
                     <input id="login-handle" type="text" placeholder="Handle" class="bg-indigo-200 rounded-full w-full mb-4 p-1/4 drop-shadow-md">
                     <input id="login-password" type="password" placeholder="Password" class="bg-indigo-200 rounded-full w-full mb-4 p-1/4 drop-shadow-md">
-                    <span id="login-invite"></span>
+                    <input id="login-invite" type="text" placeholder="Invite Code (if registering)" class="bg-indigo-200 rounded-full w-full mb-4 p-1/4 drop-shadow-md">
                     <button id="login" type="button" class="bg-indigo-400 rounded-full w-full mb-4 p-2 drop-shadow-md" @click="await window.loginInitiate()">Log in/Register</button>
                 </form>
             </div>

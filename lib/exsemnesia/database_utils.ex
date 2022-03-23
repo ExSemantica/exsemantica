@@ -48,7 +48,7 @@ defmodule Exsemnesia.Utils do
     ]
     |> Exsemnesia.Database.transaction()
 
-    {:ok, parsed} =
+    parsed =
       Paseto.generate_token(
         "v2",
         "public",
@@ -115,6 +115,7 @@ defmodule Exsemnesia.Utils do
                 Logger.info(
                   "Trying check PASETO for #{raw_handle} as #{handle} FAILED: Session expired"
                 )
+
                 {:error, :etime}
             end
         end
@@ -124,43 +125,38 @@ defmodule Exsemnesia.Utils do
   def create_user(raw_handle, password) do
     Logger.debug("Trying activating #{raw_handle}")
 
-    cond do
-      not Exsemnesia.Handle128.is_valid(raw_handle) ->
-        Logger.info("Trying activating #{raw_handle} FAILED: Invalid handle")
-        {:error, :einval}
+    handle = Exsemnesia.Handle128.serialize(raw_handle)
+    unique? = Exsemnesia.Utils.unique?(handle)
 
-      true ->
-        handle = Exsemnesia.Handle128.serialize(raw_handle)
+    if unique? do
+      id = increment(:id_count)
 
-        if unique?(handle) do
-          id = increment(:id_count)
+      secret = Argon2.add_hash(password)
+      date = DateTime.utc_now()
 
-          secret = Argon2.add_hash(password)
-          date = DateTime.utc_now()
+      {:ok, pk, sk} = Salty.Sign.Ed25519.keypair()
 
-          {:ok, pk, sk} = Salty.Sign.Ed25519.keypair()
+      IO.inspect([
+        %{
+          operation: :put,
+          table: :users,
+          info: {:users, id, date, handle, <<0::128>>},
+          idh: {id, handle}
+        },
+        %{operation: :put, table: :auth, info: {:auth, handle, secret, {pk, sk}}}
+      ]
+      |> Exsemnesia.Database.transaction())
 
-          [
-            %{
-              operation: :put,
-              table: :users,
-              info: {:users, id, date, handle, <<0::128>>},
-              idh: {id, handle}
-            },
-            %{operation: :put, table: :auth, info: {:auth, handle, secret, {pk, sk}}}
-          ]
-          |> Exsemnesia.Database.transaction()
+      Logger.info("Trying activating #{raw_handle} as #{handle} SUCCESS")
+      :persistent_term.put(:exseminvite, :crypto.strong_rand_bytes(24))
 
-          Logger.info("Trying activating #{raw_handle} as #{handle} SUCCESS")
-
-          {:ok,
-           %{
-             handle: handle
-           }}
-        else
-          Logger.info("Trying activating #{raw_handle} as #{handle} FAILED: Not a unique handle")
-          {:error, :eusers}
-        end
+      {:ok,
+       %{
+         handle: handle
+       }}
+    else
+      Logger.info("Trying activating #{raw_handle} as #{handle} FAILED: Not a unique handle")
+      {:error, :eusers}
     end
   end
 
@@ -275,6 +271,7 @@ defmodule Exsemnesia.Utils do
   end
 
   def unique?(handle) do
+    handle = String.downcase(handle, :ascii)
     {:atomic, uniqs} =
       [
         Exsemnesia.Utils.count(:users, :handle, handle),
