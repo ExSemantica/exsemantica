@@ -23,11 +23,13 @@ defmodule ExsemanticaWeb.APIv0.Login do
 
           transliterated ->
             {:ok, json} =
-              Jason.encode(%{
-                success: true,
-                parsed: transliterated,
-                unique: Exsemnesia.Utils.unique?(transliterated)
-              })
+              IO.inspect(
+                Jason.encode(%{
+                  success: true,
+                  parsed: transliterated,
+                  unique: Exsemnesia.Utils.unique?(transliterated)
+                })
+              )
 
             conn |> send_resp(200, json)
         end
@@ -45,11 +47,8 @@ defmodule ExsemanticaWeb.APIv0.Login do
   end
 
   def post_authentication(conn, _opts) do
-    invite = :persistent_term.get(:exseminvite)
-    invite_match = conn.body_params["invite"]
-
     case Exsemnesia.Utils.login_user(conn.body_params["user"], conn.body_params["pass"]) do
-      {:ok, login_user} when invite === invite_match ->
+      {:ok, login_user} ->
         {:ok, json} =
           Jason.encode(%{
             success: true,
@@ -57,7 +56,10 @@ defmodule ExsemanticaWeb.APIv0.Login do
             handle: login_user.handle
           })
 
-        conn |> put_session(:login_paseto, login_user.paseto) |> send_resp(200, json)
+        conn
+        |> fetch_session()
+        |> put_session(:login_paseto, login_user.paseto)
+        |> send_resp(200, json)
 
       {:error, :einval} ->
         {:ok, json} =
@@ -77,7 +79,7 @@ defmodule ExsemanticaWeb.APIv0.Login do
             description: "Authentication failed."
           })
 
-        conn |> send_resp(400, json)
+        conn |> send_resp(401, json)
 
       {:error, :enoent} ->
         {:ok, json} =
@@ -108,12 +110,14 @@ defmodule ExsemanticaWeb.APIv0.Login do
 
         conn |> send_resp(401, json)
 
-      invite_incoming != invite_outgoing -> {:ok, json} =
-        Jason.encode(%{
-          success: false,
-          error_code: "E_INVITE_INVALID",
-          description: "The invite code has already been used."
-        })
+      invite_incoming != invite_outgoing ->
+        {:ok, json} =
+          Jason.encode(%{
+            success: false,
+            error_code: "E_INVITE_INVALID",
+            description: "The invite code has already been used."
+          })
+
         conn |> send_resp(400, json)
 
       invite_incoming == invite_outgoing ->
@@ -128,7 +132,9 @@ defmodule ExsemanticaWeb.APIv0.Login do
                 error_code: "E_USER_EXISTS",
                 description: "The user already exists."
               })
-              conn |> send_resp(400, json)
+
+            conn |> send_resp(400, json)
+
           {:error, :einval} ->
             {:ok, json} =
               Jason.encode(%{

@@ -74,9 +74,9 @@ defmodule Exsemnesia.Utils do
 
       true ->
         handle = Exsemnesia.Handle128.serialize(raw_handle)
-
+        downcased = String.downcase(handle, :ascii)
         {:atomic, [auth, auth_state]} =
-          [Exsemnesia.Utils.get(:auth, handle), Exsemnesia.Utils.get(:auth_state, handle)]
+          [Exsemnesia.Utils.get(:auth, downcased), Exsemnesia.Utils.get(:auth_state, downcased)]
           |> Exsemnesia.Database.transaction()
 
         keypair =
@@ -109,7 +109,7 @@ defmodule Exsemnesia.Utils do
             case expiry do
               :lt ->
                 Logger.info("Trying check PASETO for #{raw_handle} as #{handle} SUCCESS")
-                generate_paseto(handle, keypair)
+                generate_paseto(downcased, keypair)
 
               _ ->
                 Logger.info(
@@ -136,16 +136,18 @@ defmodule Exsemnesia.Utils do
 
       {:ok, pk, sk} = Salty.Sign.Ed25519.keypair()
 
-      IO.inspect([
-        %{
-          operation: :put,
-          table: :users,
-          info: {:users, id, date, handle, <<0::128>>},
-          idh: {id, handle}
-        },
-        %{operation: :put, table: :auth, info: {:auth, handle, secret, {pk, sk}}}
-      ]
-      |> Exsemnesia.Database.transaction())
+      IO.inspect(
+        [
+          %{
+            operation: :put,
+            table: :users,
+            info: {:users, id, date, handle, <<0::128>>},
+            idh: {id, handle}
+          },
+          %{operation: :put, table: :auth, info: {:auth, String.downcase(handle, :ascii), secret, {pk, sk}}}
+        ]
+        |> Exsemnesia.Database.transaction()
+      )
 
       Logger.info("Trying activating #{raw_handle} as #{handle} SUCCESS")
       :persistent_term.put(:exseminvite, :crypto.strong_rand_bytes(24))
@@ -171,15 +173,15 @@ defmodule Exsemnesia.Utils do
       true ->
         handle = Exsemnesia.Handle128.serialize(raw_handle)
 
-        {:atomic, head} =
-          [Exsemnesia.Utils.get(:auth, handle)] |> Exsemnesia.Database.transaction()
+        {:atomic, [head]} =
+          [Exsemnesia.Utils.get(:auth, String.downcase(handle, :ascii))] |> Exsemnesia.Database.transaction()
 
         case head.response do
           [] ->
             Logger.info("Trying logging in #{raw_handle} as #{handle} FAILED: No such handle")
             {:error, :enoent}
 
-          [{:auth, _handle, secret, keypair}] ->
+          [{:auth, handle, secret, keypair}] ->
             case Argon2.check_pass(secret, password) do
               {:ok, _} ->
                 Logger.info("Trying logging in #{raw_handle} as #{handle} SUCCESS")
@@ -272,6 +274,7 @@ defmodule Exsemnesia.Utils do
 
   def unique?(handle) do
     handle = String.downcase(handle, :ascii)
+
     {:atomic, uniqs} =
       [
         Exsemnesia.Utils.count(:users, :handle, handle),

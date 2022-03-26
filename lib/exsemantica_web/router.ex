@@ -18,6 +18,7 @@ defmodule ExsemanticaWeb.Router do
       post "/login", Login, :post_authentication
       put "/login", Login, :put_registration
       get "/wants", Wants, :get_enabled
+      resources "/bucket", Bucket, only: [:create, :show, :update, :delete]
     end
   end
 

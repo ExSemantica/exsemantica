@@ -118,31 +118,37 @@ window.loginInitiate = async () => {
     let handle = document.getElementById("login-handle").value
     let passwd = document.getElementById("login-password").value
     let invite = document.getElementById("login-invite").value
-    let result = await fetch(`/api/v0/login?user=${handle}`, { method: 'GET' })
-    let json = await result.json()
+    let presence = await fetch(`/api/v0/login?user=${handle}`, { method: 'GET' })
+    let presence_json = await presence.json()
 
     let foot = document.getElementById("login-footer")
     foot.classList.remove('invisible')
 
-    foot.innerText = `Logging in as '${json.parsed.trim()}'...`
-    let response = await fetch(`/api/v0/login`, {
-        method: 'PUT',
-        headers: {
-            'content-type': 'application/json'
-        },
-        body: JSON.stringify({
-            'user': handle,
-            'pass': passwd,
-            'invite': invite
+    if (presence_json.unique) {
+        foot.innerText = 'Please wait... [registering]';
+        await fetch(`/api/v0/login`, {
+            method: 'PUT',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                'user': handle,
+                'pass': passwd,
+                'invite': invite
+            })
         })
-    })
-
-    let response_json = await response.json();
-
-    if (response.ok) {
-        foot.innerText = 'Please wait to be logged in...';
-        setTimeout(() => { window.location.reload() }, 1000);
     } else {
-        foot.innerText = response_json.description;
+        foot.innerText = 'Please wait... [logging in]';
+        await fetch(`/api/v0/login`, {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                'user': handle,
+                'pass': passwd
+            })
+        })
     }
+    setTimeout(() => window.location.reload(), 2000)
 }
