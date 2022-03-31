@@ -25,7 +25,7 @@ defmodule ExsemanticaWeb.Schema do
               Exsemnesia.Utils.get(:posts, &1)
             ]
           )
-          |> Exsemnesia.Database.transaction()
+          |> Exsemnesia.Database.transaction("get+increment post")
 
         {:ok,
          packets
@@ -66,7 +66,7 @@ defmodule ExsemanticaWeb.Schema do
               Exsemnesia.Utils.get(:users, &1)
             ]
           )
-          |> Exsemnesia.Database.transaction()
+          |> Exsemnesia.Database.transaction("get+increment user")
 
         {:ok,
          packets
@@ -106,7 +106,7 @@ defmodule ExsemanticaWeb.Schema do
               Exsemnesia.Utils.get(:interests, &1)
             ]
           )
-          |> Exsemnesia.Database.transaction()
+          |> Exsemnesia.Database.transaction("get+increment interest")
 
         {:ok,
          packets
@@ -141,7 +141,7 @@ defmodule ExsemanticaWeb.Schema do
       resolve(fn %{count: count, fuzzy: fuzzy_handle}, _ when count > 0 ->
         {:atomic, [packet]} =
           [Exsemnesia.Utils.trending(count)]
-          |> Exsemnesia.Database.transaction()
+          |> Exsemnesia.Database.transaction("fuzzy look for trends")
 
         {:ok,
          if not is_nil(fuzzy_handle) do

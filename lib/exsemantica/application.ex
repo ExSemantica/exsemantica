@@ -5,14 +5,21 @@ defmodule Exsemantica.Application do
 
   use Application
 
+  @serv_opts [:binary, packet: :line, active: :true, reuseaddr: true]
+
   @impl true
   def start(_type, _args) do
     case Application.get_env(:exsemantica, :commit_sha_result) do
       {sha, 0} ->
         sha |> String.replace_trailing("\n", "")
-          :persistent_term.put(Exsemantica.Version, "#{Application.spec(:exsemantica, :vsn)}-#{sha}")
-        _ ->
-          :persistent_term.put(Exsemantica.Version, Application.spec(:exsemantica, :vsn))
+
+        :persistent_term.put(
+          Exsemantica.Version,
+          "#{Application.spec(:exsemantica, :vsn)}-#{sha}"
+        )
+
+      _ ->
+        :persistent_term.put(Exsemantica.Version, Application.spec(:exsemantica, :vsn))
     end
 
     children = [
@@ -39,6 +46,9 @@ defmodule Exsemantica.Application do
            # This is weird. You can botch a composite key. Cool!
            ctrending: ~w(count_node node type htimestamp handle)a,
            lowercases: ~w(handle lowercase)a,
+           # Exirchatterd augmentations require exsemnesia caches to share state
+           irc_idling: ~w(handle modes_list)a,
+           irc_inroom: ~w(room modes_list users_list)a
          },
          tcopts: %{
            extra_indexes: %{
@@ -77,7 +87,8 @@ defmodule Exsemantica.Application do
            end
          }
        ]},
-       ExsemanticaWeb.AnnounceServer
+      ExsemanticaWeb.AnnounceServer,
+      Exirchatterd.Dial.DynamicSupervisor
       # Start a worker by calling: Exsemantica.Worker.start_link(arg)
       # {Exsemantica.Worker, arg}
     ]
@@ -88,7 +99,12 @@ defmodule Exsemantica.Application do
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Exsemantica.Supervisor]
-    Supervisor.start_link(children, opts)
+    # which came first, the chicken or the egg
+    state = Supervisor.start_link(children, opts)
+
+    {:ok, listen} = :gen_tcp.listen(6667, @serv_opts)
+    Exirchatterd.Dial.DynamicSupervisor.spawn_connection(listen)
+    state
   end
 
   # Tell Phoenix to update the endpoint configurations

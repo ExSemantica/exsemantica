@@ -46,7 +46,7 @@ defmodule Exsemnesia.Utils do
         idh: nil
       }
     ]
-    |> Exsemnesia.Database.transaction()
+    |> Exsemnesia.Database.transaction("change authentication state (generate PASETO)")
 
     parsed =
       Paseto.generate_token(
@@ -75,9 +75,10 @@ defmodule Exsemnesia.Utils do
       true ->
         handle = Exsemnesia.Handle128.serialize(raw_handle)
         downcased = String.downcase(handle, :ascii)
+
         {:atomic, [auth, auth_state]} =
           [Exsemnesia.Utils.get(:auth, downcased), Exsemnesia.Utils.get(:auth_state, downcased)]
-          |> Exsemnesia.Database.transaction()
+          |> Exsemnesia.Database.transaction("check paseto for user")
 
         keypair =
           case auth.response do
@@ -144,9 +145,13 @@ defmodule Exsemnesia.Utils do
             info: {:users, id, date, handle, <<0::128>>},
             idh: {id, handle}
           },
-          %{operation: :put, table: :auth, info: {:auth, String.downcase(handle, :ascii), secret, {pk, sk}}}
+          %{
+            operation: :put,
+            table: :auth,
+            info: {:auth, String.downcase(handle, :ascii), secret, {pk, sk}}
+          }
         ]
-        |> Exsemnesia.Database.transaction()
+        |> Exsemnesia.Database.transaction("create user + downcasing")
       )
 
       Logger.info("Trying activating #{raw_handle} as #{handle} SUCCESS")
@@ -174,7 +179,8 @@ defmodule Exsemnesia.Utils do
         handle = Exsemnesia.Handle128.serialize(raw_handle)
 
         {:atomic, [head]} =
-          [Exsemnesia.Utils.get(:auth, String.downcase(handle, :ascii))] |> Exsemnesia.Database.transaction()
+          [Exsemnesia.Utils.get(:auth, String.downcase(handle, :ascii))]
+          |> Exsemnesia.Database.transaction("try to log in to HTTP")
 
         case head.response do
           [] ->
@@ -281,7 +287,7 @@ defmodule Exsemnesia.Utils do
         Exsemnesia.Utils.count(:posts, :handle, handle),
         Exsemnesia.Utils.count(:interests, :handle, handle)
       ]
-      |> Exsemnesia.Database.transaction()
+      |> Exsemnesia.Database.transaction("uniqueness")
 
     uniqs
     |> Enum.map(fn %{operation: :count, table: _table, info: _info, response: response} ->

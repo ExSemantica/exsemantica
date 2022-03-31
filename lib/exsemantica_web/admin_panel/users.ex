@@ -23,7 +23,7 @@ defmodule ExsemanticaWeb.AdminPanel.Users do
   end
   # card(title: "Invite code", value: :persistent_term.get(:exsemantica_invite)),
   defp fetch_rows(_params, _node) do
-    {:atomic, [reply]} = [%{operation: :dump, table: :users}] |> Exsemnesia.Database.transaction()
+    {:atomic, [reply]} = [%{operation: :dump, table: :users}] |> Exsemnesia.Database.transaction("DUMPING all users in admin panel")
     %{operation: :dump, response: entries, table: :users} = reply
 
     {for {:users, idx, timestamp, handle, privmask} <- entries do
