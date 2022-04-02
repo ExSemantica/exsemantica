@@ -4,59 +4,6 @@ defmodule Exirchatterd.IRCPacket do
   """
   defstruct prefix: nil, command: nil, args_head: nil, args_tail: nil
 
-  #   {prefix, root, stem, postfix} =
-  #     if raw |> String.starts_with?(":") do
-  #       case raw |> String.split(" ", parts: 4) do
-  #         [raw_prefix, root, stem, raw_postfix] ->
-  #           prefix = String.trim_leading(raw_prefix, ":")
-  #           postfix = String.trim_leading(raw_postfix, ":")
-  #           {prefix, root, stem, postfix}
-
-  #         [raw_prefix, root, stem] ->
-  #           prefix = String.trim_leading(raw_prefix, ":")
-  #           {prefix, root, stem, nil}
-
-  #         [raw_prefix, root] ->
-  #           prefix = String.trim_leading(raw_prefix, ":")
-  #           {prefix, root, nil, nil}
-  #       end
-  #     else
-  #       case raw |> String.split(" ", parts: 3) do
-  #         [root, stem, raw_postfix] ->
-  #           postfix = String.trim_leading(raw_postfix, ":")
-  #           {nil, root, stem, postfix}
-
-  #         [root, stem] ->
-  #           {nil, root, stem, nil}
-
-  #         [root] ->
-  #           {nil, root, nil, nil}
-  #       end
-  #     end
-
-  #   %__MODULE__{
-  #     prefix: prefix,
-  #     root: root,
-  #     stem: stem,
-  #     postfix: postfix
-  #   }
-  # end
-
-  # def stringify(st) do
-  #   if not is_nil(st.prefix) do
-  #     if not is_nil(st.postfix) do
-  #       ":" <> Enum.join([st.prefix, st.root, st.stem, ":" <> st.postfix], " ") <> "\r\n"
-  #     else
-  #       Enum.join([st.prefix, st.root, st.stem], " ") <> "\r\n"
-  #     end
-  #   else
-  #     if not is_nil(st.postfix) do
-  #       Enum.join([st.root, st.stem, ":" <> st.postfix], " ") <> "\r\n"
-  #     else
-  #       Enum.join([st.root, st.stem], " ") <> "\r\n"
-  #     end
-  #   end
-  # end
   def encode(data) do
     data = data |> String.replace_trailing("\r\n", "")
 
@@ -207,7 +154,11 @@ defmodule Exirchatterd.IRCPacket do
         "ISON" ->
           :ison
 
-        other -> other
+        "CAP" ->
+          :cap
+
+        other ->
+          other
       end
 
     case tail |> String.split(" :", parts: 2) do
@@ -230,18 +181,23 @@ defmodule Exirchatterd.IRCPacket do
   end
 
   def decode(pack) do
-    unless is_nil(pack.prefix) do
-      ":" <> pack.prefix <> " "
-    else
-      ""
-    end <>
-      pack.command <>
-      Enum.join(pack.args_head, " ") <>
-      unless is_nil(pack.args_tail) do
-        ":" <> pack.args_tail
-      else
-        ""
-      end <> "\r\n"
+    ([
+       unless is_nil(pack.prefix) do
+         ":" <> pack.prefix
+       else
+         ""
+       end,
+       pack.command |> to_string |> String.upcase(),
+       pack.args_head,
+       unless is_nil(pack.args_tail) do
+         ":" <> pack.args_tail
+       else
+         ""
+       end
+     ]
+     |> List.flatten()
+     |> Enum.join(" ")
+     |> String.trim()) <> "\r\n"
   end
 
   # ============================================================================

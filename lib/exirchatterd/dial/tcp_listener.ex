@@ -3,7 +3,6 @@ defmodule Exirchatterd.Dial.TcpListener do
   use GenServer
 
   @ping_thresh 120_000
-  @regex_user ~r"[Uu][Ss][Ee][Rr]\ ([[:alnum:]]+)\ [^ ]+ \*\ (\:[[:alnum:][:space:]]+)"
 
   def start_link(listen) do
     GenServer.start_link(__MODULE__, listen)
@@ -16,10 +15,7 @@ defmodule Exirchatterd.Dial.TcpListener do
     {:ok,
      %{
        tcp_listen: listen,
-       irc_stateword: {:login, :nick},
-       irc_statedata: %{nick: nil, ident: nil, real_name: nil},
-       ping_timer: nil,
-       ping_killer: nil
+       irc_state: %{}
      }}
   end
 
@@ -41,10 +37,13 @@ defmodule Exirchatterd.Dial.TcpListener do
               :inet.ntoa(uaddr)
           end
 
-        Process.send_after(self(), {:init_kill, sock}, 15_000)
-        Logger.debug("Peer connected [#{inspect(sock)} -> #{inspect(host)}]")
+        # Process.send_after(self(), {:init_kill, sock}, 15_000)
         Exirchatterd.Dial.DynamicSupervisor.spawn_connection(state.tcp_listen)
-        {:noreply, %{state | irc_statedata: %{hostent: host}}}
+        Logger.debug("User #{inspect(sock)} [#{inspect(host)}] joins :)")
+
+        {:noreply,
+         state
+         |> put_in(~w(irc_state hostname)a, host)}
 
       {:error, :timeout} ->
         {:noreply, state}
@@ -56,8 +55,50 @@ defmodule Exirchatterd.Dial.TcpListener do
   end
 
   @impl true
+  def handle_info({:ping, accept}, state) do
+    :gen_tcp.send(
+      accept,
+      %Exirchatterd.IRCPacket{
+        prefix: nil,
+        command: :ping,
+        args_head: [],
+        args_tail: nil
+      }
+      |> Exirchatterd.IRCPacket.decode()
+    )
+
+    {:noreply,
+     state
+     |> put_in(
+       ~w(irc_state ping_kill)a,
+       Process.send_after(self(), {:ping_kill, accept}, 30_000)
+     )}
+  end
+
+  @impl true
+  def handle_info({:ping_kill, accept}, state) do
+    t1 = DateTime.utc_now() |> DateTime.to_unix()
+    t0 = state |> get_in(~w(irc_state ping?)a)
+
+    :gen_tcp.send(
+      accept,
+      %Exirchatterd.IRCPacket{
+        prefix: nil,
+        command: :error,
+        args_head: [],
+        args_tail: "Ping timeout (#{t1 - t0} seconds)"
+      }
+      |> Exirchatterd.IRCPacket.decode()
+    )
+
+    :gen_tcp.close(accept)
+
+    {:stop, :normal, state}
+  end
+
+  @impl true
   def handle_info({:tcp, accept, data}, state) do
-    handle_irc(accept, data, state)
+    Exirchatterd.IRCPacket.encode(data) |> handle_irc(accept, state)
   end
 
   @impl true
@@ -65,140 +106,168 @@ defmodule Exirchatterd.Dial.TcpListener do
     {:stop, :normal, state}
   end
 
-  @impl true
-  def handle_info({{:error, reason}, sock}, state) do
-    case state.irc_stateword do
-      :ready ->
-        {:noreply, state}
+  # ============================================================================
+  # Give me a nick
+  defp handle_irc(
+         %Exirchatterd.IRCPacket{
+           prefix: _origin,
+           command: :nick,
+           args_head: [nick],
+           args_tail: _nothing
+         },
+         accept,
+         state
+       ) do
+    host = state |> get_in(~w(irc_state hostname)a)
+    Logger.debug("User #{inspect(accept)} [#{host}] assigns their nickname #{nick}")
 
-      _ when reason === :login ->
-        Logger.debug("Peer killed for not logging in on time [#{inspect(sock)}]")
-
-        :gen_tcp.send(
-          sock,
-          "ERROR :You did not log in on time\r\n"
-        )
-
-        :gen_tcp.close(sock)
-
-        {:stop, :normal, state}
-
-      _ when reason === :ping ->
-        Logger.debug("Peer killed for ping timeout [#{inspect(sock)}]")
-
-        :gen_tcp.send(
-          sock,
-          "ERROR :Ping timeout\r\n"
-        )
-
-        :gen_tcp.close(sock)
-
-        {:stop, :normal, state}
-    end
+    {:noreply, state |> put_in(~w(irc_state nick)a, nick) |> send_motd_if_possible(accept)}
   end
 
-  @impl true
-  def handle_info({:ping, sock}, state) do
-    :gen_tcp.send(sock, "PING :" <> ExsemanticaWeb.Endpoint.struct_url()[:host])
-    timer = Process.send_after(self(), {:ping, sock}, @ping_thresh)
-    tkill = Process.send_after(self(), {{:error, :ping}, sock}, @ping_thresh + 15000)
-    {:noreply, %{state | ping_timer: timer, ping_killer: tkill}}
+  # ============================================================================
+  # Give me a user
+  defp handle_irc(
+         %Exirchatterd.IRCPacket{
+           prefix: _origin,
+           command: :user,
+           args_head: [ident, _, _],
+           args_tail: realname
+         },
+         accept,
+         state
+       ) do
+    host = state |> get_in(~w(irc_state hostname)a)
+
+    Logger.debug(
+      "User #{inspect(accept)} [#{host}] assigns their ident #{ident} and realname #{realname}"
+    )
+
+    {:noreply,
+     state
+     |> put_in(~w(irc_state ident)a, ident)
+     |> put_in(~w(irc_state real_name)a, realname)
+     |> send_motd_if_possible(accept)}
   end
 
-  defp handle_irc(sock, data, state) do
-    irc_parse = IO.inspect(Exirchatterd.IRCPacket.encode(data))
+  # ============================================================================
+  # Ping
+  defp handle_irc(
+         %Exirchatterd.IRCPacket{
+           prefix: origin,
+           command: :ping,
+           args_head: nonsense,
+           args_tail: _ignoretl
+         },
+         accept,
+         state
+       ) do
+    host = state |> get_in(~w(irc_state hostname)a)
+    uri = ExsemanticaWeb.Endpoint.struct_url()
 
-    root = irc_parse.command
+    Logger.debug("User #{inspect(accept)} [#{host}] pings")
+    nudge = state |> get_in(~w(irc_state ping_nudge)a)
+    kill = state |> get_in(~w(irc_state ping_kill)a)
 
-    case state.irc_stateword do
-      :ready ->
-        host = String.downcase(irc_parse.stem)
-        this = String.downcase(ExsemanticaWeb.Endpoint.struct_url()[:host])
+    unless is_nil(nudge),
+      do: if(nudge |> Process.read_timer(), do: nudge |> Process.cancel_timer())
 
-        case root do
-          :pong when host == this ->
-            case Process.read_timer(state.ping_killer) do
-              false -> nil
-              _ -> Process.cancel_timer(state.ping_killer)
-            end
+    unless is_nil(kill), do: if(kill |> Process.read_timer(), do: kill |> Process.cancel_timer())
 
-            case Process.read_timer(state.ping_timer) do
-              false -> nil
-              _ -> Process.cancel_timer(state.ping_timer)
-            end
+    :gen_tcp.send(
+      accept,
+      %Exirchatterd.IRCPacket{
+        prefix: origin,
+        command: :pong,
+        args_head: nonsense,
+        args_tail: uri.host
+      }
+      |> Exirchatterd.IRCPacket.decode()
+    )
 
-            Process.send(self(), {:ping, sock}, [])
+    {:noreply,
+     state
+     |> put_in(~w(irc_state ping?)a, DateTime.utc_now() |> DateTime.to_unix())
+     |> put_in(
+       ~w(irc_state ping_nudge)a,
+       Process.send_after(self(), {:ping, accept}, @ping_thresh)
+     )}
+  end
 
-          :ping when host == this ->
-            :gen_tcp.send(
-              sock,
-              "PONG :#{this}\r\n"
-            )
-        end
+  # ============================================================================
+  # Quit
+  defp handle_irc(
+         %Exirchatterd.IRCPacket{
+           prefix: origin,
+           command: :quit,
+           args_head: head,
+           args_tail: reason
+         },
+         accept,
+         state
+       ) do
+    host = state |> get_in(~w(irc_state hostname)a)
+    Logger.debug("User #{inspect(accept)} [#{inspect(host)}] quits")
 
-      {:login, step} ->
-        case step do
-          :nick ->
-            {:noreply,
-             %{
-               state
-               | irc_statedata: %{state.irc_statedata | nick: hd(irc_parse.args_head)},
-                 irc_stateword: {:login, :user}
-             }}
+    :gen_tcp.send(
+      accept,
+      %Exirchatterd.IRCPacket{
+        prefix: origin,
+        command: :error,
+        args_head: head,
+        args_tail: "Quit (#{reason})"
+      }
+      |> Exirchatterd.IRCPacket.decode()
+    )
 
-          :user ->
-            # Parsing the USER is a corner case, just use Regex.
-            case Regex.run(@regex_user, data) do
-              [_root, ident, real_name] ->
-                state_data = %{state.irc_statedata | ident: ident, real_name: real_name}
+    :gen_tcp.close(accept)
+    {:noreply, state}
+  end
 
-                # Send 001 [RPL_WELCOME]
-                :gen_tcp.send(
-                  sock,
-                  state_data
-                  |> Exirchatterd.CannedReplies.reply(1)
-                  |> Exirchatterd.IRCPacket.decode()
-                )
+  # ============================================================================
+  # Catchall
+  defp handle_irc(catch_all, accept, state) do
+    host = state |> get_in(~w(irc_state hostname)a)
 
-                # then 002 [RPL_YOURHOST]
-                :gen_tcp.send(
-                  sock,
-                  state_data
-                  |> Exirchatterd.CannedReplies.reply(2)
-                  |> Exirchatterd.IRCPacket.decode()
-                )
+    Logger.warning(
+      "Unimplemented IRC data from #{inspect(accept)} [#{host}]: #{inspect(catch_all)}"
+    )
 
-                :gen_tcp.send(
-                  sock,
-                  state_data
-                  |> Exirchatterd.CannedReplies.reply(375)
-                  |> Exirchatterd.IRCPacket.decode()
-                )
+    {:noreply, state}
+  end
 
-                for line <- Exirchatterd.MOTD.motd() |> String.split("\n") do
-                  :gen_tcp.send(
-                    sock,
-                    state_data
-                    |> Exirchatterd.CannedReplies.reply({372, line})
-                    |> Exirchatterd.IRCPacket.decode()
-                  )
-                end
+  # ============================================================================
+  defp send_motd_if_possible(state, accept) do
+    no_ident =
+      is_nil(state |> get_in(~w(irc_state ident)a)) &&
+        is_nil(state |> get_in(~w(irc_state ident)a))
 
-                :gen_tcp.send(
-                  sock,
-                  state_data
-                  |> Exirchatterd.CannedReplies.reply(376)
-                  |> Exirchatterd.IRCPacket.decode()
-                )
+    no_nick = is_nil(state |> get_in(~w(irc_state ident)a))
 
-                Process.send(self(), {:ping, sock}, [])
-
-                {:noreply, %{state | irc_statedata: state_data, irc_stateword: :ready}}
-            end
-
-          _ ->
-            {:noreply, state}
-        end
+    unless no_ident || no_nick do
+      state |> send_motd(accept)
     end
+
+    state
+  end
+
+  defp send_motd(state, accept) do
+    :gen_tcp.send(
+      accept,
+      state |> Exirchatterd.CannedReplies.reply(375) |> Exirchatterd.IRCPacket.decode()
+    )
+
+    for line <- Exirchatterd.MOTD.motd() |> String.split("\n") do
+      :gen_tcp.send(
+        accept,
+        state
+        |> Exirchatterd.CannedReplies.reply({372, line})
+        |> Exirchatterd.IRCPacket.decode()
+      )
+    end
+
+    :gen_tcp.send(
+      accept,
+      state |> Exirchatterd.CannedReplies.reply(376) |> Exirchatterd.IRCPacket.decode()
+    )
   end
 end
