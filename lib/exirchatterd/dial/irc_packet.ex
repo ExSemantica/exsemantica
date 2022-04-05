@@ -174,12 +174,12 @@ defmodule Exirchatterd.IRCPacket do
           other
       end
 
-    IO.inspect(%__MODULE__{
+    %__MODULE__{
       prefix: origin,
       command: verb,
       args_head: head |> Enum.drop(1),
       args_tail: tail
-    })
+    }
   end
 
   def decode(pack) do

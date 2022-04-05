@@ -5,7 +5,7 @@ defmodule Exsemantica.Application do
 
   use Application
 
-  @serv_opts [:binary, packet: :line, active: true, packet_size: 510]
+  @serv_opts [:binary, packet: :line, active: true, packet_size: 510, reuseaddr: true]
 
   @impl true
   def start(_type, _args) do

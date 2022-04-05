@@ -18,5 +18,7 @@ defmodule Exirchatterd.ProtoTX do
     else
       :gen_tcp.close(socket)
     end
+
+    state
   end
 end
