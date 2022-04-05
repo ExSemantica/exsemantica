@@ -9,16 +9,29 @@ defmodule Exirchatterd.IRCPacket do
 
     {origin, head, tail} =
       if String.starts_with?(data, ":") do
-        [head, tail] = String.split(data, " ", parts: 2)
-        origin = String.replace_prefix(head, ":", "")
-        {origin, head, tail}
+        [origin, ht] = data |> String.split(" ", parts: 2)
+
+        [head, tail] =
+          case String.split(ht, " :", parts: 2) do
+            [tailless] -> [tailless, nil]
+            [head, tail] -> [head, tail]
+          end
+
+        {origin |> String.replace_prefix(":", ""), head |> String.split(" "), tail}
       else
-        [head, tail] = String.split(data, " ", parts: 2)
-        {nil, head, tail}
+        [head, tail] =
+          case String.split(data, " :", parts: 2) do
+            [tailless] -> [tailless, nil]
+            [head, tail] -> [head, tail]
+          end
+
+        {nil, head |> String.split(" "), tail}
       end
 
+    [cat] = Enum.take(head, 1)
+
     verb =
-      case String.upcase(head) do
+      case cat |> String.upcase() do
         "PASS" ->
           :pass
 
@@ -161,23 +174,12 @@ defmodule Exirchatterd.IRCPacket do
           other
       end
 
-    case tail |> String.split(" :", parts: 2) do
-      [head, tail] ->
-        %__MODULE__{
-          prefix: origin,
-          command: verb,
-          args_head: head |> String.split(" "),
-          args_tail: tail
-        }
-
-      [head] ->
-        %__MODULE__{
-          prefix: origin,
-          command: verb,
-          args_head: head |> String.split(" "),
-          args_tail: nil
-        }
-    end
+    IO.inspect(%__MODULE__{
+      prefix: origin,
+      command: verb,
+      args_head: head |> Enum.drop(1),
+      args_tail: tail
+    })
   end
 
   def decode(pack) do

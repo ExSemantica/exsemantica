@@ -5,22 +5,39 @@ defmodule Exsemantica.Application do
 
   use Application
 
-  @serv_opts [:binary, packet: :line, active: :true, reuseaddr: true]
+  @serv_opts [:binary, packet: :line, active: true, packet_size: 510]
 
   @impl true
   def start(_type, _args) do
-    case Application.get_env(:exsemantica, :commit_sha_result) do
-      {sha, 0} ->
-        sha |> String.replace_trailing("\n", "")
+    cdate_path = Path.join([Application.app_dir(:exsemantica, "priv"), "Exsemantica_CDATE.erl"])
 
-        :persistent_term.put(
-          Exsemantica.Version,
+    # read off Creation Date for IRC standard requirement...ugh
+    :persistent_term.put(
+      Exsemantica.CDate,
+      case :file.consult(cdate_path) do
+        {:ok, [cdate]} ->
+          cdate
+
+        _ ->
+          cdate = DateTime.utc_now()
+          File.write(cdate_path, :io_lib.format("~p.~n", [Term]))
+          cdate
+      end
+    )
+
+    # then read off the Commit SHA or none at all...
+    :persistent_term.put(
+      Exsemantica.Version,
+      case Application.get_env(:exsemantica, :commit_sha_result) do
+        {sha, 0} ->
+          sha |> String.replace_trailing("\n", "")
+
           "#{Application.spec(:exsemantica, :vsn)}-#{sha}"
-        )
 
-      _ ->
-        :persistent_term.put(Exsemantica.Version, Application.spec(:exsemantica, :vsn))
-    end
+        _ ->
+          Application.spec(:exsemantica, :vsn)
+      end
+    )
 
     children = [
       # Start the Telemetry supervisor
@@ -103,7 +120,21 @@ defmodule Exsemantica.Application do
     state = Supervisor.start_link(children, opts)
 
     {:ok, listen} = :gen_tcp.listen(6667, @serv_opts)
-    Exirchatterd.Dial.DynamicSupervisor.spawn_connection(listen)
+    Exirchatterd.Dial.DynamicSupervisor.spawn_connection(listen, ssl: false)
+
+    {:ok, ssl_listen} =
+      :ssl.listen(
+        6697,
+        [
+          [
+            keyfile: Path.join([Application.app_dir(:exsemantica, "priv"), "snake.pem"]),
+            certfile: Path.join([Application.app_dir(:exsemantica, "priv"), "snake.public.pem"])
+          ]
+          | @serv_opts
+        ]
+      )
+
+    Exirchatterd.Dial.DynamicSupervisor.spawn_connection(ssl_listen, ssl: true)
     state
   end
 

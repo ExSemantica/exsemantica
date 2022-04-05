@@ -1,4 +1,4 @@
-defmodule Exirchatterd.CannedReplies do
+defmodule Exirchatterd.Replies do
   @moduledoc """
   ircd numerics...convert down to a string using Exirchatterd.IRCPacket.stringify/1
   """
