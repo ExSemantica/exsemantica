@@ -27,7 +27,7 @@ defmodule ExsemanticaWeb.APIv0.Login do
                 Jason.encode(%{
                   success: true,
                   parsed: transliterated,
-                  unique: Exsemnesia.Utils.unique?(transliterated)
+                  unique: Exsemnesia.Utils.unique?(String.downcase(transliterated, :ascii))
                 })
               )
 
@@ -115,7 +115,7 @@ defmodule ExsemanticaWeb.APIv0.Login do
           Jason.encode(%{
             success: false,
             error_code: "E_INVITE_INVALID",
-            description: "The invite code has already been used."
+            description: "The invite code is invalid."
           })
 
         conn |> send_resp(400, json)

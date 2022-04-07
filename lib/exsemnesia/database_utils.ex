@@ -283,9 +283,7 @@ defmodule Exsemnesia.Utils do
 
     {:atomic, uniqs} =
       [
-        Exsemnesia.Utils.count(:users, :handle, handle),
-        Exsemnesia.Utils.count(:posts, :handle, handle),
-        Exsemnesia.Utils.count(:interests, :handle, handle)
+        Exsemnesia.Utils.count(:lowercases, :lowercase, handle)
       ]
       |> Exsemnesia.Database.transaction("uniqueness")
 

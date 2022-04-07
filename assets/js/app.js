@@ -17,7 +17,6 @@
 //
 //     import "some-package"
 //
-import { argon2id, argon2Verify } from 'hash-wasm'
 
 import Alpine from 'alpinejs'
 
@@ -126,7 +125,7 @@ window.loginInitiate = async () => {
 
     if (presence_json.unique) {
         foot.innerText = 'Please wait... [registering]';
-        await fetch(`/api/v0/login`, {
+        let result = await fetch(`/api/v0/login`, {
             method: 'PUT',
             headers: {
                 'content-type': 'application/json'
@@ -137,9 +136,15 @@ window.loginInitiate = async () => {
                 'invite': invite
             })
         })
+        let result_json = await result.json()
+        setTimeout(() => {
+            if (result_json.success) { window.location.reload() } else {
+                foot.innerText = result_json.description
+            }
+        }, 2000)
     } else {
         foot.innerText = 'Please wait... [logging in]';
-        await fetch(`/api/v0/login`, {
+        let result = await fetch(`/api/v0/login`, {
             method: 'POST',
             headers: {
                 'content-type': 'application/json'
@@ -149,6 +154,13 @@ window.loginInitiate = async () => {
                 'pass': passwd
             })
         })
+        let result_json = await result.json()
+
+        setTimeout(() => {
+            if (result_json.success) { window.location.reload() } else {
+                foot.innerText = result_json.description
+            }
+        }, 2000)
+
     }
-    setTimeout(() => window.location.reload(), 2000)
 }
