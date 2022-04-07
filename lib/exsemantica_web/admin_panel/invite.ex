@@ -4,11 +4,14 @@ defmodule ExsemanticaWeb.AdminPanel.InviteCode do
 
   @impl true
   def menu_link(_, _) do
-    {:ok, "ExSemantica Invite Code"}
+    {:ok, "Current ExSemantica Invite Code"}
   end
 
   @impl true
   def render_page(_assigns) do
-    card(title: "Current Invite Code", value: :persistent_term.get(:exsemantica_invite))
+    card(
+      title: "Current Invite Code",
+      value: Base.url_encode64(:persistent_term.get(:exseminvite))
+    )
   end
 end

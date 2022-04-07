@@ -34,3 +34,4 @@ npm-debug.log
 
 .elixir_ls
 priv/Exsemnesia_*
+priv/Exsemantica_CDATE.erl

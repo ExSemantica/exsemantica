@@ -9,6 +9,7 @@ defmodule ExsemanticaWeb.Live.Socket do
 
   """
   use Phoenix.Socket
+  use Absinthe.Phoenix.Socket, schema: ExsemanticaWeb.Schema
 
   require Logger
 

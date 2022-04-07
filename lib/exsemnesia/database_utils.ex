@@ -3,15 +3,9 @@ defmodule Exsemnesia.Utils do
   Utilities for the Mnesia database to make things easier.
   """
   require Exsemnesia.Handle128
+  require Logger
 
-  @max_login_lasts 60
-
-  def shuffle_invite do
-    :persistent_term.put(
-      :exsemantica_invite,
-      Base.encode64(:crypto.hash(:sha3_256, :crypto.strong_rand_bytes(32)))
-    )
-  end
+  @max_login_lasts 3600
 
   def increment(type) do
     cnt = :mnesia.dirty_update_counter(:counters, type, 1)
@@ -26,61 +20,186 @@ defmodule Exsemnesia.Utils do
     }
   end
 
-  def create_user(raw_handle, hash, invite_code) do
-    invite = :persistent_term.get(:exsemantica_invite)
+  # ============================================================================
+  # User authentication
+  # ============================================================================
+  defp generate_paseto(handle, keypair) do
+    date = DateTime.utc_now()
+
+    {:ok, json} =
+      Jason.encode(
+        paseto = %{
+          iss: ExsemanticaWeb.Endpoint.host(),
+          aud: handle,
+          exp: date |> DateTime.add(@max_login_lasts, :second) |> DateTime.to_iso8601(),
+          iat: date |> DateTime.to_iso8601(),
+          exs_kid: Base.url_encode64(:crypto.strong_rand_bytes(32)),
+          exs_uid: handle
+        }
+      )
+
+    [
+      %{
+        operation: :put,
+        table: :auth_state,
+        info: {:auth_state, handle, paseto},
+        idh: nil
+      }
+    ]
+    |> Exsemnesia.Database.transaction("change authentication state (generate PASETO)")
+
+    parsed =
+      Paseto.generate_token(
+        "v2",
+        "public",
+        json,
+        keypair
+      )
+
+    # Server has secret, client can run off with public.
+    {:ok,
+     %{
+       handle: handle,
+       paseto: parsed
+     }}
+  end
+
+  def check_user(raw_handle, paseto) do
+    Logger.debug("Trying check PASETO for #{raw_handle}")
 
     cond do
-      invite != invite_code ->
-        {:error, :einvite}
-
       not Exsemnesia.Handle128.is_valid(raw_handle) ->
+        Logger.info("Trying check PASETO for #{raw_handle} FAILED: Invalid handle")
+        {:error, :einval}
+
+      true ->
+        handle = Exsemnesia.Handle128.serialize(raw_handle)
+        downcased = String.downcase(handle, :ascii)
+
+        {:atomic, [auth, auth_state]} =
+          [Exsemnesia.Utils.get(:auth, downcased), Exsemnesia.Utils.get(:auth_state, downcased)]
+          |> Exsemnesia.Database.transaction("check paseto for user")
+
+        keypair =
+          case auth.response do
+            [{:auth, _secret, keypair}] -> keypair
+            _ -> nil
+          end
+
+        # TODO: Better error handling below
+        {:ok, token} =
+          Paseto.parse_token(
+            paseto,
+            keypair
+          )
+
+        {:ok, decoded} = Jason.decode(token.payload)
+        # TODO: Better error handling above
+
+        case auth_state.response do
+          [] ->
+            Logger.info(
+              "Trying check PASETO for #{raw_handle} as #{handle} FAILED: No PASETO on server"
+            )
+
+            {:error, :enoent}
+
+          [{:auth_state, _handle, paseto}] when paseto === decoded ->
+            expiry = paseto.exp |> DateTime.from_iso8601() |> DateTime.compare(DateTime.utc_now())
+
+            case expiry do
+              :lt ->
+                Logger.info("Trying check PASETO for #{raw_handle} as #{handle} SUCCESS")
+                generate_paseto(downcased, keypair)
+
+              _ ->
+                Logger.info(
+                  "Trying check PASETO for #{raw_handle} as #{handle} FAILED: Session expired"
+                )
+
+                {:error, :etime}
+            end
+        end
+    end
+  end
+
+  def create_user(raw_handle, password) do
+    Logger.debug("Trying activating #{raw_handle}")
+
+    handle = Exsemnesia.Handle128.serialize(raw_handle)
+    unique? = Exsemnesia.Utils.unique?(handle)
+
+    if unique? do
+      id = increment(:id_count)
+
+      secret = Argon2.add_hash(password)
+      date = DateTime.utc_now()
+
+      {:ok, pk, sk} = Salty.Sign.Ed25519.keypair()
+
+      IO.inspect(
+        [
+          %{
+            operation: :put,
+            table: :users,
+            info: {:users, id, date, handle, <<0::128>>},
+            idh: {id, handle}
+          },
+          %{
+            operation: :put,
+            table: :auth,
+            info: {:auth, String.downcase(handle, :ascii), secret, {pk, sk}}
+          }
+        ]
+        |> Exsemnesia.Database.transaction("create user + downcasing")
+      )
+
+      Logger.info("Trying activating #{raw_handle} as #{handle} SUCCESS")
+      :persistent_term.put(:exseminvite, :crypto.strong_rand_bytes(24))
+
+      {:ok,
+       %{
+         handle: handle
+       }}
+    else
+      Logger.info("Trying activating #{raw_handle} as #{handle} FAILED: Not a unique handle")
+      {:error, :eusers}
+    end
+  end
+
+  def login_user(raw_handle, password) do
+    Logger.debug("Trying logging in #{raw_handle}")
+
+    cond do
+      not Exsemnesia.Handle128.is_valid(raw_handle) ->
+        Logger.info("Trying logging in #{raw_handle} FAILED: Invalid handle")
         {:error, :einval}
 
       true ->
         handle = Exsemnesia.Handle128.serialize(raw_handle)
 
-        if unique?(handle) do
-          shuffle_invite()
-          id = increment(:id_count)
+        {:atomic, [head]} =
+          [Exsemnesia.Utils.get(:auth, String.downcase(handle, :ascii))]
+          |> Exsemnesia.Database.transaction("try to log in to HTTP")
 
-          {:ok, pk, sk} = Salty.Sign.Ed25519.keypair()
-          date = DateTime.utc_now()
+        case head.response do
+          [] ->
+            Logger.info("Trying logging in #{raw_handle} as #{handle} FAILED: No such handle")
+            {:error, :enoent}
 
-          # The JSON PASETOs MUST match, database on the server + the client
-          {:ok, json} =
-            Jason.encode(%{
-              iss: ExsemanticaWeb.Endpoint.host(),
-              aud: handle,
-              exp: date |> DateTime.add(@max_login_lasts, :minute) |> DateTime.to_iso8601(),
-              iat: date |> DateTime.to_iso8601()
-            })
+          [{:auth, handle, secret, keypair}] ->
+            case Argon2.check_pass(secret, password) do
+              {:ok, _} ->
+                Logger.info("Trying logging in #{raw_handle} as #{handle} SUCCESS")
+                generate_paseto(handle, keypair)
 
-          [
-            %{
-              operation: :put,
-              table: :users,
-              info: {:users, id, date, handle, <<0::128>>},
-              idh: {id, handle}
-            },
-            %{
-              operation: :put,
-              table: :auth,
-              info: {:auth, handle, hash, json, sk},
-              idh: nil
-            }
-          ]
-          |> Exsemnesia.Database.transaction()
+              {:error, err} ->
+                Logger.warning(
+                  "Trying logging in #{raw_handle} as #{handle} FAILED: argon2 - '#{err}'"
+                )
 
-          # Server has secret, client can run off with public.
-          {:ok,
-           %{
-             idx: id,
-             handle: handle,
-             public_key: pk,
-             paseto: Paseto.generate_token("v2", "public", json, {pk, sk})
-           }}
-        else
-          {:error, :eusers}
+                {:error, :eacces}
+            end
         end
     end
   end
@@ -88,7 +207,7 @@ defmodule Exsemnesia.Utils do
   # ============================================================================
   # Put items
   # ============================================================================
-  # TODO: Clean these up into generate_ functions, so we can just do it in a go
+  # TODO: Clean these up into create_ functions, so we can just do it in a go
   # I mean like make it so that each function calls the transaction predefined
   def put_post(raw_handle, title, content, user) do
     if Exsemnesia.Handle128.is_valid(raw_handle) do
@@ -160,13 +279,15 @@ defmodule Exsemnesia.Utils do
   end
 
   def unique?(handle) do
+    handle = String.downcase(handle, :ascii)
+
     {:atomic, uniqs} =
       [
         Exsemnesia.Utils.count(:users, :handle, handle),
         Exsemnesia.Utils.count(:posts, :handle, handle),
         Exsemnesia.Utils.count(:interests, :handle, handle)
       ]
-      |> Exsemnesia.Database.transaction()
+      |> Exsemnesia.Database.transaction("uniqueness")
 
     uniqs
     |> Enum.map(fn %{operation: :count, table: _table, info: _info, response: response} ->
