@@ -16,6 +16,9 @@ defmodule ExsemanticaWeb.Router do
     scope "/api/v0", ExsemanticaWeb.APIv0 do
       get "/login", Login, :get_attributes
       post "/login", Login, :post_authentication
+      put "/login", Login, :put_registration
+      get "/wants", Wants, :get_enabled
+      resources "/bucket", Bucket, only: [:create, :show, :update, :delete]
     end
   end
 
@@ -48,8 +51,8 @@ defmodule ExsemanticaWeb.Router do
       live_dashboard "/dashboard",
         metrics: ExsemanticaWeb.Telemetry,
         additional_pages: [
-          exsem_invite_code: ExsemanticaWeb.AdminPanel.InviteCode,
-          exsem_users: ExsemanticaWeb.AdminPanel.Users
+          exsem_users: ExsemanticaWeb.AdminPanel.Users,
+          exsem_invite: ExsemanticaWeb.AdminPanel.InviteCode
         ]
     end
   end

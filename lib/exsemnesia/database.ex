@@ -19,9 +19,11 @@ defmodule Exsemnesia.Database do
   @doc """
   Makes the Mnesia server process a list of transactions, reading and/or writing.
   """
-  @spec transaction(any) :: any
-  def transaction(transactions) do
-    GenServer.call(__MODULE__, {:transaction, transactions})
+  def transaction(transactions, reason) do
+    Logger.debug("transactions begin: #{reason}")
+    {time, result} = :timer.tc(fn -> GenServer.call(__MODULE__, {:transaction, transactions}) end)
+    Logger.debug("transactions ended in #{time}µs: #{reason}")
+    result
   end
 
   # ============================================================================
@@ -177,7 +179,7 @@ defmodule Exsemnesia.Database do
               }
             end
 
-          %{operation: :put, table: table, info: info, idh: nil} ->
+          %{operation: :put, table: table, info: info} ->
             fn ->
               %{
                 table: table,

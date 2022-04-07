@@ -25,7 +25,7 @@ defmodule ExsemanticaWeb.Schema do
               Exsemnesia.Utils.get(:posts, &1)
             ]
           )
-          |> Exsemnesia.Database.transaction()
+          |> Exsemnesia.Database.transaction("get+increment post")
 
         {:ok,
          packets
@@ -66,17 +66,18 @@ defmodule ExsemanticaWeb.Schema do
               Exsemnesia.Utils.get(:users, &1)
             ]
           )
-          |> Exsemnesia.Database.transaction()
+          |> Exsemnesia.Database.transaction("get+increment user")
 
         {:ok,
          packets
          |> Enum.map(fn packet ->
            case packet.response do
-             [{:users, id, timestamp, handle}] ->
+             [{:users, id, timestamp, handle, privmask}] ->
                %{
                  node: id,
                  handle: handle,
-                 timestamp: timestamp
+                 timestamp: timestamp,
+                 privmask: Base.encode16(privmask)
                }
 
              _ ->
@@ -105,7 +106,7 @@ defmodule ExsemanticaWeb.Schema do
               Exsemnesia.Utils.get(:interests, &1)
             ]
           )
-          |> Exsemnesia.Database.transaction()
+          |> Exsemnesia.Database.transaction("get+increment interest")
 
         {:ok,
          packets
@@ -140,7 +141,7 @@ defmodule ExsemanticaWeb.Schema do
       resolve(fn %{count: count, fuzzy: fuzzy_handle}, _ when count > 0 ->
         {:atomic, [packet]} =
           [Exsemnesia.Utils.trending(count)]
-          |> Exsemnesia.Database.transaction()
+          |> Exsemnesia.Database.transaction("fuzzy look for trends")
 
         {:ok,
          if not is_nil(fuzzy_handle) do
@@ -175,6 +176,21 @@ defmodule ExsemanticaWeb.Schema do
            )
          end}
       end)
+    end
+  end
+
+  mutation do
+    field :create_post, :post do
+      arg(:title, non_null(:string))
+      arg(:content, non_null(:string))
+      resolve fn %{title: title, content: content}, context ->
+        :pass
+      end
+    end
+    field :create_interest, :interest do
+      arg(:title, non_null(:string))
+      arg(:content, non_null(:string))
+      arg(:related, list_of(:id128))
     end
   end
 end

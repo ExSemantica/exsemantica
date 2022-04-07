@@ -116,51 +116,39 @@ window.exSemFeedChannel.on("update_trends", (msg) => {
 
 window.loginInitiate = async () => {
     let handle = document.getElementById("login-handle").value
-    let result = await fetch(`/api/v0/login?user=${handle}`, {})
-    let json = await result.json()
-    console.log("Got login entry", json)
-    let old = document.getElementById("login-invite")
+    let passwd = document.getElementById("login-password").value
+    let invite = document.getElementById("login-invite").value
+    let presence = await fetch(`/api/v0/login?user=${handle}`, { method: 'GET' })
+    let presence_json = await presence.json()
+
     let foot = document.getElementById("login-footer")
     foot.classList.remove('invisible')
 
-    if (json.unique) {
-        let invite = document.getElementById('login-invite')
-        if (invite.value !== undefined) {
-            foot.innerText = `Registering as '${json.parsed.trim()}'...`
-            let salsaVerde = new Uint8Array(32)
-            crypto.getRandomValues(salsaVerde)
-            let hash = await argon2id({
-                password: document.getElementById("login-handle").value,
-                salt: salsaVerde,
-                parallelism: 1,
-                iterations: 256,
-                memorySize: 512,
-                hashLength: 32,
-                outputType: 'encoded'
+    if (presence_json.unique) {
+        foot.innerText = 'Please wait... [registering]';
+        await fetch(`/api/v0/login`, {
+            method: 'PUT',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                'user': handle,
+                'pass': passwd,
+                'invite': invite
             })
-            console.log("Hash slinging", hash)
-        } else {
-            let invite = document.createElement("input")
-            invite.type = "text"
-            invite.placeholder = "Invite code"
-            invite.classList.add(
-                'bg-indigo-200',
-                'rounded-full',
-                'w-full',
-                'mb-4',
-                'p-1/4',
-                'drop-shadow-md'
-            )
-            old.replaceWith(invite)
-            invite.id = "login-invite"
-            foot.innerText = `Handle '${json.parsed.trim()}' is unique and can be registered. Please enter your invite code.`
-        }
+        })
     } else {
-        let invite = document.createElement("span")
-        old.replaceWith(invite)
-        invite.id = "login-invite"
-        foot.innerText = `Logging in as '${json.parsed.trim()}'...`
+        foot.innerText = 'Please wait... [logging in]';
+        await fetch(`/api/v0/login`, {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify({
+                'user': handle,
+                'pass': passwd
+            })
+        })
     }
-
-    // let password = document.getElementById("loginPassword").nodeValue
+    setTimeout(() => window.location.reload(), 2000)
 }
