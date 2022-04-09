@@ -26,11 +26,10 @@ import "phoenix_html"
 import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
-// import socket from "./user_socket.js"
-
+import socket from "./user_socket.js"
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfToken } })
+let liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfToken, } })
 
 // Show progress bar on live navigation and form submits
 topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" })
@@ -48,70 +47,7 @@ window.liveSocket = liveSocket
 window.Alpine = Alpine
 Alpine.start()
 
-window.exSemFeedChannel = window.liveSocket.channel("lv_semantic_feed:home", {})
-window.exSemFeedChannel.join()
-    .receive("ok", resp => { console.log("Joined successfully", resp) })
-    .receive("error", resp => { console.log("Unable to join", resp) })
 
-window.exSemFeedChannel.on("update_trends", (msg) => {
-    console.log("Trends received", msg)
-    document.getElementById("trend-summary").innerText = "";
-    msg.result.forEach(element => {
-        let node = document.createElement("div");
-        switch (element.type) {
-            case "users":
-                node.innerHTML = `<b>${element.handle}</b><br>user`
-                node.classList.add(
-                    'text-xs',
-                    'transition',
-                    'bg-amber-200',
-                    'duration-0',
-                    'hover:bg-amber-100',
-                    'hover:duration-200',
-                    'm-1',
-                    'p-1',
-                    'rounded-xl'
-                )
-                document.getElementById("trend-summary").appendChild(node)
-                break;
-
-            case "interests":
-                node.innerHTML = `<b>${element.handle}</b><br>interest`
-                node.classList.add(
-                    'text-xs',
-                    'transition',
-                    'bg-lime-200',
-                    'duration-0',
-                    'hover:bg-lime-100',
-                    'hover:duration-200',
-                    'm-1',
-                    'p-1',
-                    'rounded-xl'
-                )
-                document.getElementById("trend-summary").appendChild(node)
-                break;
-
-            case "posts":
-                node.innerHTML = `<b>${element.handle}</b><br>post`
-                node.classList.add(
-                    'text-xs',
-                    'transition',
-                    'bg-cyan-200',
-                    'duration-0',
-                    'hover:bg-cyan-100',
-                    'hover:duration-200',
-                    'm-1',
-                    'p-1',
-                    'rounded-xl'
-                )
-                document.getElementById("trend-summary").appendChild(node)
-                break;
-            default:
-                break;
-        }
-    });
-    document.getElementById("trend-display-waiting").innerText = `Trends loaded on ${msg.time}`
-})
 
 window.loginInitiate = async () => {
     let handle = document.getElementById("login-handle").value
@@ -138,7 +74,9 @@ window.loginInitiate = async () => {
         })
         let result_json = await result.json()
         setTimeout(() => {
-            if (result_json.success) { window.location.reload() } else {
+            if (result_json.success) {
+                window.location.reload()
+            } else {
                 foot.innerText = result_json.description
             }
         }, 2000)
@@ -157,10 +95,13 @@ window.loginInitiate = async () => {
         let result_json = await result.json()
 
         setTimeout(() => {
-            if (result_json.success) { window.location.reload() } else {
+            if (result_json.success) {
+                localStorage.setItem('exsemantica_handle', result_json.handle)
+                localStorage.setItem('exsemantica_paseto', result_json.paseto)
+                window.location.reload()
+            } else {
                 foot.innerText = result_json.description
             }
         }, 2000)
-
     }
 }

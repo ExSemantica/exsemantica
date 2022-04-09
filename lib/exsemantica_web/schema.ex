@@ -179,18 +179,18 @@ defmodule ExsemanticaWeb.Schema do
     end
   end
 
-  mutation do
-    field :create_post, :post do
-      arg(:title, non_null(:string))
-      arg(:content, non_null(:string))
-      resolve fn %{title: title, content: content}, context ->
-        :pass
-      end
-    end
-    field :create_interest, :interest do
-      arg(:title, non_null(:string))
-      arg(:content, non_null(:string))
-      arg(:related, list_of(:id128))
-    end
-  end
+  # mutation do
+  #   field :create_post, :post do
+  #     arg(:title, non_null(:string))
+  #     arg(:content, non_null(:string))
+  #     resolve fn %{title: title, content: content}, context ->
+  #       :pass
+  #     end
+  #   end
+  #   field :create_interest, :interest do
+  #     arg(:title, non_null(:string))
+  #     arg(:content, non_null(:string))
+  #     arg(:related, list_of(:id128))
+  #   end
+  # end
 end

@@ -82,43 +82,59 @@ defmodule Exsemnesia.Utils do
 
         keypair =
           case auth.response do
-            [{:auth, _secret, keypair}] -> keypair
+            [{:auth, _handle, _secret, keypair}] -> keypair
             _ -> nil
           end
 
-        # TODO: Better error handling below
-        {:ok, token} =
-          Paseto.parse_token(
-            paseto,
-            keypair
-          )
-
-        {:ok, decoded} = Jason.decode(token.payload)
-        # TODO: Better error handling above
-
-        case auth_state.response do
-          [] ->
-            Logger.info(
-              "Trying check PASETO for #{raw_handle} as #{handle} FAILED: No PASETO on server"
+        unless is_nil(keypair) do
+          # TODO: Better error handling below
+          {:ok, token} =
+            Paseto.parse_token(
+              paseto,
+              keypair
             )
 
-            {:error, :enoent}
+          {:ok, decoded} = Jason.decode(token.payload)
+          # TODO: Better error handling above
 
-          [{:auth_state, _handle, paseto}] when paseto === decoded ->
-            expiry = paseto.exp |> DateTime.from_iso8601() |> DateTime.compare(DateTime.utc_now())
 
-            case expiry do
-              :lt ->
-                Logger.info("Trying check PASETO for #{raw_handle} as #{handle} SUCCESS")
-                generate_paseto(downcased, keypair)
+          case auth_state.response do
+            [] ->
+              Logger.info(
+                "Trying check PASETO for #{raw_handle} as #{handle} FAILED: No PASETO on server"
+              )
 
-              _ ->
+              {:error, :enoent}
+
+            [{:auth_state, _handle, paseto}] ->
+              paseto = for {k, v} <- paseto, into: %{} do
+                {to_string(k), v}
+              end
+              if paseto == decoded do
+                {:ok, expiry, _utcoff} = paseto["exp"] |> DateTime.from_iso8601()
+                expiry = DateTime.utc_now() |> DateTime.compare(expiry)
+
+                case expiry do
+                  :lt ->
+                    Logger.info("Trying check PASETO for #{raw_handle} as #{handle} SUCCESS")
+                    generate_paseto(downcased, keypair)
+
+                  _ ->
+                    Logger.info(
+                      "Trying check PASETO for #{raw_handle} as #{handle} FAILED: Session expired"
+                    )
+
+                    {:error, :etime}
+                end
+              else
                 Logger.info(
-                  "Trying check PASETO for #{raw_handle} as #{handle} FAILED: Session expired"
+                  "Trying check PASETO for #{raw_handle} as #{handle} FAILED: Not match"
                 )
-
-                {:error, :etime}
-            end
+                {:error, :einval}
+              end
+          end
+        else
+          {:error, :einval}
         end
     end
   end

@@ -5,9 +5,9 @@
     </nav>
     <template x-if="showMenu">
         <menu class="absolute w-1/6 bg-slate-200 min-h-0 z-10 right-0 rounded-bl-2xl drop-shadow-xl p-4">
-            <h2 class="text-xl text-center"><b>Not logged in</b></h2>
+            <h2 class="text-xl text-center"><b><%= @login_who %></b></h2>
             <br>
-            <button @click="showMenu = false; showLogin = true" class="w-full p-1 bg-slate-100 rounded-md drop-shadow-md" >Log in/register</button>
+            <button @click="showMenu = false; showLogin = true" class="w-full p-1 bg-slate-100 rounded-md drop-shadow-md"><%= @login_prompt %></button>
         </menu>
     </template>
 </header>

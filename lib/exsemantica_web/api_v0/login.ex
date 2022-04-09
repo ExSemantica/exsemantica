@@ -53,12 +53,11 @@ defmodule ExsemanticaWeb.APIv0.Login do
           Jason.encode(%{
             success: true,
             # The handle of the user.
-            handle: login_user.handle
+            handle: login_user.handle,
+            paseto: login_user.paseto
           })
 
         conn
-        |> fetch_session()
-        |> put_session(:login_paseto, login_user.paseto)
         |> send_resp(200, json)
 
       {:error, :einval} ->

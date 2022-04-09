@@ -5,7 +5,6 @@ defmodule ExsemanticaWeb.LayoutLive do
 
   @max_search_entries 48
   @algorithm 0.707
-
   def mount(_params, _session, socket) do
     {:ok,
      socket
@@ -18,9 +17,11 @@ defmodule ExsemanticaWeb.LayoutLive do
          <br>
          <p>Check the sidebar to see what's popular. Below is either a search results page or an interest feed.</p>
          """,
-         dyn_header: "Reading the interest feed is currently unimplemented.",
+         dyn_header: "Search for interests",
          dyn_text: "Please search for something.",
-         login_nag: "<i>Please enter a handle, a string with 16 characters or less.</i><br>"
+         login_nag: "<i>Please enter a handle, a string with 16 characters or less.</i><br>",
+         login_who: "Not logged in",
+         login_prompt: "Login/Register"
        ]
        |> Enum.map(fn {k, v} ->
          {k, v |> Phoenix.HTML.raw()}
@@ -113,7 +114,7 @@ defmodule ExsemanticaWeb.LayoutLive do
            [
              dyn_header:
                ExsemanticaWeb.Gettext.ngettext(
-                "<i><b>%{count}</b> trend found</i>",
+                 "<i><b>%{count}</b> trend found</i>",
                  "<i><b>%{count}</b> trends found</i>",
                  length(trends_filt)
                ),

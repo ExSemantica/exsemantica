@@ -17,17 +17,14 @@ defmodule ExsemanticaWeb.Router do
       get "/login", Login, :get_attributes
       post "/login", Login, :post_authentication
       put "/login", Login, :put_registration
-      get "/wants", Wants, :get_enabled
-      resources "/bucket", Bucket, only: [:create, :show, :update, :delete]
+      # resources "/bucket", Bucket, only: [:create, :show, :update, :delete]
     end
   end
 
   scope "/", ExsemanticaWeb do
     pipe_through :browser
 
-    live_session :default, root_layout: {ExsemanticaWeb.LayoutView, :different_layout} do
-      get "/", PageController, :index
-    end
+    live "/", LayoutLive
   end
 
   # Other scopes may use custom stacks.
