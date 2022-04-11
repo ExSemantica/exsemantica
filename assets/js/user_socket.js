@@ -6,7 +6,7 @@ import { Socket } from "phoenix"
 
 // And connect to the path in "lib/exsemantica_web/endpoint.ex". We pass the
 // token for authentication. Read below how it should be used.
-let socket = new Socket("/socket", { params: { paseto: localStorage.getItem('exsemantica_paseto'), handle: localStorage.getItem('exsemantica_handle') } })
+let socket = new Socket("/socket", { params: { } })
 
 // When you connect, you'll often need to authenticate the client.
 // For example, imagine you have an authentication plug, `MyAuth`,

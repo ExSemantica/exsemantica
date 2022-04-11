@@ -23,7 +23,6 @@ defmodule ExsemanticaWeb.UserSocket do
   # performing token verification on connect.
   @impl true
   def connect(params, socket, _connect_info) do
-    IO.inspect Exsemnesia.Utils.check_user(params["handle"], params["paseto"])
     {:ok, socket}
   end
 

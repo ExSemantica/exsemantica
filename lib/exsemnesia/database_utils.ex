@@ -20,6 +20,14 @@ defmodule Exsemnesia.Utils do
     }
   end
 
+  def do_case(lc_handle) do
+    %{
+      operation: :index,
+      table: :lowercases,
+      info: %{key: :lowercase, value: Exsemnesia.Handle128.serialize(lc_handle)}
+    }
+  end
+
   # ============================================================================
   # User authentication
   # ============================================================================
@@ -97,7 +105,6 @@ defmodule Exsemnesia.Utils do
           {:ok, decoded} = Jason.decode(token.payload)
           # TODO: Better error handling above
 
-
           case auth_state.response do
             [] ->
               Logger.info(
@@ -107,9 +114,11 @@ defmodule Exsemnesia.Utils do
               {:error, :enoent}
 
             [{:auth_state, _handle, paseto}] ->
-              paseto = for {k, v} <- paseto, into: %{} do
-                {to_string(k), v}
-              end
+              paseto =
+                for {k, v} <- paseto, into: %{} do
+                  {to_string(k), v}
+                end
+
               if paseto == decoded do
                 {:ok, expiry, _utcoff} = paseto["exp"] |> DateTime.from_iso8601()
                 expiry = DateTime.utc_now() |> DateTime.compare(expiry)
@@ -117,7 +126,7 @@ defmodule Exsemnesia.Utils do
                 case expiry do
                   :lt ->
                     Logger.info("Trying check PASETO for #{raw_handle} as #{handle} SUCCESS")
-                    generate_paseto(downcased, keypair)
+                    {:ok, %{handle: handle, paseto: paseto}}
 
                   _ ->
                     Logger.info(
@@ -130,10 +139,12 @@ defmodule Exsemnesia.Utils do
                 Logger.info(
                   "Trying check PASETO for #{raw_handle} as #{handle} FAILED: Not match"
                 )
+
                 {:error, :einval}
               end
           end
         else
+          Logger.info("Trying check PASETO for #{raw_handle} as #{handle} FAILED: No keys")
           {:error, :einval}
         end
     end
@@ -153,22 +164,20 @@ defmodule Exsemnesia.Utils do
 
       {:ok, pk, sk} = Salty.Sign.Ed25519.keypair()
 
-      IO.inspect(
-        [
-          %{
-            operation: :put,
-            table: :users,
-            info: {:users, id, date, handle, <<0::128>>},
-            idh: {id, handle}
-          },
-          %{
-            operation: :put,
-            table: :auth,
-            info: {:auth, String.downcase(handle, :ascii), secret, {pk, sk}}
-          }
-        ]
-        |> Exsemnesia.Database.transaction("create user + downcasing")
-      )
+      [
+        %{
+          operation: :put,
+          table: :users,
+          info: {:users, id, date, handle, <<0::128>>},
+          idh: {id, handle}
+        },
+        %{
+          operation: :put,
+          table: :auth,
+          info: {:auth, String.downcase(handle, :ascii), secret, {pk, sk}}
+        }
+      ]
+      |> Exsemnesia.Database.transaction("create user + downcasing")
 
       Logger.info("Trying activating #{raw_handle} as #{handle} SUCCESS")
       :persistent_term.put(:exseminvite, :crypto.strong_rand_bytes(24))

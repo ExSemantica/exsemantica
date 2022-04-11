@@ -2,10 +2,40 @@ defmodule ExsemanticaWeb.LayoutLive do
   use ExsemanticaWeb, :live_view
 
   require Exsemnesia.Handle128
+  require Logger
 
   @max_search_entries 48
   @algorithm 0.707
   def mount(_params, _session, socket) do
+    user = Exsemnesia.Utils.check_user(get_connect_params(socket)["handle"], get_connect_params(socket)["paseto"])
+    socket = case user do
+      {:ok, user} ->
+        {:atomic, [remapped]} =
+          [Exsemnesia.Utils.do_case(user.handle)]
+          |> Exsemnesia.Database.transaction("redetermine case")
+
+        [{:lowercases, upcased, _}] = remapped.response
+
+        socket
+        |> assign(
+          login_who: upcased,
+          login_prompt: "Log out",
+          profile_picture:
+            Routes.static_path(ExsemanticaWeb.Endpoint, "/images/unassigned_64x.webp")
+        )
+
+      {:error, err} ->
+        Logger.warn(inspect(err))
+
+        socket
+        |> assign(
+          login_who: "Not logged in",
+          login_prompt: "Log in",
+          profile_picture:
+            Routes.static_path(ExsemanticaWeb.Endpoint, "/images/unassigned_64x.webp")
+        )
+    end
+
     {:ok,
      socket
      |> assign(
@@ -19,9 +49,7 @@ defmodule ExsemanticaWeb.LayoutLive do
          """,
          dyn_header: "Search for interests",
          dyn_text: "Please search for something.",
-         login_nag: "<i>Please enter a handle, a string with 16 characters or less.</i><br>",
-         login_who: "Not logged in",
-         login_prompt: "Login/Register"
+         login_nag: "<i>Please enter a handle, a string with 16 characters or less.</i><br>"
        ]
        |> Enum.map(fn {k, v} ->
          {k, v |> Phoenix.HTML.raw()}

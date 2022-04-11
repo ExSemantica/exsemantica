@@ -1,7 +1,7 @@
 <header @click.outside="showMenu = false">
     <nav class="h-16 w-full drop-shadow-lg bg-slate-50">
         <a href={Routes.static_path(ExsemanticaWeb.Endpoint, "/")}><img class="float-left mt-2 ml-4 line-height-1 max-h-12" src={Routes.static_path(ExsemanticaWeb.Endpoint, "/images/logo.png")} alt="ExSemantica Logo"/></a>
-        <img class="w-12 h-12 m-2 rounded-full float-right drop-shadow-md" src={Routes.static_path(ExsemanticaWeb.Endpoint, "/images/unassigned_64x.webp")} @click="showMenu = true">
+        <img class="w-12 h-12 m-2 rounded-full float-right drop-shadow-md" src={@profile_picture} @click="showMenu = true">
     </nav>
     <template x-if="showMenu">
         <menu class="absolute w-1/6 bg-slate-200 min-h-0 z-10 right-0 rounded-bl-2xl drop-shadow-xl p-4">
