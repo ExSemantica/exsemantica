@@ -31,9 +31,7 @@ import socket from "./user_socket.js"
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 let liveSocket = new LiveSocket("/live", Socket, {
     params: {
-        _csrf_token: csrfToken,
-        paseto: localStorage.getItem('exsemantica_paseto'),
-        handle: localStorage.getItem('exsemantica_handle')
+        _csrf_token: csrfToken
     }
 })
 
@@ -52,8 +50,6 @@ liveSocket.connect()
 window.liveSocket = liveSocket
 window.Alpine = Alpine
 Alpine.start()
-
-
 
 window.loginInitiate = async () => {
     let handle = document.getElementById("login-handle").value
@@ -102,8 +98,6 @@ window.loginInitiate = async () => {
 
         setTimeout(() => {
             if (result_json.success) {
-                localStorage.setItem('exsemantica_handle', result_json.handle)
-                localStorage.setItem('exsemantica_paseto', result_json.paseto)
                 window.location.reload()
             } else {
                 foot.innerText = result_json.description

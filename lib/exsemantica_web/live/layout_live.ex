@@ -6,35 +6,38 @@ defmodule ExsemanticaWeb.LayoutLive do
 
   @max_search_entries 48
   @algorithm 0.707
-  def mount(_params, _session, socket) do
-    user = Exsemnesia.Utils.check_user(get_connect_params(socket)["handle"], get_connect_params(socket)["paseto"])
-    socket = case user do
-      {:ok, user} ->
-        {:atomic, [remapped]} =
-          [Exsemnesia.Utils.do_case(user.handle)]
-          |> Exsemnesia.Database.transaction("redetermine case")
+  def mount(_params, session, socket) do
+    user =
+      Exsemnesia.Utils.check_user(session["exsemantica_handle"], session["exsemantica_paseto"])
 
-        [{:lowercases, upcased, _}] = remapped.response
+    socket =
+      case user do
+        {:ok, user} ->
+          {:atomic, [remapped]} =
+            [Exsemnesia.Utils.do_case(user.handle)]
+            |> Exsemnesia.Database.transaction("redetermine case")
 
-        socket
-        |> assign(
-          login_who: upcased,
-          login_prompt: "Log out",
-          profile_picture:
-            Routes.static_path(ExsemanticaWeb.Endpoint, "/images/unassigned_64x.webp")
-        )
+          [{:lowercases, upcased, _}] = remapped.response
 
-      {:error, err} ->
-        Logger.warn(inspect(err))
+          socket
+          |> assign(
+            login_who: upcased,
+            login_prompt: "Log out",
+            profile_picture:
+              Routes.static_path(ExsemanticaWeb.Endpoint, "/images/unassigned_64x.webp")
+          )
 
-        socket
-        |> assign(
-          login_who: "Not logged in",
-          login_prompt: "Log in",
-          profile_picture:
-            Routes.static_path(ExsemanticaWeb.Endpoint, "/images/unassigned_64x.webp")
-        )
-    end
+        {:error, err} ->
+          Logger.warn(inspect(err))
+
+          socket
+          |> assign(
+            login_who: "Not logged in",
+            login_prompt: "Log in",
+            profile_picture:
+              Routes.static_path(ExsemanticaWeb.Endpoint, "/images/unassigned_64x.webp")
+          )
+      end
 
     {:ok,
      socket
