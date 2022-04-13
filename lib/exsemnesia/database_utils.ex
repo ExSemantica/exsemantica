@@ -240,12 +240,13 @@ defmodule Exsemnesia.Utils do
 
       if unique?(handle) do
         id = increment(:id_count)
+        downcased = String.downcase(handle, :ascii)
 
         %{
           operation: :put,
           table: :posts,
-          info: {:posts, id, DateTime.utc_now(), handle, title, content, user},
-          idh: {id, handle}
+          info: {:posts, id, DateTime.utc_now(), downcased, title, content, user},
+          idh: {id, downcased}
         }
       else
         {:error, :eusers}
@@ -261,12 +262,13 @@ defmodule Exsemnesia.Utils do
 
       if unique?(handle) do
         id = increment(:id_count)
+        downcased = String.downcase(handle, :ascii)
 
         %{
           operation: :put,
           table: :interests,
-          info: {:interests, id, DateTime.utc_now(), title, content, related_to},
-          idh: {id, handle}
+          info: {:interests, id, DateTime.utc_now(), downcased, title, content, related_to},
+          idh: {id, downcased}
         }
       else
         {:error, :eusers}
@@ -284,6 +286,14 @@ defmodule Exsemnesia.Utils do
       operation: :get,
       table: table,
       info: idx
+    }
+  end
+
+  def get_by_handle(table, handle) do
+    %{
+      operation: :index,
+      table: table,
+      info: %{key: :handle, value: handle}
     }
   end
 

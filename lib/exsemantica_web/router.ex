@@ -24,7 +24,11 @@ defmodule ExsemanticaWeb.Router do
   scope "/", ExsemanticaWeb do
     pipe_through :browser
 
-    live "/", LayoutLive
+    live_session :exsemantica do
+      live "/", LayoutLive
+      live "/search", SearchLive
+      live "/i/:interest", InterestLive
+    end
   end
 
   # Other scopes may use custom stacks.

@@ -144,7 +144,7 @@ defmodule Exsemnesia.Database do
               %{
                 table: table,
                 info: info,
-                operation: :get,
+                operation: :index,
                 response: :mnesia.index_read(table, value, key)
               }
             end
