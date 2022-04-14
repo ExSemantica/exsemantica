@@ -5,29 +5,41 @@ defmodule ExsemanticaWeb.InterestLive do
   require Logger
 
   def mount(params, session, socket) do
-    {:atomic, [entry]} =
+    {:atomic, [recase]} =
       [
-        Exsemnesia.Utils.get_by_handle(
-          :interests,
-          Exsemnesia.Handle128.serialize(params["interest"])
+        Exsemnesia.Utils.get_recase(
+          String.downcase(Exsemnesia.Handle128.serialize(params["interest"]), :ascii)
         )
       ]
-      |> Exsemnesia.Database.transaction("find handle for entry")
+      |> Exsemnesia.Database.transaction("downcase find interest")
 
     {header, body} =
-      case entry.response do
+      case recase.response do
         [] ->
           {"Interest not found", "The interest was either deleted or not created at all."}
 
-        [{:interests, node, timestamp, handle, title, content, related_to}] ->
+        [{:lowercases, handle, _lowercase}] ->
+          {:atomic, [entry]} =
+            [
+              Exsemnesia.Utils.get_by_handle(
+                :interests,
+                handle
+              )
+            ]
+            |> Exsemnesia.Database.transaction("find handle for entry")
+
+          [{:interests, _node, timestamp, _handle, title, content, _related_to}] = entry.response
           safe_title = Phoenix.HTML.html_escape(title) |> Phoenix.HTML.safe_to_string()
           safe_content = Phoenix.HTML.html_escape(content) |> Phoenix.HTML.safe_to_string()
+          timestamp_8601 = timestamp |> DateTime.to_iso8601()
 
           {handle,
            """
-           <h3>#{safe_title}</h3>
-
+           <h3 class="font-bold">#{safe_title}</h3>
+           <br>
            #{safe_content}
+           <br>
+           <small>Submitted on #{timestamp_8601}</small>
            """}
       end
 

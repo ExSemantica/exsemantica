@@ -242,12 +242,20 @@ defmodule Exsemnesia.Utils do
         id = increment(:id_count)
         downcased = String.downcase(handle, :ascii)
 
-        %{
-          operation: :put,
-          table: :posts,
-          info: {:posts, id, DateTime.utc_now(), downcased, title, content, user},
-          idh: {id, downcased}
-        }
+        [
+          %{
+            operation: :put,
+            table: :lowercases,
+            info: {:lowercases, handle, downcased},
+            idh: nil
+          },
+          %{
+            operation: :put,
+            table: :posts,
+            info: {:posts, id, DateTime.utc_now(), handle, title, content, user},
+            idh: {id, handle}
+          }
+        ]
       else
         {:error, :eusers}
       end
@@ -264,12 +272,20 @@ defmodule Exsemnesia.Utils do
         id = increment(:id_count)
         downcased = String.downcase(handle, :ascii)
 
-        %{
-          operation: :put,
-          table: :interests,
-          info: {:interests, id, DateTime.utc_now(), downcased, title, content, related_to},
-          idh: {id, downcased}
-        }
+        [
+          %{
+            operation: :put,
+            table: :lowercases,
+            info: {:lowercases, handle, downcased},
+            idh: nil
+          },
+          %{
+            operation: :put,
+            table: :interests,
+            info: {:interests, id, DateTime.utc_now(), handle, title, content, related_to},
+            idh: {id, handle}
+          }
+        ]
       else
         {:error, :eusers}
       end
@@ -281,6 +297,9 @@ defmodule Exsemnesia.Utils do
   # ============================================================================
   # Get items
   # ============================================================================
+  @doc """
+  Gets an entry by its node ID.
+  """
   def get(table, idx) do
     %{
       operation: :get,
@@ -289,11 +308,25 @@ defmodule Exsemnesia.Utils do
     }
   end
 
+  @doc """
+  Looks up by handle. Only works with :users, :posts, and :interests tables.
+  """
   def get_by_handle(table, handle) do
     %{
       operation: :index,
       table: table,
       info: %{key: :handle, value: handle}
+    }
+  end
+
+  @doc """
+  Looks up the lowercase to its original case.
+  """
+  def get_recase(lower) do
+    %{
+      operation: :index,
+      table: :lowercases,
+      info: %{key: :lowercase, value: lower}
     }
   end
 
