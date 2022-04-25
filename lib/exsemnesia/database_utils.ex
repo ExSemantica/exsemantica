@@ -5,6 +5,7 @@ defmodule Exsemnesia.Utils do
   require Exsemnesia.Handle128
   require Logger
 
+  @salsa "auth"
   @max_login_lasts 3600
 
   def increment(type) do
@@ -31,125 +32,39 @@ defmodule Exsemnesia.Utils do
   # ============================================================================
   # User authentication
   # ============================================================================
-  defp generate_paseto(handle, keypair) do
-    date = DateTime.utc_now()
-
-    {:ok, json} =
-      Jason.encode(
-        paseto = %{
-          iss: ExsemanticaWeb.Endpoint.host(),
-          aud: handle,
-          exp: date |> DateTime.add(@max_login_lasts, :second) |> DateTime.to_iso8601(),
-          iat: date |> DateTime.to_iso8601(),
-          exs_kid: Base.url_encode64(:crypto.strong_rand_bytes(32)),
-          exs_uid: handle
-        }
-      )
-
-    [
-      %{
-        operation: :put,
-        table: :auth_state,
-        info: {:auth_state, handle, paseto},
-        idh: nil
-      }
-    ]
-    |> Exsemnesia.Database.transaction("change authentication state (generate PASETO)")
-
-    parsed =
-      Paseto.generate_token(
-        "v2",
-        "public",
-        json,
-        keypair
-      )
-
-    # Server has secret, client can run off with public.
-    {:ok,
-     %{
-       handle: handle,
-       paseto: parsed
-     }}
-  end
-
-  def check_user(raw_handle, paseto) do
-    Logger.debug("Trying check PASETO for #{raw_handle}")
+  def check_user(raw_handle, token_in) do
+    Logger.debug("Trying check Phoenix token for #{raw_handle}")
 
     cond do
       not Exsemnesia.Handle128.is_valid(raw_handle) ->
-        Logger.info("Trying check PASETO for #{raw_handle} FAILED: Invalid handle")
+        Logger.debug("Trying check Phoenix token for #{raw_handle} FAILED: Invalid handle")
         {:error, :einval}
 
       true ->
         handle = Exsemnesia.Handle128.serialize(raw_handle)
         downcased = String.downcase(handle, :ascii)
 
-        {:atomic, [auth, auth_state]} =
-          [Exsemnesia.Utils.get(:auth, downcased), Exsemnesia.Utils.get(:auth_state, downcased)]
-          |> Exsemnesia.Database.transaction("check paseto for user")
+        {:atomic, [auth]} =
+          [Exsemnesia.Utils.get(:auth, downcased)]
+          |> Exsemnesia.Database.transaction("check Phoenix token for user '#{handle}'")
 
-        keypair =
+        token =
           case auth.response do
-            [{:auth, _handle, _secret, keypair}] -> keypair
-            _ -> nil
+            [] -> nil
+            [{:auth, _handle, _secret, token}] -> token
           end
 
-        unless is_nil(keypair) do
-          # TODO: Better error handling below
-          {:ok, token} =
-            Paseto.parse_token(
-              paseto,
-              keypair
-            )
+        case Phoenix.Token.verify(ExsemanticaWeb.Endpoint, "auth", token_in) do
+          {:ok, ^token} ->
+            Logger.debug("Trying check Phoenix token for #{raw_handle} SUCCESS")
+            true
 
-          {:ok, decoded} = Jason.decode(token.payload)
-          # TODO: Better error handling above
-
-          case auth_state.response do
-            [] ->
-              Logger.info(
-                "Trying check PASETO for #{raw_handle} as #{handle} FAILED: No PASETO on server"
-              )
-
-              {:error, :enoent}
-
-            [{:auth_state, _handle, paseto}] ->
-              paseto =
-                for {k, v} <- paseto, into: %{} do
-                  {to_string(k), v}
-                end
-
-              if paseto == decoded do
-                {:ok, expiry, _utcoff} = paseto["exp"] |> DateTime.from_iso8601()
-                expiry = DateTime.utc_now() |> DateTime.compare(expiry)
-
-                case expiry do
-                  :lt ->
-                    Logger.info("Trying check PASETO for #{raw_handle} as #{handle} SUCCESS")
-                    {:ok, %{handle: handle, paseto: paseto}}
-
-                  _ ->
-                    Logger.info(
-                      "Trying check PASETO for #{raw_handle} as #{handle} FAILED: Session expired"
-                    )
-
-                    {:error, :etime}
-                end
-              else
-                Logger.info(
-                  "Trying check PASETO for #{raw_handle} as #{handle} FAILED: Not match"
-                )
-
-                {:error, :einval}
-              end
-          end
-        else
-          Logger.info("Trying check PASETO for #{raw_handle} as #{handle} FAILED: No keys")
-          {:error, :einval}
+          error ->
+            Logger.debug("Trying check Phoenix token for #{raw_handle} FAILED: #{inspect(error)}")
+            false
         end
     end
   end
-
   def create_user(raw_handle, password) do
     Logger.debug("Trying activating #{raw_handle}")
 
@@ -162,8 +77,6 @@ defmodule Exsemnesia.Utils do
       secret = Argon2.add_hash(password)
       date = DateTime.utc_now()
 
-      {:ok, pk, sk} = Salty.Sign.Ed25519.keypair()
-
       [
         %{
           operation: :put,
@@ -174,17 +87,21 @@ defmodule Exsemnesia.Utils do
         %{
           operation: :put,
           table: :auth,
-          info: {:auth, String.downcase(handle, :ascii), secret, {pk, sk}}
+          # We don't need a token here yet
+          info: {:auth, String.downcase(handle, :ascii), secret, nil}
         }
       ]
       |> Exsemnesia.Database.transaction("create user + downcasing")
+
+      {:ok, token} = regenerate_token(handle)
 
       Logger.info("Trying activating #{raw_handle} as #{handle} SUCCESS")
       :persistent_term.put(:exseminvite, :crypto.strong_rand_bytes(24))
 
       {:ok,
        %{
-         handle: handle
+         handle: handle,
+         token: token
        }}
     else
       Logger.info("Trying activating #{raw_handle} as #{handle} FAILED: Not a unique handle")
@@ -212,11 +129,11 @@ defmodule Exsemnesia.Utils do
             Logger.info("Trying logging in #{raw_handle} as #{handle} FAILED: No such handle")
             {:error, :enoent}
 
-          [{:auth, handle, secret, keypair}] ->
+          [{:auth, handle, secret, _token}] ->
             case Argon2.check_pass(secret, password) do
               {:ok, _} ->
                 Logger.info("Trying logging in #{raw_handle} as #{handle} SUCCESS")
-                generate_paseto(handle, keypair)
+                Exsemnesia.Utils.regenerate_token(handle)
 
               {:error, err} ->
                 Logger.warning(
@@ -226,6 +143,33 @@ defmodule Exsemnesia.Utils do
                 {:error, :eacces}
             end
         end
+    end
+  end
+
+  def regenerate_token(handle) do
+    Logger.debug("Trying regenerate token for #{handle}")
+
+    {:atomic, [head]} =
+      [Exsemnesia.Utils.get(:auth, String.downcase(handle, :ascii))]
+      |> Exsemnesia.Database.transaction("try to get data to regenerate token")
+
+    case head.response do
+      [] ->
+        Logger.info("Trying regenerate token for #{handle} FAILED: No such handle")
+        {:error, :enoent}
+
+      [{:auth, handle, secret, _token}] ->
+        Logger.info("Trying regenerate token #{handle} SUCCESS")
+
+        token =
+          Phoenix.Token.sign(ExsemanticaWeb.Endpoint, @salsa, :crypto.strong_rand_bytes(32),
+            max_age: @max_login_lasts
+          )
+
+        [%{operation: :put, table: :auth, info: {:auth, handle, secret, token}, idh: nil}]
+        |> Exsemnesia.Database.transaction("put in regenerated token")
+
+        {:ok, %{handle: handle, token: token}}
     end
   end
 

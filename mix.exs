@@ -54,8 +54,8 @@ defmodule Exsemantica.MixProject do
       {:absinthe_plug, "~> 1.5"},
       {:unidecode, "~> 1.0"},
       {:argon2_elixir, "~> 3.0"},
-      {:paseto, "~> 1.3.2"},
-      {:mogrify, "~> 0.9.1"}
+      {:paseto, "~> 1.4"},
+      {:mogrify, "~> 0.9"}
     ]
   end
 

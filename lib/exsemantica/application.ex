@@ -55,8 +55,7 @@ defmodule Exsemantica.Application do
            users: ~w(node timestamp handle privmask)a,
            posts: ~w(node timestamp handle title content posted_by)a,
            interests: ~w(node timestamp handle title content related_to)a,
-           auth: ~w(handle secret keypair)a,
-           auth_state: ~w(handle paseto)a,
+           auth: ~w(handle secret token)a,
            counters: ~w(type count)a
          },
          caches: %{

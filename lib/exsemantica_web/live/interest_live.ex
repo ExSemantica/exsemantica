@@ -28,6 +28,7 @@ defmodule ExsemanticaWeb.InterestLive do
             ]
             |> Exsemnesia.Database.transaction("find handle for entry")
 
+            # TODO: related to...
           [{:interests, _node, timestamp, _handle, title, content, _related_to}] = entry.response
           safe_title = Phoenix.HTML.html_escape(title) |> Phoenix.HTML.safe_to_string()
           safe_content = Phoenix.HTML.html_escape(content) |> Phoenix.HTML.safe_to_string()

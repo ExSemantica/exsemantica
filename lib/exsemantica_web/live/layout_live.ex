@@ -85,6 +85,7 @@ defmodule ExsemanticaWeb.LayoutLive do
   end
 
   def mount(_params, session, socket) do
+    {:ok, socket} = ExsemanticaWeb.ExsemFeedChannel.join("exsem_feed:home", nil, socket)
     {:ok,
      socket
      |> login(
