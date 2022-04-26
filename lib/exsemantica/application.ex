@@ -5,15 +5,39 @@ defmodule Exsemantica.Application do
 
   use Application
 
+  @serv_opts [:binary, packet: :line, active: true, packet_size: 510, reuseaddr: true]
+
   @impl true
   def start(_type, _args) do
-    case Application.get_env(:exsemantica, :commit_sha_result) do
-      {sha, 0} ->
-        sha |> String.replace_trailing("\n", "")
-          :persistent_term.put(Exsemantica.Version, "#{Application.spec(:exsemantica, :vsn)}-#{sha}")
+    cdate_path = Path.join([Application.app_dir(:exsemantica, "priv"), "Exsemantica_CDATE.erl"])
+
+    # read off Creation Date for IRC standard requirement...ugh
+    :persistent_term.put(
+      Exsemantica.CDate,
+      case :file.consult(cdate_path) do
+        {:ok, [cdate]} ->
+          cdate
+
         _ ->
-          :persistent_term.put(Exsemantica.Version, Application.spec(:exsemantica, :vsn))
-    end
+          cdate = DateTime.utc_now()
+          File.write(cdate_path, :io_lib.format("~p.~n", [Term]))
+          cdate
+      end
+    )
+
+    # then read off the Commit SHA or none at all...
+    :persistent_term.put(
+      Exsemantica.Version,
+      case Application.get_env(:exsemantica, :commit_sha_result) do
+        {sha, 0} ->
+          sha |> String.replace_trailing("\n", "")
+
+          "#{Application.spec(:exsemantica, :vsn)}-#{sha}"
+
+        _ ->
+          Application.spec(:exsemantica, :vsn)
+      end
+    )
 
     children = [
       # Start the Telemetry supervisor
@@ -31,13 +55,16 @@ defmodule Exsemantica.Application do
            users: ~w(node timestamp handle privmask)a,
            posts: ~w(node timestamp handle title content posted_by)a,
            interests: ~w(node timestamp handle title content related_to)a,
-           auth: ~w(handle hash state secret)a,
+           auth: ~w(handle secret token)a,
            counters: ~w(type count)a
          },
          caches: %{
            # This is weird. You can botch a composite key. Cool!
            ctrending: ~w(count_node node type htimestamp handle)a,
            lowercases: ~w(handle lowercase)a,
+           # Exirchatterd augmentations require exsemnesia caches to share state
+           irc_idling: ~w(handle modes_list)a,
+           irc_inroom: ~w(room modes_list users_list)a
          },
          tcopts: %{
            extra_indexes: %{
@@ -76,19 +103,38 @@ defmodule Exsemantica.Application do
            end
          }
        ]},
-       ExsemanticaWeb.AnnounceServer
+      ExsemanticaWeb.AnnounceServer,
+      Exirchatterd.Dial.DynamicSupervisor
       # Start a worker by calling: Exsemantica.Worker.start_link(arg)
       # {Exsemantica.Worker, arg}
     ]
 
+    :persistent_term.put(:exseminvite, :crypto.strong_rand_bytes(24))
+    :persistent_term.put(:exsemprefs, %{registration_enabled: true})
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Exsemantica.Supervisor]
-    reply = Supervisor.start_link(children, opts)
+    # which came first, the chicken or the egg
+    state = Supervisor.start_link(children, opts)
 
-    Exsemnesia.Utils.shuffle_invite()
+    {:ok, listen} = :gen_tcp.listen(6667, @serv_opts)
+    Exirchatterd.Dial.DynamicSupervisor.spawn_connection(listen, ssl: false)
 
-    reply
+    {:ok, ssl_listen} =
+      :ssl.listen(
+        6697,
+        [
+          [
+            keyfile: Path.join([Application.app_dir(:exsemantica, "priv"), "snake.pem"]),
+            certfile: Path.join([Application.app_dir(:exsemantica, "priv"), "snake.public.pem"])
+          ]
+          | @serv_opts
+        ]
+      )
+
+    Exirchatterd.Dial.DynamicSupervisor.spawn_connection(ssl_listen, ssl: true)
+    state
   end
 
   # Tell Phoenix to update the endpoint configurations

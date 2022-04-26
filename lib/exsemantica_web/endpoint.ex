@@ -10,7 +10,14 @@ defmodule ExsemanticaWeb.Endpoint do
     signing_salt: "iEMYWBRd"
   ]
 
-  socket "/live", ExsemanticaWeb.Live.Socket, websocket: [connect_info: [session: @session_options]]
+  socket "/live", Phoenix.LiveView.Socket,
+    websocket: [connect_info: [session: @session_options]],
+    longpoll: false
+
+    socket "/socket", ExsemanticaWeb.UserSocket,
+    websocket: true,
+    longpoll: false
+
 
   # Serve at "/" the static files from "priv/static" directory.
   #

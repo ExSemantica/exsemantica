@@ -3,7 +3,7 @@ defmodule ExsemanticaWeb.AnnounceServer do
   require Logger
 
   @all_announces %{
-    broadcast_trends: 10000
+    broadcast_trends: 5000
   }
   @max_trend_entries 5
 
@@ -38,7 +38,7 @@ defmodule ExsemanticaWeb.AnnounceServer do
 
     :ok =
       ExsemanticaWeb.Endpoint.broadcast(
-        "lv_semantic_feed:home",
+        "exsem_feed:home",
         "update_trends",
         %{
           "result" => get_in(trends, [:data, "trending"]),
