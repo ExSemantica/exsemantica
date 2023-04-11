@@ -7,17 +7,11 @@ defmodule ExsemanticaWeb.Endpoint do
   @session_options [
     store: :cookie,
     key: "_exsemantica_key",
-    signing_salt: "iEMYWBRd"
+    signing_salt: "JmrwWdlr",
+    same_site: "Lax"
   ]
 
-  socket "/live", Phoenix.LiveView.Socket,
-    websocket: [connect_info: [session: @session_options]],
-    longpoll: false
-
-    socket "/socket", ExsemanticaWeb.UserSocket,
-    websocket: true,
-    longpoll: false
-
+  socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -27,7 +21,7 @@ defmodule ExsemanticaWeb.Endpoint do
     at: "/",
     from: :exsemantica,
     gzip: false,
-    only: ~w(assets fonts images favicon.ico robots.txt)
+    only: ExsemanticaWeb.static_paths()
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
@@ -35,6 +29,7 @@ defmodule ExsemanticaWeb.Endpoint do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader
     plug Phoenix.CodeReloader
+    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :exsemantica
   end
 
   plug Phoenix.LiveDashboard.RequestLogger,

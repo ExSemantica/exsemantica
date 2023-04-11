@@ -5,30 +5,19 @@ defmodule ExsemanticaWeb.Router do
     plug :accepts, ["html"]
     plug :fetch_session
     plug :fetch_live_flash
-    plug :put_root_layout, {ExsemanticaWeb.LayoutView, :root}
+    plug :put_root_layout, {ExsemanticaWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
   end
 
   pipeline :api do
     plug :accepts, ["json"]
-
-    scope "/api/v0", ExsemanticaWeb.APIv0 do
-      get "/login", Login, :get_attributes
-      post "/login", Login, :post_authentication
-      put "/login", Login, :put_registration
-      # resources "/bucket", Bucket, only: [:create, :show, :update, :delete]
-    end
   end
 
   scope "/", ExsemanticaWeb do
     pipe_through :browser
 
-    live_session :exsemantica do
-      live "/", LayoutLive
-      live "/search", SearchLive
-      live "/i/:interest", InterestLive
-    end
+    get "/", PageController, :home
   end
 
   # Other scopes may use custom stacks.
@@ -36,36 +25,19 @@ defmodule ExsemanticaWeb.Router do
   #   pipe_through :api
   # end
 
-  # Enables LiveDashboard only for development
-  #
-  # If you want to use the LiveDashboard in production, you should put
-  # it behind authentication and allow only admins to access it.
-  # If your application does not have an admins-only section yet,
-  # you can use Plug.BasicAuth to set up some basic authentication
-  # as long as you are also using SSL (which you should anyway).
-  if Mix.env() in [:dev, :test] do
+  # Enable LiveDashboard and Swoosh mailbox preview in development
+  if Application.compile_env(:exsemantica, :dev_routes) do
+    # If you want to use the LiveDashboard in production, you should put
+    # it behind authentication and allow only admins to access it.
+    # If your application does not have an admins-only section yet,
+    # you can use Plug.BasicAuth to set up some basic authentication
+    # as long as you are also using SSL (which you should anyway).
     import Phoenix.LiveDashboard.Router
 
-    scope "/" do
-      pipe_through :browser
-
-      live_dashboard "/dashboard",
-        metrics: ExsemanticaWeb.Telemetry,
-        additional_pages: [
-          exsem_users: ExsemanticaWeb.AdminPanel.Users,
-          exsem_invite: ExsemanticaWeb.AdminPanel.InviteCode
-        ]
-    end
-  end
-
-  # Enables the Swoosh mailbox preview in development.
-  #
-  # Note that preview only shows emails that were sent by the same
-  # node running the Phoenix server.
-  if Mix.env() == :dev do
     scope "/dev" do
       pipe_through :browser
 
+      live_dashboard "/dashboard", metrics: ExsemanticaWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end

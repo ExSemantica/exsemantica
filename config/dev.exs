@@ -1,5 +1,15 @@
 import Config
 
+# Configure your database
+config :exsemantica, Exsemantica.Repo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "exsemantica_dev",
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 10
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
@@ -13,25 +23,12 @@ config :exsemantica, ExsemanticaWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "ClsDxuvE3wuXcb01wsYeKagsF15cZbY1FbtT/A4pgO0laLV36dO+VlmZEfhJ8dCh",
+  secret_key_base: "1Ct/CL/ChIR0Z/1GA/k1jZR77y7XU2R6rFph9fky1C//EiilTnE+BkoszQ/07UqN",
   watchers: [
-    # Start the esbuild watcher by calling Esbuild.install_and_run(:default, args)
     esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
     tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
   ]
 
-# Exsemantica-special stuff goes here BELOW
-config :exsemantica, commit_sha_result: System.cmd("git", ["rev-parse", "--short", "HEAD"])
-
-config :mnesia,
-  dir: to_charlist(Path.join([Path.dirname(__DIR__), "priv", "Exsemnesia_devel.#{node()}"]))
-
-config :exsemantica, ExsemanticaWeb.EndpointApi,
-  http: [ip: {127, 0, 0, 1}, port: 4007],
-  check_origin: false,
-  code_reloader: false,
-  debug_errors: true
-# Exsemantica-special stuff goes here ABOVE
 # ## SSL Support
 #
 # In order to use HTTPS in development, a self-signed
@@ -40,7 +37,6 @@ config :exsemantica, ExsemanticaWeb.EndpointApi,
 #
 #     mix phx.gen.cert
 #
-# Note that this task requires Erlang/OTP 20 or later.
 # Run `mix help phx.gen.cert` for more information.
 #
 # The `http:` config above can be replaced with:
@@ -62,10 +58,12 @@ config :exsemantica, ExsemanticaWeb.Endpoint,
     patterns: [
       ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
-      ~r"lib/exsemantica_web/(live|views)/.*(ex)$",
-      ~r"lib/exsemantica_web/templates/.*(eex)$"
+      ~r"lib/exsemantica_web/(controllers|live|components)/.*(ex|heex)$"
     ]
   ]
+
+# Enable dev routes for dashboard and mailbox
+config :exsemantica, dev_routes: true
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
@@ -76,3 +74,6 @@ config :phoenix, :stacktrace_depth, 20
 
 # Initialize plugs at runtime for faster development compilation
 config :phoenix, :plug_init_mode, :runtime
+
+# Disable swoosh api client as it is only required for production adapters.
+config :swoosh, :api_client, false

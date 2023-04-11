@@ -1,6 +1,6 @@
 # exsemantica
 
-Open-source microblogging for people with mutual interests.
+Open-source link aggregator.
 
 ## Guidance
 
@@ -11,9 +11,6 @@ This is what I see and hope in `v0.9`, but failure is okay.
 
 ## How to use this?
 
-If you want to fetch packages for frontend, use NodeJS NPM in `assets/` to use Alpine.JS
-```shell
-$ npm install alpinejs
-```
+This part of the guide will be rewritten soon...
 
 [eactivitypub]: https://github.com/Chlorophytus/eactivitypub-legacy-0.2

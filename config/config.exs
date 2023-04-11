@@ -7,16 +7,18 @@
 # General application configuration
 import Config
 
+config :exsemantica,
+  ecto_repos: [Exsemantica.Repo]
+
 # Configures the endpoint
 config :exsemantica, ExsemanticaWeb.Endpoint,
   url: [host: "localhost"],
-  render_errors: [view: ExsemanticaWeb.ErrorView, accepts: ~w(html json), layout: false],
+  render_errors: [
+    formats: [html: ExsemanticaWeb.ErrorHTML, json: ExsemanticaWeb.ErrorJSON],
+    layout: false
+  ],
   pubsub_server: Exsemantica.PubSub,
-  live_view: [signing_salt: "DVIwt9//"]
-
-config :exsemantica, ExsemanticaWeb.EndpointApi,
-  url: [host: "localhost"],
-  pubsub_server: Exsemantica.PubSub
+  live_view: [signing_salt: "VdbYLOni"]
 
 # Configures the mailer
 #
@@ -27,12 +29,9 @@ config :exsemantica, ExsemanticaWeb.EndpointApi,
 # at the `config/runtime.exs`.
 config :exsemantica, Exsemantica.Mailer, adapter: Swoosh.Adapters.Local
 
-# Swoosh API client is needed for adapters other than SMTP.
-config :swoosh, :api_client, false
-
 # Configure esbuild (the version is required)
 config :esbuild,
-  version: "0.14.24",
+  version: "0.17.11",
   default: [
     args:
       ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
@@ -40,8 +39,9 @@ config :esbuild,
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]
 
+# Configure tailwind (the version is required)
 config :tailwind,
-  version: "3.0.23",
+  version: "3.2.7",
   default: [
     args: ~w(
       --config=tailwind.config.js

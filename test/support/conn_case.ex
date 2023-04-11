@@ -19,19 +19,20 @@ defmodule ExsemanticaWeb.ConnCase do
 
   using do
     quote do
+      # The default endpoint for testing
+      @endpoint ExsemanticaWeb.Endpoint
+
+      use ExsemanticaWeb, :verified_routes
+
       # Import conveniences for testing with connections
       import Plug.Conn
       import Phoenix.ConnTest
       import ExsemanticaWeb.ConnCase
-
-      alias ExsemanticaWeb.Router.Helpers, as: Routes
-
-      # The default endpoint for testing
-      @endpoint ExsemanticaWeb.Endpoint
     end
   end
 
-  setup _tags do
+  setup tags do
+    Exsemantica.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
 end
