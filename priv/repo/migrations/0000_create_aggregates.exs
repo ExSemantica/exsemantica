@@ -8,5 +8,7 @@ defmodule Exsemantica.Repo.Migrations.CreateAggregates do
 
       timestamps()
     end
+
+    create unique_index(:aggregates, [:name])
   end
 end

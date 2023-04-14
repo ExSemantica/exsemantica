@@ -18,6 +18,7 @@ defmodule ExsemanticaWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/s/:aggregate", PageController, :aggregate
   end
 
   # Other scopes may use custom stacks.

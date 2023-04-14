@@ -11,5 +11,7 @@ defmodule Exsemantica.Repo.Migrations.CreateUsers do
 
       timestamps()
     end
+
+    create unique_index(:users, [:handle, :email])
   end
 end

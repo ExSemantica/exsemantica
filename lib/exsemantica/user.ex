@@ -10,6 +10,7 @@ defmodule Exsemantica.User do
     field :status, :binary
 
     has_many :posts, Exsemantica.Post
+    has_many :comments, Exsemantica.Comment
     many_to_many :aggregates, Exsemantica.Aggregate, join_through: "aggregates_moderators"
 
     timestamps()
@@ -20,5 +21,6 @@ defmodule Exsemantica.User do
     user
     |> cast(attrs, [:handle, :email, :description, :password, :status])
     |> validate_required([:handle, :email, :description, :password, :status])
+    |> unique_constraint([:handle, :email])
   end
 end

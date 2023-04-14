@@ -1,17 +1,16 @@
-defmodule Exsemantica.Handle128 do
+defmodule Exsemantica.AggHandle do
   @moduledoc """
-  A Handle128 is a 16-char ASCII identifier, that can be tested for equality by
-  most SIMD engines.
+  An AggHandle is a lowercase ASCII identifier used to identify aggregates.
   """
 
-  defguard is_valid(item) when is_binary(item) and byte_size(item) > 0 and byte_size(item) <= 16
+  defguard is_valid(item) when is_binary(item) and byte_size(item) > 0 and byte_size(item) <= 32
 
   @doc """
-  Converts a handle into a Handle128 with at most 16 characters.
+  Converts a handle into an AggHandle with at most 32 characters.
   **THIS IS A LOSSY CONVERSION**.
   ```elixir
-      iex> Exsemantica.Handle128.convert_to("老干妈")
-      {:ok, "Lao_Gan_Ma      "}
+      iex> Exsemantica.AggHandle.convert_to("老干妈")
+      {:ok, "lao_gan_ma"}
   ```
   """
   def convert_to(item) do
