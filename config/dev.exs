@@ -29,6 +29,9 @@ config :exsemantica, ExsemanticaWeb.Endpoint,
     tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
   ]
 
+config :exsemantica, commit_sha_result: System.cmd("git", ["rev-parse", "--short", "HEAD"])
+config :exsemantica, dev_routes: true
+
 # ## SSL Support
 #
 # In order to use HTTPS in development, a self-signed

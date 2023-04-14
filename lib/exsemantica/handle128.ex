@@ -7,8 +7,12 @@ defmodule Exsemantica.Handle128 do
   defguard is_valid(item) when is_binary(item) and byte_size(item) > 0 and byte_size(item) <= 16
 
   @doc """
-  Attempts to convert a handle with at most 16 characters into a Handle128.
+  Converts a handle with at most 16 characters into a Handle128.
   **THIS IS A LOSSY CONVERSION**.
+  ```elixir
+      iex> Exsemantica.Handle128.convert_to("老干妈")
+      {:ok, "Lao_Gan_Ma      "}
+  ```
   """
   def convert_to(item) do
     case item

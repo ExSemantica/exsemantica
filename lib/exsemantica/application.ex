@@ -7,6 +7,19 @@ defmodule Exsemantica.Application do
 
   @impl true
   def start(_type, _args) do
+    :persistent_term.put(
+      Exsemantica.Version,
+      case Application.get_env(:exsemantica, :commit_sha_result) do
+        {sha, 0} ->
+          sha |> String.replace_trailing("\n", "")
+
+          "#{Application.spec(:exsemantica, :vsn)}-#{sha}"
+
+        _ ->
+          Application.spec(:exsemantica, :vsn)
+      end
+    )
+
     children = [
       # Start the Telemetry supervisor
       ExsemanticaWeb.Telemetry,

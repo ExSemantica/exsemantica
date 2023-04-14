@@ -11,10 +11,30 @@
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script>
   </head>
-  <nav class="bg-white h-16 shadow-xl">
-    <.link href={~p"/"}><img src={~p"/images/logo.png"} class="h-16 p-3" alt="ExSemantica Logo"></.link>
-  </nav>
-  <body class="bg-slate-100">
-    <%= @inner_content %>
+  <body class="bg-slate-100" x-data="{ menuOpen: false }">
+    <header class="bg-white h-16 shadow-xl absolute w-full top-0">
+      <.link href={~p"/"}>
+        <img src={~p"/images/logo.png"} class="h-16 p-3 float-left" alt="ExSemantica Logo" />
+      </.link>
+      <button @click="menuOpen = !menuOpen" class="float-right">
+        <.icon name="hero-bars-3" class="m-4 p-4" />
+      </button>
+    </header>
+    <nav
+      x-show="menuOpen"
+      @click.outside="menuOpen = false"
+      class="absolute top-16 right-0 w-1/3 bg-slate-50 p-4 shadow-xl"
+    >
+      <.dropdown_menu />
+    </nav>
+    <div class="py-16">
+      <%= @inner_content %>
+    </div>
+    <footer class="text-xs text-center">
+      ExSemantica v<%= :persistent_term.get(Exsemantica.Version) %> -
+      <a class="text-blue-800" href="https://github.com/ExSemantica/ExSemantica">
+        Fork me on GitHub!
+      </a>
+    </footer>
   </body>
 </html>
