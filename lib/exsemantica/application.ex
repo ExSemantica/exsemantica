@@ -11,9 +11,7 @@ defmodule Exsemantica.Application do
       Exsemantica.Version,
       case Application.get_env(:exsemantica, :commit_sha_result) do
         {sha, 0} ->
-          sha |> String.replace_trailing("\n", "")
-
-          "#{Application.spec(:exsemantica, :vsn)}-#{sha}"
+          "#{Application.spec(:exsemantica, :vsn)}-#{sha |> String.replace_trailing("\n", "")}"
 
         _ ->
           Application.spec(:exsemantica, :vsn)

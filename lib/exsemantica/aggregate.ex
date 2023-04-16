@@ -6,7 +6,7 @@ defmodule Exsemantica.Aggregate do
     field :description, :string
     field :name, :string
     has_many :posts, Exsemantica.Post
-    many_to_many :moderators, Exsemantica.User, join_through: "aggregates_moderators"
+    many_to_many :moderators, Exsemantica.User, join_through: "aggregates_moderators", on_replace: :delete
 
     timestamps()
   end

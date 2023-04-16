@@ -35,12 +35,25 @@ defmodule Exsemantica.Administration.ModifyAggregates do
     })
   end
 
-  # TODO: Check if this actually works.
-  def moderators_add(aggregate_id, new_moderators) do
-    old_moderators = Exsemantica.Repo.get(Exsemantica.Aggregate, aggregate_id)
-    |> Exsemantica.Repo.preload(:moderators)
+  @doc """
+  Modifies the aggregate to use the specified moderators list
 
-    old_moderators |> Ecto.Changeset.change(moderators: [new_moderators | old_moderators])
+  ## Examples
+
+  Modify the moderator list with user ID 2
+  ```elixir
+  Exsemantica.Administration.ModifyAggregates.change_moderators(1, [Exsemantica.Repo.get(Exsemantica.User, 2)])
+  ```
+
+  Clear the moderator list
+  ```elixir
+  Exsemantica.Administration.ModifyAggregates.change_moderators(1, [])
+  ```
+  """
+  def change_moderators(aggregate_id, moderators) do
+    Exsemantica.Repo.get(Exsemantica.Aggregate, aggregate_id)
+    |> Exsemantica.Repo.preload(:moderators)
+    |> Ecto.Changeset.change(moderators: moderators)
     |> Exsemantica.Repo.update()
   end
 end

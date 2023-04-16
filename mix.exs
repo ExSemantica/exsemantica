@@ -56,7 +56,11 @@ defmodule Exsemantica.MixProject do
       # RATIONALE: Password hashing
       {:argon2_elixir, "~> 3.1"},
       # RATIONALE: Transliterate characters for usernames
-      {:unidecode, "~> 1.0"}
+      {:unidecode, "~> 1.0"},
+
+      # RATIONALE: Code cleanliness
+      {:ex_doc, "~> 0.27", only: :dev, runtime: false},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
 

@@ -14,7 +14,7 @@ defmodule ExsemanticaWeb.PageHTML do
     """
   end
 
-  def community_side(assigns) when length(assigns.moderators) == 0 do
+  def community_side(assigns) when assigns.moderators == [] do
     ~H"""
     <h1 class="text-2xl p-4">Information</h1>
     <h2 class="text-xl pl-4">Description</h2>
