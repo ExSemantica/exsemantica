@@ -19,6 +19,7 @@ defmodule ExsemanticaWeb.Router do
 
     get "/", PageController, :home
     get "/s/:aggregate", PageController, :aggregate
+    get "/u/:username", PageController, :user
   end
 
   # Other scopes may use custom stacks.
