@@ -3,15 +3,13 @@ defmodule Exsemantica.Repo.Migrations.CreateComments do
 
   def change do
     create table(:comments) do
-      add :contents, :text
       add :hidden, :boolean, default: false, null: false
-      add :author, references(:users, on_delete: :nothing)
-      add :parent_id, :integer
-      add :replies, {:array, :integer}
+      add :contents, :text
+      add :user_id, :id
+      add :parent_id, :id
+      add :replies, {:array, :id}
 
       timestamps(type: :utc_datetime)
     end
-
-    create index(:comments, [:author])
   end
 end

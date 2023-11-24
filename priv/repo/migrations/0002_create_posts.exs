@@ -3,13 +3,14 @@ defmodule Exsemantica.Repo.Migrations.CreatePosts do
 
   def change do
     create table(:posts) do
+      add :hidden, :boolean, default: false, null: false
       add :type, :string
+      add :title, :string
       add :contents, :text
-      add :author, references(:users, on_delete: :nothing)
+      add :user_id, :id
+      add :aggregate_id, :id
 
       timestamps(type: :utc_datetime)
     end
-
-    create index(:posts, [:author])
   end
 end

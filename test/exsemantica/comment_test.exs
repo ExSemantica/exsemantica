@@ -3,33 +3,60 @@ defmodule Exsemantica.CommentTest do
   alias Exsemantica.User
   alias Exsemantica.Comment
 
-  test "traverses a comment chain successfully" do
-    {:ok, user} = Exsemantica.Repo.insert(%User{
-      username: "Test_User",
-      password: "test_password",
-      biography: "Test Biography",
-      email: "test_user@example.com"
-    })
+  setup do
+    # We need an author to make comments.
+    {:ok, user} =
+      Exsemantica.Repo.insert(%User{
+        username: "Test_User",
+        password: "test_password",
+        biography: "Test Biography",
+        email: "test_user@example.com"
+      })
+    [user: user]
+  end
 
-    {:ok, comment0} = Exsemantica.Repo.insert(%Comment{
-      hidden: false,
-      contents: "First comment",
-      author: user.id
-    })
+  test "traverses a comment chain", %{user: user} do
+    # Root comment
+    {:ok, comment} =
+      Exsemantica.Repo.insert(%Comment{
+        hidden: false,
+        contents: "First comment",
+        user_id: user.id
+      })
 
-    {:ok, comment1} = Exsemantica.Repo.insert(%Comment{
-      hidden: false,
-      contents: "Second comment",
-      author: user.id
-    })
+    # =========================================================================
+    # Reply once
+    {:ok, reply0} =
+      Ecto.build_assoc(comment, :replies)
+      |> Ecto.Changeset.change(%{
+        hidden: false,
+        contents: "First reply!",
+        user_id: user.id
+      })
+      |> Exsemantica.Repo.insert()
 
-    comment1 = Comment.changeset(comment0, %{
-      parent_id: comment0.id
-    })
+    # Reply again
+    {:ok, reply1} =
+      Ecto.build_assoc(comment, :replies)
+      |> Ecto.Changeset.change(%{
+        hidden: false,
+        contents: "Second reply!",
+        user_id: user.id
+      })
+      |> Exsemantica.Repo.insert()
 
-    Exsemantica.Repo.update(IO.inspect comment1)
-    {:ok, comment0} = Exsemantica.Repo.preload(comment0, [:replies])
+    # =========================================================================
+    # Ecto needs to preload our replies
+    comment_preloaded = comment |> Exsemantica.Repo.preload([:replies])
 
-    IO.inspect comment0
+    # Do comments have replies?
+    assert %{comment | replies: [reply0, reply1]} == comment_preloaded
+
+    # =========================================================================
+    # Ecto needs to preload our parent
+    reply0_preloaded = reply0 |> Exsemantica.Repo.preload([:parent])
+
+    # Does a reply have a parent?
+    assert reply0_preloaded.parent_id == comment.id
   end
 end

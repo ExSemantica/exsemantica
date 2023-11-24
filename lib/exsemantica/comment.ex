@@ -5,11 +5,10 @@ defmodule Exsemantica.Comment do
   schema "comments" do
     field :hidden, :boolean, default: false
     field :contents, :string
-    field :author, :id
-    field :parent, :id
 
-    belongs_to :parent, Exsemantica.Comment, foreign_key: :parent_id, references: :id, define_field: false
-    has_many :replies, Exsemantica.Comment, foreign_key: :parent_id, references: :id
+    belongs_to :user, Exsemantica.User, foreign_key: :user_id
+    belongs_to :parent, Exsemantica.Comment, foreign_key: :parent_id
+    has_many :replies, Exsemantica.Comment, foreign_key: :parent_id
 
     timestamps(type: :utc_datetime)
   end

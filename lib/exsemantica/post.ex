@@ -3,9 +3,13 @@ defmodule Exsemantica.Post do
   import Ecto.Changeset
 
   schema "posts" do
+    field :hidden, :boolean, default: false
     field :type, Ecto.Enum, values: [:self, :link]
+    field :title, :string
     field :contents, :string
-    field :author, :id
+
+    belongs_to :user, Exsemantica.User
+    belongs_to :aggregate, Exsemantica.Aggregate
 
     timestamps(type: :utc_datetime)
   end
