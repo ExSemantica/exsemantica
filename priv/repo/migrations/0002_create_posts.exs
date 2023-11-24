@@ -9,6 +9,7 @@ defmodule Exsemantica.Repo.Migrations.CreatePosts do
       add :contents, :text
       add :user_id, :id
       add :aggregate_id, :id
+      add :votes, {:array, :id}
 
       timestamps(type: :utc_datetime)
     end

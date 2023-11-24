@@ -10,6 +10,14 @@ config :exsemantica, Exsemantica.Repo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
+# Commit SHA for Git, displayed throughout the site
+config :exsemantica, commit_sha_result: System.cmd("git", ["rev-parse", "--short", "HEAD"])
+
+# Guardian secret
+config :exsemantica, Exsemantica.Auth.Guardian,
+  issuer: "exsemantica",
+  secret_key: "K2PHGmL5JbjPZTcbKTSctLNbN0GjUE6g/AJpDwEp2W4TKW0vxt4sFKHEC05gzJHF"
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #

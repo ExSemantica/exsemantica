@@ -1,7 +1,7 @@
-defmodule Exsemantica.AggregateTest do
+defmodule Exsemantica.RepoAggregateTest do
   use Exsemantica.DataCase, async: true
-  alias Exsemantica.Aggregate
-  alias Exsemantica.User
+  alias Exsemantica.Repo.Aggregate
+  alias Exsemantica.Repo.User
 
   setup do
     # We need an author to make comments.
@@ -24,11 +24,12 @@ defmodule Exsemantica.AggregateTest do
 
   test "allows post insertion in bulk", %{user: user, aggregate: aggregate} do
     # Create a few entries
-    entries = 1..5 |> Enum.map(& %{type: :self, title: "Test post #{&1}", contents: "Just testing", user_id: user.id})
+    entries = 1..250 |> Enum.map(& %{type: :self, title: "Test post #{&1}", contents: "Just testing", user_id: user.id})
 
     # Insert them
     for entry <- entries do
-      Ecto.build_assoc(aggregate, :posts)
+      aggregate
+      |> Ecto.build_assoc(:posts)
       |> Ecto.Changeset.change(entry)
       |> Exsemantica.Repo.insert()
     end

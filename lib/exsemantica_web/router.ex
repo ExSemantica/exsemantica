@@ -17,7 +17,19 @@ defmodule ExsemanticaWeb.Router do
   scope "/", ExsemanticaWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live_session :main do
+      live "/", MainLive, :redirect_to_all
+      live "/s/:aggregate", MainLive, :aggregate
+      live "/u/:handle", MainLive, :user
+    end
+  end
+
+  scope "/api/", ExsemanticaWeb do
+    pipe_through :api
+
+    post "/login", API.Auth, :log_in
+    post "/register", API.Auth, :register
+    post "/logout", API.Auth, :log_out
   end
 
   # Other scopes may use custom stacks.

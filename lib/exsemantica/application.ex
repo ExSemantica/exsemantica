@@ -4,9 +4,25 @@ defmodule Exsemantica.Application do
   @moduledoc false
 
   use Application
+  require Logger
 
   @impl true
   def start(_type, _args) do
+    # Start Mnesia
+    :mnesia.create_schema([Node.self()])
+    :mnesia.start()
+
+    # Put version into an Erlang/OTP persistent term
+    :persistent_term.put(
+      Exsemantica.Version,
+      case Application.get_env(:exsemantica, :commit_sha_result) do
+        {sha, 0} ->
+          "v#{Application.spec(:exsemantica, :vsn)}-git-#{sha |> String.replace_trailing("\n", "")}"
+
+        _ ->
+          "v#{Application.spec(:exsemantica, :vsn)}"
+      end
+    )
     children = [
       ExsemanticaWeb.Telemetry,
       Exsemantica.Repo,
@@ -19,6 +35,8 @@ defmodule Exsemantica.Application do
       # Start to serve requests, typically the last entry
       ExsemanticaWeb.Endpoint
     ]
+
+    Logger.info("Exsemantica #{:persistent_term.get(Exsemantica.Version)} starting")
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options

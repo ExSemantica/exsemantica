@@ -9,6 +9,8 @@ defmodule Exsemantica.Repo.Migrations.CreateUsers do
       add :email, :string
       add :password, :string
       add :posts, {:array, :id}
+      add :comment_votes, {:array, :id}
+      add :post_votes, {:array, :id}
 
       timestamps(type: :utc_datetime)
     end

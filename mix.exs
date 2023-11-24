@@ -19,7 +19,7 @@ defmodule Exsemantica.MixProject do
   def application do
     [
       mod: {Exsemantica.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :os_mon, :mnesia]
     ]
   end
 
@@ -32,6 +32,7 @@ defmodule Exsemantica.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      # RATIONALE: Phoenix pulls its own dependencies in
       {:phoenix, "~> 1.7.10"},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.10"},
@@ -50,7 +51,22 @@ defmodule Exsemantica.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
-      {:plug_cowboy, "~> 2.5"}
+      {:plug_cowboy, "~> 2.5"},
+
+      # RATIONALE: Miscellaneous tracing
+      {:ecto_psql_extras, "~> 0.7"},
+
+      # RATIONALE: Documentation for external developers
+      {:ex_doc, "~> 0.30", only: :dev, runtime: false},
+
+      # RATIONALE: Code cleanliness
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+
+      # RATIONALE: Authenticate users
+      {:guardian, "~> 2.3"},
+
+      # RATIONALE: Password hashing
+      {:argon2_elixir, "~> 4.0"}
     ]
   end
 

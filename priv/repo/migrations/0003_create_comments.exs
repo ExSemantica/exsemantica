@@ -8,6 +8,7 @@ defmodule Exsemantica.Repo.Migrations.CreateComments do
       add :user_id, :id
       add :parent_id, :id
       add :replies, {:array, :id}
+      add :votes, {:array, :id}
 
       timestamps(type: :utc_datetime)
     end
