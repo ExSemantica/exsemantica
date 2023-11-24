@@ -3,7 +3,7 @@ import Config
 # Configure your database
 config :exsemantica, Exsemantica.Repo,
   username: "postgres",
-  password: "postgres",
+  password: "change_me",
   hostname: "localhost",
   database: "exsemantica_dev",
   stacktrace: true,

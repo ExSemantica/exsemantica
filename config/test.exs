@@ -7,7 +7,7 @@ import Config
 # Run `mix help test` for more information.
 config :exsemantica, Exsemantica.Repo,
   username: "postgres",
-  password: "postgres",
+  password: "change_me",
   hostname: "localhost",
   database: "exsemantica_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
