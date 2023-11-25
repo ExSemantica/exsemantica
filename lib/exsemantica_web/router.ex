@@ -2,8 +2,13 @@ defmodule ExsemanticaWeb.Router do
   use ExsemanticaWeb, :router
 
   pipeline :browser do
+    plug Guardian.Plug.Pipeline,
+      module: Exsemantica.Auth.Guardian
+
     plug :accepts, ["html"]
     plug :fetch_session
+    plug Guardian.Plug.VerifySession, claims: %{"typ" => "access"}, key: :token
+    plug Guardian.Plug.LoadResource, allow_blank: true
     plug :fetch_live_flash
     plug :put_root_layout, html: {ExsemanticaWeb.Layouts, :root}
     plug :protect_from_forgery
@@ -20,7 +25,7 @@ defmodule ExsemanticaWeb.Router do
     live_session :main do
       live "/", MainLive, :redirect_to_all
       live "/s/:aggregate", MainLive, :aggregate
-      live "/u/:handle", MainLive, :user
+      live "/u/:username", MainLive, :user
     end
   end
 
@@ -28,7 +33,7 @@ defmodule ExsemanticaWeb.Router do
     pipe_through :api
 
     post "/login", API.Auth, :log_in
-    post "/register", API.Auth, :register
+    # post "/register", API.Auth, :register
     post "/logout", API.Auth, :log_out
   end
 

@@ -5,7 +5,8 @@ defmodule Exsemantica.Auth do
   import Ecto.Query
 
   def check_user(username, password) do
-    user_data = Exsemantica.Repo.one(from u in Exsemantica.Repo.User, where: ilike(u.username, ^username))
+    user_data =
+      Exsemantica.Repo.one(from u in Exsemantica.Repo.User, where: ilike(u.username, ^username))
 
     case user_data do
       # User not found
@@ -31,8 +32,8 @@ defmodule Exsemantica.Auth do
       {:ok, user, _claims} ->
         {:ok, user}
 
-        {:error, error} ->
-          {:error, error}
+      {:error, error} ->
+        {:error, error}
     end
   end
 end

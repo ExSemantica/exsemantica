@@ -66,7 +66,10 @@ defmodule Exsemantica.MixProject do
       {:guardian, "~> 2.3"},
 
       # RATIONALE: Password hashing
-      {:argon2_elixir, "~> 4.0"}
+      {:argon2_elixir, "~> 4.0"},
+
+      # RATIONALE: Username/aggregate automatic transliteration
+      {:unidecode, "~> 1.0"}
     ]
   end
 

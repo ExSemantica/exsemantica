@@ -18,15 +18,16 @@
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import "phoenix_html"
 // Establish Phoenix Socket and LiveView configuration.
-import {Socket} from "phoenix"
-import {LiveSocket} from "phoenix_live_view"
+import { Socket } from "phoenix"
+import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
+import Alpine from 'alpinejs'
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
+let liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfToken } })
 
 // Show progress bar on live navigation and form submits
-topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
+topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" })
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
 window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 
@@ -37,5 +38,84 @@ liveSocket.connect()
 // >> liveSocket.enableDebug()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
+
 window.liveSocket = liveSocket
 
+window.onLogin = () => {
+    let acknowledgement = window.document.getElementById("loginAcknowledgement")
+    acknowledgement.className = ''
+    acknowledgement.textContent = "Trying to sign you in..."
+    let username = window.document.getElementById("loginUsername")
+    let password = window.document.getElementById("loginPassword")
+    fetch('/api/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+            'username': username.value,
+            'password': password.value
+        })
+    })
+        .then((response) => { return response.json() })
+        .then((json) => {
+            acknowledgement.textContent = json.message
+            if (json.is_error) {
+                acknowledgement.className = 'text-red-500 font-bold'
+            } else {
+                setTimeout(() => {
+                    window.location.replace('/s/all')
+                }, 2000)
+            }
+        })
+}
+
+window.onLogout = () => {
+    fetch('/api/logout', {
+        method: 'POST'
+    })
+        .then((_response) => {
+            window.location.replace('/s/all')
+        })
+}
+
+Alpine.store('menus', {
+    loginOpen: false,
+    navOpen: false,
+
+    closeMenus() {
+        this.loginOpen = false
+        this.navOpen = false
+    },
+
+    toggleNavMenu() {
+        this.navOpen = !this.navOpen
+    },
+
+    openLoginMenu() {
+        this.navOpen = false
+        this.loginOpen = true
+    },
+
+    closeNavMenu() {
+        this.navOpen = false
+    }
+});
+window.Alpine = Alpine
+window.addEventListener("keyup", event => {
+    let menus = Alpine.store('menus')
+    switch (event.key) {
+        case "Escape": {
+            menus.closeMenus()
+            break
+        }
+        case "Enter": {
+            if (Alpine.store('menus').loginOpen) {
+                window.onLogin()
+            }
+            break
+        }
+        default: {
+            break
+        }
+    }
+});
+Alpine.start()
