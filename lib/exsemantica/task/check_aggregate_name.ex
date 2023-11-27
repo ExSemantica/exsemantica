@@ -17,10 +17,10 @@ defmodule Exsemantica.Task.CheckAggregateName do
     case data do
       # Couldn't find the aggregate
       nil ->
-        {:error, :not_found}
+        :not_found
 
       aggregate ->
-        {:ok, %{id: aggregate.id, name: aggregate.name, identical?: aggregate.name == guess}}
+        %{id: aggregate.id, name: aggregate.name, identical?: aggregate.name == guess}
     end
   end
 end

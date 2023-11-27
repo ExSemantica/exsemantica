@@ -14,16 +14,16 @@ defmodule Exsemantica.Task.LoadUserPage do
     case data do
       # Couldn't find the user
       nil ->
-        {:error, :not_found}
+        :not_found
 
       # Only load the name and description if the page is nil
       # TODO: Load other statistics?
       user when is_nil(page) ->
-        {:ok, %{user: user}}
+        %{user: user}
 
       # Load a page from the user
       user ->
-        {:ok, %{user: user, page_info: user.id |> fetch_posts(load_by, page)}}
+        %{user: user, page_info: user.id |> fetch_posts(load_by, page)}
     end
   end
 

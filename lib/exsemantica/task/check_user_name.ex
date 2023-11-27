@@ -16,10 +16,10 @@ defmodule Exsemantica.Task.CheckUserName do
 
     case data do
       nil ->
-        {:error, :not_found}
+        :not_found
 
       user ->
-        {:ok, %{id: user.id, name: user.username, identical?: user.username == guess}}
+        %{id: user.id, name: user.username, identical?: user.username == guess}
     end
   end
 end

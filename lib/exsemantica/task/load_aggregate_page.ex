@@ -14,16 +14,16 @@ defmodule Exsemantica.Task.LoadAggregatePage do
     case data do
       # Couldn't find the aggregate
       nil ->
-        {:error, :not_found}
+        :not_found
 
       # Only load the name and description if the page is nil
       # TODO: Load other statistics?
       aggregate when is_nil(page) ->
-        {:ok, %{aggregate: aggregate}}
+        %{aggregate: aggregate}
 
       # Load a page from the aggregate
       aggregate ->
-        {:ok, %{aggregate: aggregate, page_info: aggregate.id |> fetch_posts(load_by, page)}}
+        %{aggregate: aggregate, page_info: aggregate.id |> fetch_posts(load_by, page)}
     end
   end
 

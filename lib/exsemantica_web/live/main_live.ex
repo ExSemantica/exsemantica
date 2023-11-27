@@ -3,6 +3,7 @@ defmodule ExsemanticaWeb.MainLive do
   A live view that handles most logic in the site.
   """
   use ExsemanticaWeb, :live_view
+  require Logger
 
   embed_templates "layouts/*"
 
@@ -13,145 +14,98 @@ defmodule ExsemanticaWeb.MainLive do
     {:ok, socket |> push_navigate(to: ~p"/s/all")}
   end
 
-  def mount(params, session, socket) do
+  def mount(_params, session, socket) do
     {:ok,
-     if socket |> connected? do
-       socket =
-         socket
-         |> assign(loading: true, t0: DateTime.utc_now |> DateTime.to_unix(:millisecond))
-         |> check_auth(session)
-
-       socket =
-         case params do
-           %{"username" => username} ->
-             socket
-             |> assign(
-               event: :check_user_name,
-               task: Task.async(Exsemantica.Task.CheckUserName, :run, [%{guess: username}])
-             )
-
-           %{"aggregate" => "all"} ->
-             socket
-             |> assign(event: :load_all_page)
-
-           %{"aggregate" => aggregate} ->
-             socket
-             |> assign(
-               event: :check_aggregate_name,
-               task: Task.async(Exsemantica.Task.CheckAggregateName, :run, [%{guess: aggregate}])
-             )
-         end
-
-       case socket.assigns.event do
-         :check_aggregate_name ->
-           check_result = Task.await(socket.assigns.task)
-
-           case check_result do
-             {:ok, %{identical?: true, id: id, name: name}} ->
-               socket =
-                 socket
-                 |> assign(
-                   ident: name,
-                   task:
-                     Task.async(Exsemantica.Task.LoadAggregatePage, :run, [
-                       %{id: id, load_by: :newest, page: 0}
-                     ])
-                 )
-
-               {:ok, data} = Task.await(socket.assigns.task)
-
-               socket
-               |> assign(
-                 otype: :aggregate,
-                 data: data,
-                 loading: false,
-                 page_title: "/s/#{socket.assigns.ident}"
-               )
-               |> push_event("transition-loader", %{})
-
-             {:ok, %{identical?: false, name: name}} ->
-               socket |> push_navigate(to: ~p"/s/#{name}")
-
-             {:error, :not_found} ->
-               socket
-               |> push_navigate(to: ~p"/s/all")
-               |> put_flash(:error, gettext("That aggregate does not exist"))
-           end
-
-         :check_user_name ->
-           check_result = Task.await(socket.assigns.task)
-
-           case check_result do
-             {:ok, %{identical?: true, id: id, name: name}} ->
-               socket =
-                 socket
-                 |> assign(
-                   ident: name,
-                   task:
-                     Task.async(Exsemantica.Task.LoadUserPage, :run, [
-                       %{id: id, load_by: :newest, page: 0}
-                     ])
-                 )
-
-               {:ok, data} = Task.await(socket.assigns.task)
-
-               socket
-               |> assign(
-                 otype: :user,
-                 data: data,
-                 loading: false,
-                 page_title: "/u/#{socket.assigns.ident}"
-               )
-               |> push_event("transition-loader", %{})
-
-             {:ok, %{identical?: false, name: name}} ->
-               socket |> push_navigate(to: ~p"/u/#{name}")
-
-             {:error, :not_found} ->
-               socket
-               |> push_navigate(to: ~p"/s/all")
-               |> put_flash(:error, gettext("That aggregate does not exist"))
-           end
-
-         :load_all_page ->
-           socket
-           |> assign(otype: :aggregate, ident: nil, loading: false, page_title: "/s/all")
-           |> push_event("transition-loader", %{})
-       end
-     else
-       socket |> assign(loading: true, page_title: "Loading")
-     end}
+      socket
+      |> check_auth(session)
+      |> assign(loading: true, t0: get_ms())}
   end
 
   # ===========================================================================
-  # After mounting has finished
+  # Handle parameters
   # ===========================================================================
-  # def post_mount(%{"username" => username}, _session, socket)
-  #     when socket.assigns.live_action == :user do
-  #   {:ok, socket |> assign(otype: :user, ident: username, page_title: "/u/" <> username)}
-  # end
+  def handle_params(%{"username" => username}, _uri, socket) do
+    {:noreply,
+     socket
+     |> start_async(:load_user, fn ->
+       Exsemantica.Task.CheckUserName.run(%{guess: username})
+     end)}
+  end
 
-  # def post_mount(%{"aggregate" => "all"}, _session, socket)
-  #     when socket.assigns.live_action == :aggregate do
-  #   {:ok, socket |> assign(otype: :aggregate, ident: nil, page_title: "/s/all")}
-  # end
+  def handle_params(%{"aggregate" => "all"}, _uri, socket) do
+    {:noreply, socket |> start_async(:load_all, fn -> :unimplemented end)}
+  end
 
-  # def post_mount(%{"aggregate" => aggregate}, _session, socket)
-  #     when socket.assigns.live_action == :aggregate do
-  #   case result do
-  #     {:error, :not_found} ->
-  #       {:ok,
-  #        socket
-  #        |> push_navigate(to: ~p"/s/all")
-  #        |> put_flash(:error, gettext("That aggregate does not exist"))}
+  def handle_params(%{"aggregate" => aggregate}, _uri, socket) do
+    {:noreply,
+     socket
+     |> start_async(:load_aggregate, fn ->
+       Exsemantica.Task.CheckUserName.run(%{guess: aggregate})
+     end)}
+  end
 
-  #     {:ok, name: name, identical?: false} ->
-  #       {:ok, socket |> push_navigate(to: ~p"/s/#{name}")}
+  # ===========================================================================
+  # Asynchronous event handling
+  # ===========================================================================
+  # ===== Load /u/___ =====
+  def handle_async(:load_user, {:ok, %{name: name, identical?: false}}, socket) do
+    {:noreply, socket |> push_patch(to: ~p"/u/#{name}")}
+  end
 
-  #     {:ok, name: name, identical?: false} ->
-  #       {:ok, socket |> push_navigate(to: ~p"/s/#{name}")}
-  #   end
-  # end
+  def handle_async(:load_user, {:ok, %{id: id, name: name, identical?: true}}, socket) do
+    {:noreply,
+     socket
+     |> assign(
+       otype: :user,
+       loading: false,
+       delay: get_ms() - socket.assigns.t0,
+       ident: name,
+       data: Exsemantica.Task.LoadUserPage.run(%{id: id, load_by: :newest, page: 0})
+     )}
+  end
+
+  def handle_async(:load_aggregate, {:ok, :not_found}, socket) do
+    {:noreply,
+     socket
+     |> push_patch(to: ~p"/s/all")
+     |> put_flash(:error, gettext("That aggregate does not exist"))}
+  end
+
+  # ===== Load /s/___ ======
+  def handle_async(:load_aggregate, {:ok, %{name: name, identical?: false}}, socket) do
+    {:noreply, socket |> redirect(to: ~p"/s/#{name}")}
+  end
+
+  def handle_async(:load_aggregate, {:ok, %{id: id, name: name, identical?: true}}, socket) do
+    {:noreply,
+     socket
+     |> assign(
+       otype: :aggregate,
+       loading: false,
+       delay: get_ms() - socket.assigns.t0,
+       ident: name,
+       data: Exsemantica.Task.LoadAggregatePage.run(%{id: id, load_by: :newest, page: 0})
+     )}
+  end
+
+  def handle_async(:load_user, {:ok, :not_found}, socket) do
+    {:noreply,
+     socket
+     |> push_patch(to: ~p"/s/all")
+     |> put_flash(:error, gettext("That user does not exist"))}
+  end
+
+  # ===== Load /s/all =====
+  def handle_async(:load_all, _async_fn_result, socket) do
+    {:noreply,
+     socket
+     |> assign(
+       otype: :aggregate,
+       loading: false,
+       delay: get_ms() - socket.assigns.t0,
+       ident: nil
+     )}
+  end
 
   # ===========================================================================
   # Render
@@ -162,27 +116,26 @@ defmodule ExsemanticaWeb.MainLive do
       <.live_loader />
       """
     else
-      t1 = DateTime.utc_now |> DateTime.to_unix(:millisecond)
       case assigns.otype do
         :aggregate when is_nil(assigns.ident) ->
           ~H"""
           <.live_header myuser={assigns.myuser} />
           <.live_body_all />
-          <.live_footer time={t1 - assigns.t0} />
+          <.live_footer time={assigns.delay} />
           """
 
         :aggregate ->
           ~H"""
           <.live_header myuser={assigns.myuser} />
           <.live_body_aggregate aggregate={assigns.ident} />
-          <.live_footer time={t1 - assigns.t0} />
+          <.live_footer time={assigns.delay} />
           """
 
         :user ->
           ~H"""
           <.live_header myuser={assigns.myuser} />
           <.live_body_user />
-          <.live_footer time={t1 - assigns.t0} />
+          <.live_footer time={assigns.delay} />
           """
       end
     end
@@ -203,4 +156,6 @@ defmodule ExsemanticaWeb.MainLive do
         socket |> assign(myuser: nil)
     end
   end
+
+  defp get_ms, do: DateTime.utc_now() |> DateTime.to_unix(:millisecond)
 end
