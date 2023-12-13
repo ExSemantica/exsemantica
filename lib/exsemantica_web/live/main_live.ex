@@ -40,7 +40,7 @@ defmodule ExsemanticaWeb.MainLive do
     {:noreply,
      socket
      |> start_async(:load_aggregate, fn ->
-       Exsemantica.Task.CheckUserName.run(%{guess: aggregate})
+       Exsemantica.Task.CheckAggregateName.run(%{guess: aggregate})
      end)}
   end
 
@@ -60,7 +60,8 @@ defmodule ExsemanticaWeb.MainLive do
        loading: false,
        delay: get_ms() - socket.assigns.t0,
        ident: name,
-       data: Exsemantica.Task.LoadUserPage.run(%{id: id, load_by: :newest, page: 0})
+       data: Exsemantica.Task.LoadUserPage.run(%{id: id, load_by: :newest, page: 0}),
+       page_title: "Viewing /u/#{name}"
      )}
   end
 
@@ -84,7 +85,8 @@ defmodule ExsemanticaWeb.MainLive do
        loading: false,
        delay: get_ms() - socket.assigns.t0,
        ident: name,
-       data: Exsemantica.Task.LoadAggregatePage.run(%{id: id, load_by: :newest, page: 0})
+       data: Exsemantica.Task.LoadAggregatePage.run(%{id: id, load_by: :newest, page: 0}),
+       page_title: "Viewing /s/#{name}"
      )}
   end
 
@@ -103,7 +105,8 @@ defmodule ExsemanticaWeb.MainLive do
        otype: :aggregate,
        loading: false,
        delay: get_ms() - socket.assigns.t0,
-       ident: nil
+       ident: nil,
+       page_title: "Viewing /s/all"
      )}
   end
 
