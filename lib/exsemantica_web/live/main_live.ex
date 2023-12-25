@@ -49,7 +49,7 @@ defmodule ExsemanticaWeb.MainLive do
   # ===========================================================================
   # ===== Load /u/___ =====
   def handle_async(:load_user, {:ok, %{name: name, identical?: false}}, socket) do
-    {:noreply, socket |> push_patch(to: ~p"/u/#{name}")}
+    {:noreply, socket |> redirect(to: ~p"/u/#{name}")}
   end
 
   def handle_async(:load_user, {:ok, %{id: id, name: name, identical?: true}}, socket) do
@@ -93,7 +93,7 @@ defmodule ExsemanticaWeb.MainLive do
   def handle_async(:load_user, {:ok, :not_found}, socket) do
     {:noreply,
      socket
-     |> push_patch(to: ~p"/s/all")
+     |> redirect(to: ~p"/s/all")
      |> put_flash(:error, gettext("That user does not exist"))}
   end
 
