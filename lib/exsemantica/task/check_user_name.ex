@@ -19,7 +19,11 @@ defmodule Exsemantica.Task.CheckUserName do
         :not_found
 
       user ->
-        %{id: user.id, name: user.username, identical?: user.username == guess}
+        %{
+          id: user.id,
+          name: user.username,
+          identical?: user.username == guess
+        }
     end
   end
 end

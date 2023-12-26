@@ -16,9 +16,9 @@ defmodule ExsemanticaWeb.MainLive do
 
   def mount(_params, session, socket) do
     {:ok,
-      socket
-      |> check_auth(session)
-      |> assign(loading: true, t0: get_ms())}
+     socket
+     |> check_auth(session)
+     |> assign(loading: true, t0: get_ms())}
   end
 
   # ===========================================================================
@@ -52,7 +52,11 @@ defmodule ExsemanticaWeb.MainLive do
     {:noreply, socket |> redirect(to: ~p"/u/#{name}")}
   end
 
-  def handle_async(:load_user, {:ok, %{id: id, name: name, identical?: true}}, socket) do
+  def handle_async(
+        :load_user,
+        {:ok, %{id: id, name: name, identical?: true}},
+        socket
+      ) do
     {:noreply,
      socket
      |> assign(
@@ -60,7 +64,13 @@ defmodule ExsemanticaWeb.MainLive do
        loading: false,
        delay: get_ms() - socket.assigns.t0,
        ident: name,
-       data: Exsemantica.Task.LoadUserPage.run(%{id: id, load_by: :newest, page: 0}),
+       data:
+         Exsemantica.Task.LoadUserPage.run(%{
+           id: id,
+           load_by: :newest,
+           page: 0,
+           fetch?: ~w(posts)a
+         }),
        page_title: "Viewing /u/#{name}"
      )}
   end
@@ -85,7 +95,13 @@ defmodule ExsemanticaWeb.MainLive do
        loading: false,
        delay: get_ms() - socket.assigns.t0,
        ident: name,
-       data: Exsemantica.Task.LoadAggregatePage.run(%{id: id, load_by: :newest, page: 0}),
+       data:
+         Exsemantica.Task.LoadAggregatePage.run(%{
+           id: id,
+           load_by: :newest,
+           page: 0,
+           fetch?: ~w(posts)a
+         }),
        page_title: "Viewing /s/#{name}"
      )}
   end
@@ -130,14 +146,14 @@ defmodule ExsemanticaWeb.MainLive do
         :aggregate ->
           ~H"""
           <.live_header myuser={assigns.myuser} />
-          <.live_body_aggregate aggregate={assigns.ident} />
+          <.live_body_aggregate data={assigns.data} aggregate={assigns.ident} />
           <.live_footer time={assigns.delay} />
           """
 
         :user ->
           ~H"""
           <.live_header myuser={assigns.myuser} />
-          <.live_body_user />
+          <.live_body_user data={assigns.data} username={assigns.ident} />
           <.live_footer time={assigns.delay} />
           """
       end
