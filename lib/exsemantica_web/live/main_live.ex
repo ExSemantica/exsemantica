@@ -36,6 +36,15 @@ defmodule ExsemanticaWeb.MainLive do
     {:noreply, socket |> start_async(:load_all, fn -> :unimplemented end)}
   end
 
+  def handle_params(%{"aggregate" => aggregate, "post" => post}, _uri, socket) do
+    {:noreply,
+     socket
+     |> assign(post: post)
+     |> start_async(:load_aggregate_post, fn ->
+       Exsemantica.Task.CheckAggregateName.run(%{guess: aggregate})
+     end)}
+  end
+
   def handle_params(%{"aggregate" => aggregate}, _uri, socket) do
     {:noreply,
      socket
@@ -75,11 +84,11 @@ defmodule ExsemanticaWeb.MainLive do
      )}
   end
 
-  def handle_async(:load_aggregate, {:ok, :not_found}, socket) do
+  def handle_async(:load_user, {:ok, :not_found}, socket) do
     {:noreply,
      socket
-     |> push_patch(to: ~p"/s/all")
-     |> put_flash(:error, gettext("That aggregate does not exist"))}
+     |> redirect(to: ~p"/s/all")
+     |> put_flash(:error, gettext("That user does not exist"))}
   end
 
   # ===== Load /s/___ ======
@@ -106,11 +115,68 @@ defmodule ExsemanticaWeb.MainLive do
      )}
   end
 
-  def handle_async(:load_user, {:ok, :not_found}, socket) do
+  def handle_async(:load_aggregate, {:ok, :not_found}, socket) do
     {:noreply,
      socket
-     |> redirect(to: ~p"/s/all")
-     |> put_flash(:error, gettext("That user does not exist"))}
+     |> push_patch(to: ~p"/s/all")
+     |> put_flash(:error, gettext("That aggregate does not exist"))}
+  end
+
+  # ===== Load /s/___ post ======
+    # Phase 1: find the aggregate
+  def handle_async(:load_aggregate_post, {:ok, %{name: name, identical?: false}}, socket) do
+    {:noreply, socket |> redirect(to: ~p"/s/#{name}")}
+  end
+
+  def handle_async(:load_aggregate_post, {:ok, %{id: id, name: name, identical?: true}}, socket) do
+    {:noreply,
+     socket
+     |> assign(
+       ident: name,
+       page_title: "Viewing /s/#{name}"
+     )
+     |> start_async(:load_aggregate_post_contents, fn ->
+       Exsemantica.Task.LoadPost.run(%{
+         id: socket.assigns.post,
+         aggregate_id: id,
+         fetch?: ~w(contents)a
+       })
+     end)}
+  end
+
+  def handle_async(:load_aggregate_post, {:ok, :not_found}, socket) do
+    {:noreply,
+     socket
+     |> push_patch(to: ~p"/s/all")
+     |> put_flash(:error, gettext("That aggregate does not exist"))}
+  end
+
+  # Phase 2: Load the post
+  def handle_async(:load_aggregate_post_contents, {:ok, %{post: post, info: info}}, socket) do
+    {:noreply,
+     socket
+     |> assign(
+       otype: :aggregate_post,
+       loading: false,
+       delay: get_ms() - socket.assigns.t0,
+       post: post,
+       comments: info
+     )}
+  end
+
+  def handle_async(:load_aggregate_post_contents, {:ok, :not_found}, socket) do
+    {:noreply,
+     socket
+     |> push_patch(to: ~p"/s/#{socket.assigns.ident}")
+     |> put_flash(:error, gettext("That post does not exist"))}
+  end
+
+
+  def handle_async(:load_aggregate_post_contents, {:ok, :no_match}, socket) do
+    {:noreply,
+     socket
+     |> push_patch(to: ~p"/s/all")
+     |> put_flash(:error, gettext("That post does not belong to that aggregate"))}
   end
 
   # ===== Load /s/all =====
@@ -146,14 +212,14 @@ defmodule ExsemanticaWeb.MainLive do
         :aggregate ->
           ~H"""
           <.live_header myuser={assigns.myuser} />
-          <.live_body_aggregate data={assigns.data} aggregate={assigns.ident} />
+          <.live_body_aggregate data={assigns.data} />
           <.live_footer time={assigns.delay} />
           """
 
         :user ->
           ~H"""
           <.live_header myuser={assigns.myuser} />
-          <.live_body_user data={assigns.data} username={assigns.ident} />
+          <.live_body_user data={assigns.data} />
           <.live_footer time={assigns.delay} />
           """
       end

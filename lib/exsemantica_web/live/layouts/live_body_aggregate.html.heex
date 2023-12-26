@@ -1,12 +1,15 @@
 <div class="py-16 z-0 m-auto flex flex-col-reverse lg:flex-row w-full lg:w-3/4">
   <main class="bg-gray-200 m-8 p-8 shadow-2xl lg:w-2/3 w-auto h-min">
+    <h1 class="text-2xl font-bold">/u/<%= @data.aggregate.name %></h1>
     <.live_component
       module={ExsemanticaWeb.Components.AggregatePageView}
       id="page-view"
-      aggregate={@aggregate}
+      info={@data.info}
     />
   </main>
   <aside class="bg-slate-200 m-8 p-8 shadow-2xl lg:w-1/3 w-auto h-min">
-    TODO
+    
+    <h2 class="text-lg font-bold">Description</h2>
+    <p class="text-md"><%= @data.aggregate.description %></p>
   </aside>
 </div>

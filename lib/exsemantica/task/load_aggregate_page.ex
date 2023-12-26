@@ -40,17 +40,19 @@ defmodule Exsemantica.Task.LoadAggregatePage do
       )
 
     pages_total = div(all_count, @max_posts_per_page)
-    offset = all_count - page * @max_posts_per_page
+    offset = (pages_total - page) * @max_posts_per_page
 
     {:posts,
      %{
        contents:
-         if pages_total > page do
-           Exsemantica.Repo.all(
-             from a in Exsemantica.Repo.Aggregate,
-               where: a.id == ^id,
-               preload: [posts: [order_by: [desc: :inserted_at]]]
-           )
+         if pages_total >= page do
+           aggregate =
+             Exsemantica.Repo.preload(
+               %Exsemantica.Repo.Aggregate{id: id},
+               posts: from(p in Exsemantica.Repo.Post, order_by: [desc: p.inserted_at], preload: [:user, :aggregate])
+             )
+
+           aggregate.posts
            |> Enum.slice(offset, @max_posts_per_page)
          else
            []

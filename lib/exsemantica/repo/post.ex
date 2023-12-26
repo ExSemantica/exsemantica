@@ -15,6 +15,7 @@ defmodule Exsemantica.Repo.Post do
     belongs_to :aggregate, Exsemantica.Repo.Aggregate
 
     has_many :votes, Exsemantica.Repo.Vote.Post, foreign_key: :post_id
+    has_many :comments, Exsemantica.Repo.Comment, foreign_key: :post_id
 
     timestamps(type: :utc_datetime)
   end
@@ -22,7 +23,7 @@ defmodule Exsemantica.Repo.Post do
   @doc false
   def changeset(post, attrs) do
     post
-    |> cast(attrs, [:hidden, :type, :title, :contents, :user, :aggregate, :votes])
-    |> validate_required([:hidden, :type, :title, :contents, :user, :aggregate, :votes])
+    |> cast(attrs, [:hidden, :type, :title, :contents, :user, :aggregate, :votes, :comments])
+    |> validate_required([:hidden, :type, :title, :contents, :user, :aggregate, :votes, :comments])
   end
 end

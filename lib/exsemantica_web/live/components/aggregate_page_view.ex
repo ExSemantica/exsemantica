@@ -1,14 +1,30 @@
 defmodule ExsemanticaWeb.Components.AggregatePageView do
+  @moduledoc """
+  Shows a certain range of an aggregate's post cards into a HEEx page.
+  """
   use ExsemanticaWeb, :live_component
-
-  def mount(socket) do
-    {:ok, socket |> assign(page: 0)}
-  end
 
   def render(assigns) do
     ~H"""
     <div>
-      <h1 class="text-2xl font-bold">/s/<%= assigns.aggregate %></h1>
+      <%= if assigns.info.posts.contents == [] do %>
+        <p><%= gettext("This aggregate does not have any posts.") %></p>
+      <% else %>
+        <%= for entry <- assigns.info.posts.contents do %>
+          <.live_component
+            module={ExsemanticaWeb.Components.PostCard}
+            where={:aggregate}
+            type={entry.type}
+            title={entry.title}
+            contents={entry.contents}
+            poster={entry.user.username}
+            aggregate={entry.aggregate.name}
+            edited={entry.updated_at |> DateTime.to_string()}
+            posted={entry.inserted_at |> DateTime.to_string()}
+            id={entry}
+          />
+        <% end %>
+      <% end %>
     </div>
     """
   end

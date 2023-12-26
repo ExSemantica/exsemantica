@@ -25,6 +25,7 @@ defmodule ExsemanticaWeb.Router do
     live_session :main do
       live "/", MainLive, :redirect_to_all
       live "/s/:aggregate", MainLive, :aggregate
+      live "/s/:aggregate/post/:post", MainLive, :post
       live "/u/:username", MainLive, :user
     end
   end

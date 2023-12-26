@@ -7,12 +7,22 @@ defmodule ExsemanticaWeb.Components.UserPageView do
   def render(assigns) do
     ~H"""
     <div>
-      <h1 class="text-2xl font-bold">/u/<%= assigns.username %></h1>
-      <%= if assigns.page_info.contents == [] do %>
+      <%= if assigns.info.posts.contents == [] do %>
         <p><%= gettext("This user hasn't posted.") %></p>
       <% else %>
-        <%= for entry <- assigns.page_info.contents do %>
-          <.live_component module={ExsemanticaWeb.Components.PostCard} title="foo card" id={entry} />
+        <%= for entry <- assigns.info.posts.contents do %>
+          <.live_component
+            module={ExsemanticaWeb.Components.PostCard}
+            where={:user}
+            type={entry.type}
+            title={entry.title}
+            contents={entry.contents}
+            poster={entry.user.username}
+            aggregate={entry.aggregate.name}
+            edited={entry.updated_at |> DateTime.to_string()}
+            posted={entry.inserted_at |> DateTime.to_string()}
+            id={entry}
+          />
         <% end %>
       <% end %>
     </div>

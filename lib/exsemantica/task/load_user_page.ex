@@ -40,17 +40,19 @@ defmodule Exsemantica.Task.LoadUserPage do
       )
 
     pages_total = div(all_count, @max_posts_per_page)
-    offset = all_count - page * @max_posts_per_page
+    offset = (pages_total - page) * @max_posts_per_page
 
     {:posts,
      %{
        contents:
-         if pages_total > page do
-           Exsemantica.Repo.all(
-             from u in Exsemantica.Repo.User,
-               where: u.id == ^id,
-               preload: [posts: [order_by: [desc: :inserted_at]]]
-           )
+         if pages_total >= page do
+          user =
+            Exsemantica.Repo.preload(
+              %Exsemantica.Repo.User{id: id},
+              posts: from(p in Exsemantica.Repo.Post, order_by: [desc: p.inserted_at], preload: [:user, :aggregate])
+            )
+
+          user.posts
            |> Enum.slice(offset, @max_posts_per_page)
          else
            []

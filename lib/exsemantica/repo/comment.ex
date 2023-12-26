@@ -10,6 +10,8 @@ defmodule Exsemantica.Repo.Comment do
     field :contents, :string
 
     belongs_to :user, Exsemantica.Repo.User, foreign_key: :user_id
+    belongs_to :post, Exsemantica.Repo.User, foreign_key: :post_id
+
     belongs_to :parent, Exsemantica.Repo.Comment, foreign_key: :parent_id
     has_many :replies, Exsemantica.Repo.Comment, foreign_key: :parent_id
 
@@ -21,7 +23,7 @@ defmodule Exsemantica.Repo.Comment do
   @doc false
   def changeset(comment, attrs) do
     comment
-    |> cast(attrs, [:contents, :hidden, :user, :parent, :replies, :votes])
-    |> validate_required([:contents, :hidden, :user, :parent, :replies, :votes])
+    |> cast(attrs, [:contents, :hidden, :user, :post, :parent, :replies, :votes])
+    |> validate_required([:contents, :hidden, :user, :post, :parent, :replies, :votes])
   end
 end
