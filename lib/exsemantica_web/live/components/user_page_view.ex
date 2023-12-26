@@ -1,4 +1,7 @@
 defmodule ExsemanticaWeb.Components.UserPageView do
+  @moduledoc """
+  Shows a certain range of a user's post cards into a HEEx page.
+  """
   use ExsemanticaWeb, :live_component
 
   def render(assigns) do
