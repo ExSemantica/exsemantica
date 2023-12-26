@@ -1,4 +1,7 @@
 defmodule ExsemanticaWeb.API.Auth do
+  @moduledoc """
+  Authenticates user accounts (log in, log out)
+  """
   use ExsemanticaWeb, :controller
   alias Exsemantica.Auth
 

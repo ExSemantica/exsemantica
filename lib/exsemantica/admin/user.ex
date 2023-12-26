@@ -1,4 +1,7 @@
 defmodule Exsemantica.Admin.User do
+  @moduledoc """
+  Administrative conveniences to modify users
+  """
   def create(username, password, email, biography) do
     {:ok, constrained} = username |> Exsemantica.Constrain.into_valid_username()
     Exsemantica.Repo.insert(%Exsemantica.Repo.User{
