@@ -66,12 +66,15 @@ defmodule ExsemanticaWeb.MainLive do
         {:ok, %{id: id, name: name, identical?: true}},
         socket
       ) do
+    ExsemanticaWeb.Endpoint.subscribe("user")
+
     {:noreply,
      socket
      |> assign(
        otype: :user,
        loading: false,
        delay: get_ms() - socket.assigns.t0,
+       id: id,
        ident: name,
        data:
          Exsemantica.Task.LoadUserPage.run(%{
@@ -97,12 +100,15 @@ defmodule ExsemanticaWeb.MainLive do
   end
 
   def handle_async(:load_aggregate, {:ok, %{id: id, name: name, identical?: true}}, socket) do
+    ExsemanticaWeb.Endpoint.subscribe("aggregate")
+
     {:noreply,
      socket
      |> assign(
        otype: :aggregate,
        loading: false,
        delay: get_ms() - socket.assigns.t0,
+       id: id,
        ident: name,
        data:
          Exsemantica.Task.LoadAggregatePage.run(%{
@@ -123,7 +129,7 @@ defmodule ExsemanticaWeb.MainLive do
   end
 
   # ===== Load /s/___ post ======
-    # Phase 1: find the aggregate
+  # Phase 1: find the aggregate
   def handle_async(:load_aggregate_post, {:ok, %{name: name, identical?: false}}, socket) do
     {:noreply, socket |> redirect(to: ~p"/s/#{name}")}
   end
@@ -132,6 +138,7 @@ defmodule ExsemanticaWeb.MainLive do
     {:noreply,
      socket
      |> assign(
+       id: id,
        ident: name,
        page_title: "Viewing /s/#{name}"
      )
@@ -153,13 +160,15 @@ defmodule ExsemanticaWeb.MainLive do
 
   # Phase 2: Load the post
   def handle_async(:load_aggregate_post_contents, {:ok, %{post: post, info: info}}, socket) do
+    ExsemanticaWeb.Endpoint.subscribe("post")
+
     {:noreply,
      socket
      |> assign(
        otype: :aggregate_post,
        loading: false,
        delay: get_ms() - socket.assigns.t0,
-       post: post,
+       data: post,
        comments: info
      )}
   end
@@ -170,7 +179,6 @@ defmodule ExsemanticaWeb.MainLive do
      |> push_patch(to: ~p"/s/#{socket.assigns.ident}")
      |> put_flash(:error, gettext("That post does not exist"))}
   end
-
 
   def handle_async(:load_aggregate_post_contents, {:ok, :no_match}, socket) do
     {:noreply,
@@ -224,6 +232,56 @@ defmodule ExsemanticaWeb.MainLive do
           """
       end
     end
+  end
+
+  # ===========================================================================
+  # Reload when we get new content
+  # ===========================================================================
+  # TODO: We need to save page/load_by, we could also make a "reload" button
+  def handle_info(
+        %Phoenix.Socket.Broadcast{topic: "aggregate", event: "wants_reload", payload: id},
+        socket
+      ) do
+    socket =
+      if socket.assigns.id == id do
+        socket
+        |> assign(
+          data:
+            Exsemantica.Task.LoadAggregatePage.run(%{
+              id: id,
+              load_by: :newest,
+              page: 0,
+              fetch?: ~w(posts)a
+            })
+        )
+      else
+        socket
+      end
+
+    {:noreply, socket}
+  end
+
+  def handle_info(
+        %Phoenix.Socket.Broadcast{topic: "user", event: "wants_reload", payload: id},
+        socket
+      ) do
+    socket =
+      if socket.assigns.id == id do
+        socket
+        |> assign(
+          data:
+            Exsemantica.Task.LoadUserPage.run(%{
+              id: id,
+              load_by: :newest,
+              page: 0,
+              fetch?: ~w(posts)a
+            })
+        )
+      else
+        socket
+      end
+
+    {:noreply, socket}
   end
 
   # ===========================================================================

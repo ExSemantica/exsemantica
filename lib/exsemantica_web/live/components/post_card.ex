@@ -23,20 +23,16 @@ defmodule ExsemanticaWeb.Components.PostCard do
         <% :aggregate -> %>
           <.link navigate={~p"/u/#{assigns.poster}"}>
             <i class="text-xs text-blue-900">
-              <%= gettext("Posted by /u/%{poster} on %{post_date}; updated %{edit_date}",
-                poster: assigns.poster,
-                post_date: assigns.posted,
-                edit_date: assigns.edited
+              <%= gettext("Posted by /u/%{poster}",
+                poster: assigns.poster
               ) %>
             </i>
           </.link>
         <% :user -> %>
           <.link navigate={~p"/s/#{assigns.aggregate}"}>
             <i class="text-xs text-blue-900">
-              <%= gettext("Posted in /s/%{aggregate} on %{post_date}; updated %{edit_date}",
-                aggregate: assigns.aggregate,
-                post_date: assigns.posted,
-                edit_date: assigns.edited
+              <%= gettext("Posted in /s/%{aggregate}",
+                aggregate: assigns.aggregate
               ) %>
             </i>
           </.link>

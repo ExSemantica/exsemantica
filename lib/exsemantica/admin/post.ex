@@ -14,6 +14,8 @@ defmodule Exsemantica.Admin.Post do
     })
     |> Ecto.Changeset.put_assoc(:user, Exsemantica.Repo.get(Exsemantica.Repo.User, user_id))
     |> Exsemantica.Repo.insert()
+
+    ExsemanticaWeb.Endpoint.broadcast("aggregate", "wants_reload", aggregate_id)
   end
 
   def create_link(aggregate_id, user_id, title, contents) do
@@ -28,6 +30,8 @@ defmodule Exsemantica.Admin.Post do
     })
     |> Ecto.Changeset.put_assoc(:user, Exsemantica.Repo.get(Exsemantica.Repo.User, user_id))
     |> Exsemantica.Repo.insert()
+
+    ExsemanticaWeb.Endpoint.broadcast("aggregate", "wants_reload", aggregate_id)
   end
 
   def delete(id) do
