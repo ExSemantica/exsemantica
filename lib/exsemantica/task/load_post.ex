@@ -2,7 +2,7 @@ defmodule Exsemantica.Task.LoadPost do
   @moduledoc """
   A task that loads an aggregate page's data
   """
-  @fetches ~w(comments)a
+  @fetches ~w(comments vote_sum)a
   @behaviour Exsemantica.Task
   import Ecto.Query
 
@@ -45,5 +45,19 @@ defmodule Exsemantica.Task.LoadPost do
            preload: [:comments],
            select: p.comments
        )}
+  end
+
+  defp fetch(:vote_sum, id, _args) do
+    preload =
+      Exsemantica.Repo.one(
+        from p in Exsemantica.Repo.Post, where: p.id == ^id, select: p, preload: [:votes]
+      )
+
+    {:vote_sum,
+     contents:
+       preload.votes
+       |> Enum.reduce(0, fn vote, count ->
+         if vote.is_downvote, do: count - 1, else: count + 1
+       end)}
   end
 end

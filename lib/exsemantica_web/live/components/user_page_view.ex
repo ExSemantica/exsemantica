@@ -11,16 +11,11 @@ defmodule ExsemanticaWeb.Components.UserPageView do
         <p><%= gettext("This user hasn't posted.") %></p>
       <% else %>
         <%= for entry <- assigns.info.posts.contents do %>
-          <.live_component
+        <.live_component
             module={ExsemanticaWeb.Components.PostCard}
             where={:user}
-            type={entry.type}
-            title={entry.title}
-            contents={entry.contents}
-            poster={entry.user.username}
-            aggregate={entry.aggregate.name}
-            edited={entry.updated_at |> DateTime.to_string()}
-            posted={entry.inserted_at |> DateTime.to_string()}
+            entry={entry}
+            votes={assigns.info.posts.votes[entry.id]}
             id={entry}
           />
         <% end %>

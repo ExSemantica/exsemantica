@@ -32,7 +32,7 @@ defmodule Exsemantica.Task.LoadUserPage do
     end
   end
 
-  defp fetch(:posts, id, %{load_by: :newest, page: page}) do
+  defp fetch(:posts, id, %{load_by: :newest, page: page, options: %{preloads: preloads}}) do
     all_count =
       Exsemantica.Repo.aggregate(
         from(p in Exsemantica.Repo.Post, where: p.user_id == ^id),
@@ -42,24 +42,52 @@ defmodule Exsemantica.Task.LoadUserPage do
     pages_total = div(all_count, @max_posts_per_page)
     offset = (pages_total - page) * @max_posts_per_page
 
-    {:posts,
-     %{
-       contents:
-         if pages_total >= page do
-          user =
-            Exsemantica.Repo.preload(
-              %Exsemantica.Repo.User{id: id},
-              posts: from(p in Exsemantica.Repo.Post, order_by: [desc: p.inserted_at], preload: [:user, :aggregate])
-            )
+    posts =
+      if pages_total >= page do
+        user =
+          Exsemantica.Repo.preload(
+            %Exsemantica.Repo.User{id: id},
+            posts:
+              from(p in Exsemantica.Repo.Post,
+                order_by: [desc: p.inserted_at],
+                preload: ^[:user, :aggregate | preloads]
+              )
+          )
 
-          user.posts
-           |> Enum.slice(offset, @max_posts_per_page)
-         else
-           []
-         end,
-       pages_total: pages_total,
-       pages_began?: page < 1,
-       pages_ended?: page > pages_total - 1
-     }}
+        user.posts
+        |> Enum.slice(offset, @max_posts_per_page)
+      else
+        []
+      end
+
+    {:posts,
+     Map.merge(
+       %{
+         contents: posts,
+         pages_total: pages_total,
+         pages_began?: page < 1,
+         pages_ended?: page > pages_total - 1
+       },
+       if :votes in preloads do
+         %{
+           votes:
+             posts
+             |> Enum.map(fn post ->
+               {post.id,
+                post
+                |> Map.get(:votes)
+                |> Enum.reduce(
+                  0,
+                  fn vote, count ->
+                    if vote.is_downvote, do: count - 1, else: count + 1
+                  end
+                )}
+             end)
+             |> Map.new()
+         }
+       else
+         %{}
+       end
+     )}
   end
 end
