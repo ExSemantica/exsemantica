@@ -16,6 +16,7 @@ defmodule ExsemanticaWeb.Components.AggregatePageView do
             where={:aggregate}
             entry={entry}
             votes={assigns.info.posts.votes[entry.id]}
+            user_id={assigns.user_id}
             id={entry}
           />
         <% end %>

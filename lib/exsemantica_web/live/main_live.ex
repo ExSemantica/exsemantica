@@ -66,7 +66,7 @@ defmodule ExsemanticaWeb.MainLive do
         {:ok, %{id: id, name: name, identical?: true}},
         socket
       ) do
-    ExsemanticaWeb.Endpoint.subscribe("user")
+    ExsemanticaWeb.Endpoint.subscribe("post")
 
     {:noreply,
      socket
@@ -101,7 +101,7 @@ defmodule ExsemanticaWeb.MainLive do
   end
 
   def handle_async(:load_aggregate, {:ok, %{id: id, name: name, identical?: true}}, socket) do
-    ExsemanticaWeb.Endpoint.subscribe("aggregate")
+    ExsemanticaWeb.Endpoint.subscribe("post")
 
     {:noreply,
      socket
@@ -216,21 +216,21 @@ defmodule ExsemanticaWeb.MainLive do
         :aggregate when is_nil(assigns.ident) ->
           ~H"""
           <.live_header myuser={assigns.myuser} />
-          <.live_body_all />
+          <.live_body_all user_id={assigns.user_id} />
           <.live_footer time={assigns.delay} />
           """
 
         :aggregate ->
           ~H"""
           <.live_header myuser={assigns.myuser} />
-          <.live_body_aggregate data={assigns.data} />
+          <.live_body_aggregate user_id={assigns.user_id} data={assigns.data} />
           <.live_footer time={assigns.delay} />
           """
 
         :user ->
           ~H"""
           <.live_header myuser={assigns.myuser} />
-          <.live_body_user data={assigns.data} />
+          <.live_body_user user_id={assigns.user_id} data={assigns.data} />
           <.live_footer time={assigns.delay} />
           """
       end
@@ -240,53 +240,59 @@ defmodule ExsemanticaWeb.MainLive do
   # ===========================================================================
   # Reload when we get new content
   # ===========================================================================
-  # TODO: We need to save page/load_by, we could also make a "reload" button
-  def handle_info(
-        %Phoenix.Socket.Broadcast{topic: "aggregate", event: "wants_reload", payload: id},
-        socket
-      ) do
-    socket =
-      if socket.assigns.id == id do
-        socket
-        |> assign(
-          data:
-            Exsemantica.Task.LoadAggregatePage.run(%{
-              id: id,
-              load_by: :newest,
-              page: 0,
-              fetch?: ~w(posts)a,
-              options: %{preloads: ~w(votes)a}
-            })
-        )
-      else
-        socket
-      end
-
-    {:noreply, socket}
-  end
 
   def handle_info(
-        %Phoenix.Socket.Broadcast{topic: "user", event: "wants_reload", payload: id},
+        %Phoenix.Socket.Broadcast{
+          topic: "post",
+          event: "refresh",
+          payload: %{hints: %{aggregate: aggregate, user: user}, id: id}
+        },
         socket
       ) do
-    socket =
-      if socket.assigns.id == id do
-        socket
-        |> assign(
-          data:
-            Exsemantica.Task.LoadUserPage.run(%{
-              id: id,
-              load_by: :newest,
-              page: 0,
-              fetch?: ~w(posts)a,
-              options: %{preloads: ~w(votes)a}
-            })
-        )
-      else
-        socket
-      end
+    {:noreply,
+     case socket.assigns.otype do
+       :aggregate when is_nil(socket.assigns.ident) ->
+         # TODO
+         socket
 
-    {:noreply, socket}
+       :aggregate ->
+         entries = socket.assigns.data.info.posts.contents |> Enum.map(fn entry -> entry.id end)
+
+         if id in entries do
+           socket
+           |> assign(
+             data:
+               Exsemantica.Task.LoadAggregatePage.run(%{
+                 id: aggregate,
+                 load_by: :newest,
+                 page: 0,
+                 fetch?: ~w(posts)a,
+                 options: %{preloads: ~w(votes)a}
+               })
+           )
+         else
+           socket
+         end
+
+       :user ->
+         entries = socket.assigns.data.info.posts.contents |> Enum.map(fn entry -> entry.id end)
+
+         if id in entries do
+           socket
+           |> assign(
+             data:
+               Exsemantica.Task.LoadUserPage.run(%{
+                 id: user,
+                 load_by: :newest,
+                 page: 0,
+                 fetch?: ~w(posts)a,
+                 options: %{preloads: ~w(votes)a}
+               })
+           )
+         else
+           socket
+         end
+     end}
   end
 
   # ===========================================================================
@@ -295,13 +301,13 @@ defmodule ExsemanticaWeb.MainLive do
   defp check_auth(socket, session) do
     case Exsemantica.Auth.check_token(session["guardian_default_token"]) do
       {:ok, myuser} ->
-        socket |> assign(myuser: myuser.username)
+        socket |> assign(myuser: myuser.username, user_id: myuser.id)
 
       # TODO: I want to make an "expired session" message appear then clear.
       # I'm not quite sure how to clear it in LiveView cleanly.
       # Let's not implement this just yet
       {:error, _error} ->
-        socket |> assign(myuser: nil)
+        socket |> assign(myuser: nil, user_id: nil)
     end
   end
 

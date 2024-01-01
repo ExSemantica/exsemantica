@@ -8,8 +8,7 @@ defmodule Exsemantica.Task.LoadPost do
 
   @impl true
   def run(%{id: id, aggregate_id: aggregate_id, fetch?: wanted_fetches} = args) do
-    data =
-      Exsemantica.Repo.one(Exsemantica.Repo.Post, id: id)
+    data = Exsemantica.Repo.get(Exsemantica.Repo.Post, id)
 
     case data do
       # Couldn't find the post
