@@ -3,7 +3,7 @@ defmodule Exsemantica.Task.LoadAggregatePage do
   A task that loads an aggregate page's data
   """
   @fetches ~w(posts)a
-  @max_posts_per_page 5
+  @max_posts_per_page 10
   @behaviour Exsemantica.Task
   import Ecto.Query
 
@@ -39,13 +39,13 @@ defmodule Exsemantica.Task.LoadAggregatePage do
       )
 
     pages_total = div(all_count, @max_posts_per_page)
-    offset  = page * @max_posts_per_page
+    offset = page * @max_posts_per_page
 
     posts =
       if pages_total >= page do
         aggregate =
-          Exsemantica.Repo.preload(
-            %Exsemantica.Repo.Aggregate{id: id},
+          Exsemantica.Repo.get(Exsemantica.Repo.Aggregate, id)
+          |> Exsemantica.Repo.preload(
             posts:
               from(p in Exsemantica.Repo.Post,
                 order_by: [desc: p.inserted_at],

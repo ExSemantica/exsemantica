@@ -1,5 +1,5 @@
 <div id="header" phx-update="ignore">
-  <header class="bg-white h-16 shadow-xl absolute w-full top-0">
+  <header class="fixed bg-white h-16 shadow-xl w-full top-0 z-10">
     <.link navigate={~p"/s/all"}>
       <img src={~p"/images/logo.png"} class="h-16 p-3 float-left" alt="ExSemantica Logo" />
     </.link>
@@ -10,7 +10,7 @@
   <nav
     x-show="$store.menus.navOpen"
     @click.outside="$store.menus.closeNavMenu()"
-    class="absolute top-16 right-0 w-1/4 bg-slate-50 p-4 shadow-xl z-10"
+    class="fixed top-16 right-0 w-1/4 bg-slate-50 p-4 shadow-xl z-10"
   >
     <%= if is_nil(@myuser) do %>
       <p><b>Not logged in</b></p>

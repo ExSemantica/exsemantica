@@ -3,7 +3,7 @@ defmodule Exsemantica.Task.LoadUserPage do
   A task that loads a user page's data
   """
   @fetches ~w(posts)a
-  @max_posts_per_page 5
+  @max_posts_per_page 10
   @behaviour Exsemantica.Task
   import Ecto.Query
 
@@ -39,13 +39,13 @@ defmodule Exsemantica.Task.LoadUserPage do
       )
 
     pages_total = div(all_count, @max_posts_per_page)
-    offset  = page * @max_posts_per_page
+    offset = page * @max_posts_per_page
 
     posts =
       if pages_total >= page do
         user =
-          Exsemantica.Repo.preload(
-            %Exsemantica.Repo.User{id: id},
+          Exsemantica.Repo.get(Exsemantica.Repo.User, id)
+          |> Exsemantica.Repo.preload(
             posts:
               from(p in Exsemantica.Repo.Post,
                 order_by: [desc: p.inserted_at],

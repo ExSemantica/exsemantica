@@ -8,7 +8,7 @@ defmodule ExsemanticaWeb.Components.PostCard do
 
   def render(assigns) do
     ~H"""
-    <div class="bg-gray-100 shadow-xl m-4 p-4 flex flex-row">
+    <div class="transition-opacity duration-500 opacity-0 bg-gray-100 shadow-xl m-4 p-4 flex flex-row" phx-mounted={JS.remove_class("opacity-0")}>
       <div class="w-full">
         <div class="float-left min-h-full">
           <%= case assigns.entry.type do %>

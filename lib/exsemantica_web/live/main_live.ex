@@ -66,8 +66,6 @@ defmodule ExsemanticaWeb.MainLive do
         {:ok, %{id: id, name: name, identical?: true}},
         socket
       ) do
-    ExsemanticaWeb.Endpoint.subscribe("post")
-
     {:noreply,
      socket
      |> assign(
@@ -76,6 +74,7 @@ defmodule ExsemanticaWeb.MainLive do
        delay: get_ms() - socket.assigns.t0,
        id: id,
        ident: name,
+       page: 0,
        data:
          Exsemantica.Task.LoadUserPage.run(%{
            id: id,
@@ -101,8 +100,6 @@ defmodule ExsemanticaWeb.MainLive do
   end
 
   def handle_async(:load_aggregate, {:ok, %{id: id, name: name, identical?: true}}, socket) do
-    ExsemanticaWeb.Endpoint.subscribe("post")
-
     {:noreply,
      socket
      |> assign(
@@ -111,6 +108,7 @@ defmodule ExsemanticaWeb.MainLive do
        delay: get_ms() - socket.assigns.t0,
        id: id,
        ident: name,
+       page: 0,
        data:
          Exsemantica.Task.LoadAggregatePage.run(%{
            id: id,
@@ -163,8 +161,6 @@ defmodule ExsemanticaWeb.MainLive do
 
   # Phase 2: Load the post
   def handle_async(:load_aggregate_post_contents, {:ok, %{post: post, info: info}}, socket) do
-    ExsemanticaWeb.Endpoint.subscribe("post")
-
     {:noreply,
      socket
      |> assign(
@@ -223,14 +219,21 @@ defmodule ExsemanticaWeb.MainLive do
         :aggregate ->
           ~H"""
           <.live_header myuser={assigns.myuser} />
-          <.live_body_aggregate user_id={assigns.user_id} data={assigns.data} />
+          <div
+            id="aggregate"
+            phx-viewport-bottom={!assigns.data.info.posts.pages_ended? && "load-more-aggregate"}
+          >
+            <.live_body_aggregate user_id={assigns.user_id} data={assigns.data} />
+          </div>
           <.live_footer time={assigns.delay} />
           """
 
         :user ->
           ~H"""
           <.live_header myuser={assigns.myuser} />
-          <.live_body_user user_id={assigns.user_id} data={assigns.data} />
+          <div id="user" phx-viewport-bottom={!assigns.data.info.posts.pages_ended? && "load-more-user"}>
+            <.live_body_user user_id={assigns.user_id} data={assigns.data} />
+          </div>
           <.live_footer time={assigns.delay} />
           """
       end
@@ -238,63 +241,73 @@ defmodule ExsemanticaWeb.MainLive do
   end
 
   # ===========================================================================
-  # Reload when we get new content
+  # Handle infinite scrolling
   # ===========================================================================
+  # TODO: we really need to make a "reload" indicator
+  # POSSIBLE IMPLEMENTATION: check load timestamp vs. last SQL table modification
+  def handle_event("load-more-aggregate", _unsigned_params, socket) do
+    data =
+      Exsemantica.Task.LoadAggregatePage.run(%{
+        id: socket.assigns.id,
+        load_by: :newest,
+        page: socket.assigns.page + 1,
+        fetch?: ~w(posts)a,
+        options: %{preloads: ~w(votes)a}
+      })
 
-  def handle_info(
-        %Phoenix.Socket.Broadcast{
-          topic: "post",
-          event: "refresh",
-          payload: %{hints: %{aggregate: aggregate, user: user}, id: id}
-        },
-        socket
-      ) do
+    old_info = socket.assigns.data.info
+
+    new_info = %{
+      old_info
+      | posts: %{
+          old_info.posts
+          | contents: List.flatten(old_info.posts.contents, data.info.posts.contents),
+            votes: Map.merge(old_info.posts.votes, data.info.posts.votes),
+            pages_began?: data.info.posts.pages_began?,
+            pages_total: data.info.posts.pages_total,
+            pages_ended?: data.info.posts.pages_ended?
+        }
+    }
+
     {:noreply,
-     case socket.assigns.otype do
-       :aggregate when is_nil(socket.assigns.ident) ->
-         # TODO
-         socket
-
-       :aggregate ->
-         entries = socket.assigns.data.info.posts.contents |> Enum.map(fn entry -> entry.id end)
-
-         if id in entries do
-           socket
-           |> assign(
-             data:
-               Exsemantica.Task.LoadAggregatePage.run(%{
-                 id: aggregate,
-                 load_by: :newest,
-                 page: 0,
-                 fetch?: ~w(posts)a,
-                 options: %{preloads: ~w(votes)a}
-               })
-           )
-         else
-           socket
-         end
-
-       :user ->
-         entries = socket.assigns.data.info.posts.contents |> Enum.map(fn entry -> entry.id end)
-
-         if id in entries do
-           socket
-           |> assign(
-             data:
-               Exsemantica.Task.LoadUserPage.run(%{
-                 id: user,
-                 load_by: :newest,
-                 page: 0,
-                 fetch?: ~w(posts)a,
-                 options: %{preloads: ~w(votes)a}
-               })
-           )
-         else
-           socket
-         end
-     end}
+     socket
+     |> assign(
+       data: %{socket.assigns.data | info: new_info},
+       page: socket.assigns.page + 1
+     )}
   end
 
+  def handle_event("load-more-user", _unsigned_params, socket) do
+    data =
+      Exsemantica.Task.LoadUserPage.run(%{
+        id: socket.assigns.id,
+        load_by: :newest,
+        page: socket.assigns.page + 1,
+        fetch?: ~w(posts)a,
+        options: %{preloads: ~w(votes)a}
+      })
+
+    old_info = socket.assigns.data.info
+
+    new_info = %{
+      old_info
+      | posts: %{
+          old_info.posts
+          | contents: List.flatten(old_info.posts.contents, data.info.posts.contents),
+            votes: Map.merge(old_info.posts.votes, data.info.posts.votes),
+            pages_began?: data.info.posts.pages_began?,
+            pages_total: data.info.posts.pages_total,
+            pages_ended?: data.info.posts.pages_ended?
+        }
+    }
+
+    {:noreply,
+     socket
+     |> assign(
+       data: %{socket.assigns.data | info: new_info},
+       page: socket.assigns.page + 1
+     )}
+  end
   # ===========================================================================
   # Private functions
   # ===========================================================================
