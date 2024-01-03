@@ -9,6 +9,8 @@ defmodule Exsemantica.Repo.Migrations.CreateCommentVotes do
 
       timestamps(type: :utc_datetime)
     end
-    create unique_index(:comment_votes, [:user_id])
+
+    create index(:comment_votes, [:comment_id])
+    create index(:comment_votes, [:user_id])
   end
 end

@@ -43,7 +43,16 @@ defmodule Exsemantica.Task.PerformVote do
           |> Exsemantica.Repo.delete()
         end
 
-        :ok
+        {:ok,
+         Exsemantica.Repo.get(Exsemantica.Repo.Post, id)
+         |> Exsemantica.Repo.preload([:votes])
+         |> Map.get(:votes)
+         |> Enum.reduce(
+           0,
+           fn vote, count ->
+             if vote.is_downvote, do: count - 1, else: count + 1
+           end
+         )}
     end
   end
 
@@ -85,7 +94,16 @@ defmodule Exsemantica.Task.PerformVote do
           |> Exsemantica.Repo.delete()
         end
 
-        :ok
+        {:ok,
+         Exsemantica.Repo.get(Exsemantica.Repo.Comment, id)
+         |> Exsemantica.Repo.preload([:votes])
+         |> Map.get(:votes)
+         |> Enum.reduce(
+           0,
+           fn vote, count ->
+             if vote.is_downvote, do: count - 1, else: count + 1
+           end
+         )}
     end
   end
 end

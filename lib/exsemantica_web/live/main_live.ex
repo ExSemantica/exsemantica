@@ -66,6 +66,8 @@ defmodule ExsemanticaWeb.MainLive do
         {:ok, %{id: id, name: name, identical?: true}},
         socket
       ) do
+    ExsemanticaWeb.Endpoint.subscribe("post")
+
     {:noreply,
      socket
      |> assign(
@@ -100,6 +102,8 @@ defmodule ExsemanticaWeb.MainLive do
   end
 
   def handle_async(:load_aggregate, {:ok, %{id: id, name: name, identical?: true}}, socket) do
+    ExsemanticaWeb.Endpoint.subscribe("post")
+
     {:noreply,
      socket
      |> assign(
@@ -239,6 +243,28 @@ defmodule ExsemanticaWeb.MainLive do
       end
     end
   end
+  # ===========================================================================
+  # Handle votes
+  # ===========================================================================
+def handle_info(%Phoenix.Socket.Broadcast{topic: "post", event: "recounted_votes", payload: %{id: post_id, vote_count: vote_count}}, socket) do
+  {:noreply, case socket.assigns.otype do
+    :aggregate when is_nil(socket.assigns.ident) ->
+      socket
+
+    :aggregate ->
+      old_data = socket.assigns.data
+
+      new_data = if Map.has_key?(get_in(old_data, path = [:info, :posts, :votes]), post_id) do
+        old_data |> put_in(path ++ [post_id], vote_count)
+      else
+        old_data
+      end
+
+      socket |> assign(data: new_data)
+    :user ->
+      socket
+  end}
+end
 
   # ===========================================================================
   # Handle infinite scrolling

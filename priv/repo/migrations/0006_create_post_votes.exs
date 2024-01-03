@@ -10,6 +10,7 @@ defmodule Exsemantica.Repo.Migrations.CreatePostVotes do
       timestamps(type: :utc_datetime)
     end
 
-    create unique_index(:post_votes, [:user_id])
+    create index(:post_votes, [:user_id])
+    create index(:post_votes, [:post_id])
   end
 end

@@ -67,7 +67,7 @@ defmodule ExsemanticaWeb.Components.PostCard do
   end
 
   def handle_event("upvote", _unsigned_params, socket) do
-    :ok =
+    {:ok, vote_count} =
       Exsemantica.Task.PerformVote.run(%{
         id: socket.assigns.entry.id,
         user_id: socket.assigns.user_id,
@@ -75,16 +75,16 @@ defmodule ExsemanticaWeb.Components.PostCard do
         vote_type: :upvote
       })
 
-    ExsemanticaWeb.Endpoint.broadcast("post", "refresh", %{
+    ExsemanticaWeb.Endpoint.broadcast("post", "recounted_votes", %{
       id: socket.assigns.entry.id,
-      hints: %{aggregate: socket.assigns.entry.aggregate.id, user: socket.assigns.entry.user.id}
+      vote_count: vote_count
     })
 
     {:noreply, socket}
   end
 
   def handle_event("downvote", _unsigned_params, socket) do
-    :ok =
+    {:ok, vote_count} =
       Exsemantica.Task.PerformVote.run(%{
         id: socket.assigns.entry.id,
         user_id: socket.assigns.user_id,
@@ -92,10 +92,10 @@ defmodule ExsemanticaWeb.Components.PostCard do
         vote_type: :downvote
       })
 
-    ExsemanticaWeb.Endpoint.broadcast("post", "refresh", %{
-      id: socket.assigns.entry.id,
-      hints: %{aggregate: socket.assigns.entry.aggregate.id, user: socket.assigns.entry.user.id}
-    })
+      ExsemanticaWeb.Endpoint.broadcast("post", "recounted_votes", %{
+        id: socket.assigns.entry.id,
+        vote_count: vote_count
+      })
 
     {:noreply, socket}
   end
