@@ -243,28 +243,40 @@ defmodule ExsemanticaWeb.MainLive do
       end
     end
   end
+
   # ===========================================================================
-  # Handle votes
+  # Handle info
   # ===========================================================================
-def handle_info(%Phoenix.Socket.Broadcast{topic: "post", event: "recounted_votes", payload: %{id: post_id, vote_count: vote_count}}, socket) do
-  {:noreply, case socket.assigns.otype do
-    :aggregate when is_nil(socket.assigns.ident) ->
-      socket
+    # On vote update
+  def handle_info(
+        %Phoenix.Socket.Broadcast{
+          topic: "post",
+          event: "recounted_votes",
+          payload: %{id: post_id, vote_count: vote_count}
+        },
+        socket
+      ) do
+    {:noreply,
+     case socket.assigns.otype do
+       :aggregate when is_nil(socket.assigns.ident) ->
+         socket
 
-    :aggregate ->
-      old_data = socket.assigns.data
+       :aggregate ->
+         old_data = socket.assigns.data
 
-      new_data = if Map.has_key?(get_in(old_data, path = [:info, :posts, :votes]), post_id) do
-        old_data |> put_in(path ++ [post_id], vote_count)
-      else
-        old_data
-      end
+         new_data =
+           if Map.has_key?(get_in(old_data, path = [:info, :posts, :votes]), post_id) do
+             old_data |> put_in(path ++ [post_id], vote_count)
+           else
+             old_data
+           end
 
-      socket |> assign(data: new_data)
-    :user ->
-      socket
-  end}
-end
+         socket |> assign(data: new_data)
+
+       :user ->
+         socket
+     end}
+  end
 
   # ===========================================================================
   # Handle infinite scrolling
@@ -334,6 +346,7 @@ end
        page: socket.assigns.page + 1
      )}
   end
+
   # ===========================================================================
   # Private functions
   # ===========================================================================
