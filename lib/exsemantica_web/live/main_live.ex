@@ -263,9 +263,10 @@ defmodule ExsemanticaWeb.MainLive do
 
        :aggregate ->
          old_data = socket.assigns.data
+         path = [:info, :posts, :votes]
 
          new_data =
-           if Map.has_key?(get_in(old_data, path = [:info, :posts, :votes]), post_id) do
+           if Map.has_key?(get_in(old_data, path), post_id) do
              old_data |> put_in(path ++ [post_id], vote_count)
            else
              old_data

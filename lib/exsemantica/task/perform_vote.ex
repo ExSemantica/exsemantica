@@ -24,23 +24,22 @@ defmodule Exsemantica.Task.PerformVote do
             vote.user_id == user_id
           end)
 
-        if is_nil(vote) do
-          case type do
-            :upvote ->
-              post
-              |> Ecto.build_assoc(:votes)
-              |> Ecto.Changeset.change(%{user_id: user_id, is_downvote: false})
-              |> Exsemantica.Repo.insert()
+        case vote do
+          nil when type == :upvote ->
+            post
+            |> Ecto.build_assoc(:votes)
+            |> Ecto.Changeset.change(%{user_id: user_id, is_downvote: false})
+            |> Exsemantica.Repo.insert()
 
-            :downvote ->
-              post
-              |> Ecto.build_assoc(:votes)
-              |> Ecto.Changeset.change(%{user_id: user_id, is_downvote: true})
-              |> Exsemantica.Repo.insert()
-          end
-        else
-          vote
-          |> Exsemantica.Repo.delete()
+          nil when type == :downvote ->
+            post
+            |> Ecto.build_assoc(:votes)
+            |> Ecto.Changeset.change(%{user_id: user_id, is_downvote: true})
+            |> Exsemantica.Repo.insert()
+
+          _non_nil_vote ->
+            vote
+            |> Exsemantica.Repo.delete()
         end
 
         {:ok,
@@ -75,23 +74,22 @@ defmodule Exsemantica.Task.PerformVote do
             vote.user_id == user_id
           end)
 
-        if is_nil(vote) do
-          case type do
-            :upvote ->
-              comment
-              |> Ecto.build_assoc(:votes)
-              |> Ecto.Changeset.change(%{user_id: user_id, is_downvote: false})
-              |> Exsemantica.Repo.insert()
+        case vote do
+          nil when type == :upvote ->
+            comment
+            |> Ecto.build_assoc(:votes)
+            |> Ecto.Changeset.change(%{user_id: user_id, is_downvote: false})
+            |> Exsemantica.Repo.insert()
 
-            :downvote ->
-              comment
-              |> Ecto.build_assoc(:votes)
-              |> Ecto.Changeset.change(%{user_id: user_id, is_downvote: true})
-              |> Exsemantica.Repo.insert()
-          end
-        else
-          vote
-          |> Exsemantica.Repo.delete()
+          nil when type == :downvote ->
+            comment
+            |> Ecto.build_assoc(:votes)
+            |> Ecto.Changeset.change(%{user_id: user_id, is_downvote: true})
+            |> Exsemantica.Repo.insert()
+
+          _non_nil_vote ->
+            vote
+            |> Exsemantica.Repo.delete()
         end
 
         {:ok,
