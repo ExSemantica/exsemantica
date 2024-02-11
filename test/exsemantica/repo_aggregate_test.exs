@@ -24,7 +24,11 @@ defmodule Exsemantica.RepoAggregateTest do
 
   test "allows post insertion in bulk", %{user: user, aggregate: aggregate} do
     # Create a few entries
-    entries = 1..250 |> Enum.map(& %{type: :self, title: "Test post #{&1}", contents: "Just testing", user_id: user.id})
+    entries =
+      1..250
+      |> Enum.map(
+        &%{type: :self, title: "Test post #{&1}", contents: "Just testing", user_id: user.id}
+      )
 
     # Insert them
     for entry <- entries do

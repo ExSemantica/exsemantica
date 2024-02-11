@@ -8,7 +8,10 @@ defmodule ExsemanticaWeb.Components.PostCard do
 
   def render(assigns) do
     ~H"""
-    <div class="transition-opacity duration-500 opacity-0 bg-gray-100 shadow-xl m-4 p-4 flex flex-row" phx-mounted={JS.remove_class("opacity-0")}>
+    <div
+      class="transition-opacity duration-500 opacity-0 bg-gray-100 shadow-xl m-4 p-4 flex flex-row"
+      phx-mounted={JS.remove_class("opacity-0")}
+    >
       <div class="w-full">
         <div class="float-left min-h-full">
           <%= case assigns.entry.type do %>
@@ -92,10 +95,10 @@ defmodule ExsemanticaWeb.Components.PostCard do
         vote_type: :downvote
       })
 
-      ExsemanticaWeb.Endpoint.broadcast("post", "recounted_votes", %{
-        id: socket.assigns.entry.id,
-        vote_count: vote_count
-      })
+    ExsemanticaWeb.Endpoint.broadcast("post", "recounted_votes", %{
+      id: socket.assigns.entry.id,
+      vote_count: vote_count
+    })
 
     {:noreply, socket}
   end

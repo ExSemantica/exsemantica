@@ -2,6 +2,8 @@ defmodule Exsemantica.Cache do
   @moduledoc """
   The Mnesia-based cache resides in this namespace
   """
+  @queue_after 50
+
   require Logger
   use GenServer
 
@@ -14,8 +16,7 @@ defmodule Exsemantica.Cache do
   # ===========================================================================
   @impl true
   def init(_args) do
-    Logger.info("Preparing Mnesia")
-    # :ok = :net_kernel.monitor_nodes(true)
+    Logger.info("Preparing cache pool")
 
     :ok =
       case :mnesia.create_schema([Node.self()]) do
@@ -25,42 +26,48 @@ defmodule Exsemantica.Cache do
 
     :mnesia.start()
 
-    {:ok, %{}}
+    # === VOTES ===
+    # otype_id -> {otype, id}
+    # otype = post or comment
+    # id = the post or comment's ID within the database
+    :mnesia.create_table(Exsemantica.Cache.Vote, attributes: [:otype_id, :count])
+    :mnesia.add_table_index(Exsemantica.Cache.Vote, :otype_id)
+
+    {:ok, %{queue: :queue.new(), timer: nil}}
   end
 
   @impl true
-  def handle_info({:nodeup, joining_node}, state) do
-    nodes = Node.list()
-    Logger.debug("Node #{inspect(joining_node)} joins other nodes #{inspect(nodes)}")
+  def handle_cast(message, state) do
+    Logger.debug("Handle message #{inspect(message)}")
 
-    {:ok, _nodes} = :mnesia.change_config(:extra_db_nodes, nodes)
+    if is_nil(state.timer) do
+      {:noreply,
+       %{
+         state
+         | timer: Process.send_after(self(), :handle_queue, @queue_after),
+           queue: :queue.snoc(state.queue, message)
+       }}
+    else
+      {:noreply, %{state | queue: :queue.snoc(state.queue, message)}}
+    end
+  end
 
-    {:ok, %{}}
+  @impl true
+  def handle_info(:handle_queue, state) do
+    events = state.queue |> :queue.to_list()
+
+    Logger.debug("Timer hit with #{length(events)}")
+    events |> Enum.map(&timed_event/1)
+
+    {:noreply, %{queue: :queue.new(), timer: nil}}
   end
 
   # ===========================================================================
   # Private functions
   # ===========================================================================
-  defp votes_initialize do
-    # otype_id -> {otype, id}
-    # otype = post or comment
-    # id = the post or comment's ID within the database
-    :mnesia.create_table(Exsemantica.Cache.Votes, attributes: [:otype_id, :count])
-end
+  defp timed_event(what = {:adjust_votes, from, otype_id, amount}) do
+    Logger.debug("Adjusting votes: #{inspect(what)}")
 
-  defp votes_load(otype_id) do
-    Logger.debug("loading #{inspect(otype_id)} vote count")
-    :unimplemented
-  end
-
-  defp votes_change(otype_id, kind) do
-    if :mnesia.index_read(Exsemantica.Cache.Votes, otype_id, :otype_id) == [] do
-      Logger.debug("lazy loading #{inspect(otype_id)} vote count")
-      votes_load(otype_id)
-    end
-    case kind do
-      :upvote -> :unimplemented
-      :downvote -> :unimplemented
-    end
+    send(from, {:adjust_votes, __MODULE__.Votes.modify(otype_id, amount)})
   end
 end

@@ -23,6 +23,7 @@ defmodule Exsemantica.Application do
           "v#{Application.spec(:exsemantica, :vsn)}"
       end
     )
+
     children = [
       ExsemanticaWeb.Telemetry,
       Exsemantica.Repo,

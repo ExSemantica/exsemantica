@@ -11,7 +11,7 @@ defmodule ExsemanticaWeb.Components.UserPageView do
         <p><%= gettext("This user hasn't posted.") %></p>
       <% else %>
         <%= for entry <- assigns.info.posts.contents do %>
-        <.live_component
+          <.live_component
             module={ExsemanticaWeb.Components.PostCard}
             where={:user}
             entry={entry}

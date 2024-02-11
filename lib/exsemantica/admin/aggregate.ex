@@ -4,6 +4,7 @@ defmodule Exsemantica.Admin.Aggregate do
   """
   def create(name, description) do
     {:ok, constrained} = name |> Exsemantica.Constrain.into_valid_aggregate()
+
     Exsemantica.Repo.insert(%Exsemantica.Repo.Aggregate{
       name: constrained,
       description: description

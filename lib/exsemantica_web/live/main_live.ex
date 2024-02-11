@@ -247,7 +247,7 @@ defmodule ExsemanticaWeb.MainLive do
   # ===========================================================================
   # Handle info
   # ===========================================================================
-    # On vote update
+  # On vote update
   def handle_info(
         %Phoenix.Socket.Broadcast{
           topic: "post",

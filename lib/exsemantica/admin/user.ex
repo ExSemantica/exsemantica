@@ -4,6 +4,7 @@ defmodule Exsemantica.Admin.User do
   """
   def create(username, password, email, biography) do
     {:ok, constrained} = username |> Exsemantica.Constrain.into_valid_username()
+
     Exsemantica.Repo.insert(%Exsemantica.Repo.User{
       username: constrained,
       password: Argon2.hash_pwd_salt(password),
