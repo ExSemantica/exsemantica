@@ -24,6 +24,16 @@ defmodule Exsemantica.Task.PerformVote do
             vote.user_id == user_id
           end)
 
+        # Do cache
+        case type do
+          :upvote ->
+            Exsemantica.Cache.adjust_vote({:post, id}, 1)
+
+          :downvote ->
+            Exsemantica.Cache.adjust_vote({:post, id}, -1)
+        end
+
+        # Now do SQL
         case vote do
           nil when type == :upvote ->
             post
@@ -74,6 +84,16 @@ defmodule Exsemantica.Task.PerformVote do
             vote.user_id == user_id
           end)
 
+        # Do cache
+        case type do
+          :upvote ->
+            Exsemantica.Cache.adjust_vote({:comment, id}, 1)
+
+          :downvote ->
+            Exsemantica.Cache.adjust_vote({:comment, id}, -1)
+        end
+
+        # Now do SQL
         case vote do
           nil when type == :upvote ->
             comment

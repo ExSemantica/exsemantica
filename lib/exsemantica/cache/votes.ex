@@ -2,34 +2,46 @@ defmodule Exsemantica.Cache.Votes do
   @moduledoc """
   Depends on `Exsemantica.Cache` Mnesia store.
 
-  Utility vote cache modification functions
+  Utility vote cache modification functions.
   """
 
+  require Logger
+
+  @spec modify({{:post | :comment, integer()}, integer()}) :: :ok
   @doc """
   Modifies the **cache entry**'s vote post or comment score.
-
-  Set to 0 if not modifying.
   """
-  @spec modify({:post | :comment, integer()}, integer()) :: integer()
-  def modify(otype_id, delta) do
-    {:atomic, {Exsemantica.Cache.Vote, ^otype_id, _num_votes}} =
-      :mnesia.transaction(fn ->
-        {:atomic, retrieved_votes} =
-          :mnesia.index_read(Exsemantica.Cache.Vote, otype_id, :otype_id)
+  def modify({otype_id, delta}) do
+    Logger.debug("Modify #{inspect(otype_id)} by #{inspect(delta)}")
 
-        case retrieved_votes do
-          [] ->
-            votes = load_from_miss(otype_id)
-            vote_entry = {Exsemantica.Cache.Vote, otype_id, votes}
-            :mnesia.write(vote_entry)
-            vote_entry
+    {:ok, _votes} = load(otype_id)
 
-          [vote_entry] ->
-            vote_entry
-        end
-      end)
+    :ok
+  end
 
-    :mnesia.dirty_update_counter(Exsemantica.Cache.Vote, otype_id, delta)
+  @spec load({:post | :comment, integer()}) :: {:ok, integer()}
+  @doc """
+  Loads the **cache entry**'s vote post or comment score.
+  """
+  def load(otype_id) do
+    {:atomic, {Exsemantica.Cache.Vote, ^otype_id, votes}} = :mnesia.transaction(fn ->
+      {:atomic, retrieved_votes} =
+        :mnesia.index_read(Exsemantica.Cache.Vote, otype_id, :otype_id)
+
+      case retrieved_votes do
+        [] ->
+          Logger.debug("Load #{inspect(otype_id)} CACHE MISS")
+          votes = load_from_miss(otype_id)
+          vote_entry = {Exsemantica.Cache.Vote, otype_id, votes}
+          :ok = :mnesia.write(vote_entry)
+          vote_entry
+
+        [vote_entry] ->
+          Logger.debug("Load #{inspect(otype_id)} CACHE HIT")
+          vote_entry
+      end
+    end)
+    {:ok, votes}
   end
 
   # Stuff to load from a cache miss
