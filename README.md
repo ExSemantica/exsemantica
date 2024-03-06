@@ -16,7 +16,7 @@ This is what I see and hope in `v0.9`, but failure is okay.
 The database is a PostgreSQL storage. You could use Docker or Podman to start it.
 
 ```shell
-$ podman run --name exsemantica-db -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=exsemantica_dev -d postgres:16-alpine
+$ podman run --name exsemantica-db -p 127.0.0.1:5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=exsemantica_dev -d postgres:16-alpine
 ```
 
 The PostgreSQL database should be initialized in first use.
