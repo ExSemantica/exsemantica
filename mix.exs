@@ -32,32 +32,43 @@ defmodule Exsemantica.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      # RATIONALE: Phoenix pulls its own dependencies in
-      {:phoenix, "~> 1.7.10"},
+      # =======================================================================
+      # STOCK DEPENDENCIES
+      # =======================================================================
+      {:phoenix, "~> 1.7.11"},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.10"},
       {:postgrex, ">= 0.0.0"},
-      {:phoenix_html, "~> 3.3"},
+      {:phoenix_html, "~> 4.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.20.1"},
+      {:phoenix_live_view, "~> 0.20.2"},
       {:floki, ">= 0.30.0", only: :test},
-      {:phoenix_live_dashboard, "~> 0.8.2"},
+      {:phoenix_live_dashboard, "~> 0.8.3"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
-      {:swoosh, "~> 1.3"},
+      {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
+      {:heroicons,
+       github: "tailwindlabs/heroicons",
+       tag: "v2.1.1",
+       sparse: "optimized",
+       app: false,
+       compile: false,
+       depth: 1},
+      {:swoosh, "~> 1.5"},
       {:finch, "~> 0.13"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
-      {:plug_cowboy, "~> 2.5"},
-
+      {:bandit, "~> 1.2"},
+      # =======================================================================
+      # EXTERNAL DEPENDENCIES
+      # =======================================================================
       # RATIONALE: Miscellaneous tracing
       {:ecto_psql_extras, "~> 0.7"},
 
       # RATIONALE: Documentation for external developers
-      {:ex_doc, "~> 0.30", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.31", only: :dev, runtime: false},
 
       # RATIONALE: Code cleanliness
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
@@ -86,8 +97,12 @@ defmodule Exsemantica.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["tailwind default", "esbuild default"],
-      "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]
+      "assets.build": ["tailwind exsemantica", "esbuild exsemantica"],
+      "assets.deploy": [
+        "tailwind exsemantica --minify",
+        "esbuild exsemantica --minify",
+        "phx.digest"
+      ]
     ]
   end
 end

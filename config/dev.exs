@@ -3,7 +3,7 @@ import Config
 # Configure your database
 config :exsemantica, Exsemantica.Repo,
   username: "postgres",
-  password: "change_me",
+  password: "postgres",
   hostname: "localhost",
   database: "exsemantica_dev",
   stacktrace: true,
@@ -27,14 +27,14 @@ config :exsemantica, Exsemantica.Auth.Guardian,
 config :exsemantica, ExsemanticaWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
-  http: [ip: {0, 0, 0, 0}, port: 4000],
+  http: [ip: {127, 0, 0, 1}, port: 4000],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "wckd/ol6M29oOiENkvIaKHlN9Jj4n7qTHgUpwr5EztIkl2OoGU5RLKAdq9srKBE0",
+  secret_key_base: "yMTn6ybKDR0tNUHNwcJlbL2cmQZTsKnsjPJK1dTPHst5XQPNYE5XCU2AeUp9d7kV",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
+    esbuild: {Esbuild, :install_and_run, [:exsemantica, ~w(--sourcemap=inline --watch)]},
+    tailwind: {Tailwind, :install_and_run, [:exsemantica, ~w(--watch)]}
   ]
 
 # ## SSL Support
@@ -64,7 +64,7 @@ config :exsemantica, ExsemanticaWeb.Endpoint,
 config :exsemantica, ExsemanticaWeb.Endpoint,
   live_reload: [
     patterns: [
-      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
+      ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
       ~r"lib/exsemantica_web/(controllers|live|components)/.*(ex|heex)$"
     ]

@@ -18,4 +18,4 @@ config :swoosh, local: false
 config :logger, level: :info
 
 # Runtime production configuration, including reading
-# of environment variables, is done on config/runtime.exs.
+# of environment variables, is done on config/runtime.exs

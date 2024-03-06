@@ -14,13 +14,13 @@ config :exsemantica,
 # Configures the endpoint
 config :exsemantica, ExsemanticaWeb.Endpoint,
   url: [host: "localhost"],
-  adapter: Phoenix.Endpoint.Cowboy2Adapter,
+  adapter: Bandit.PhoenixAdapter,
   render_errors: [
     formats: [html: ExsemanticaWeb.ErrorHTML, json: ExsemanticaWeb.ErrorJSON],
     layout: false
   ],
   pubsub_server: Exsemantica.PubSub,
-  live_view: [signing_salt: "wQFaiLnz"]
+  live_view: [signing_salt: "/KOJcCrA"]
 
 # Configures the mailer
 #
@@ -34,7 +34,7 @@ config :exsemantica, Exsemantica.Mailer, adapter: Swoosh.Adapters.Local
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",
-  default: [
+  exsemantica: [
     args:
       ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
     cd: Path.expand("../assets", __DIR__),
@@ -43,8 +43,8 @@ config :esbuild,
 
 # Configure tailwind (the version is required)
 config :tailwind,
-  version: "3.3.2",
-  default: [
+  version: "3.4.0",
+  exsemantica: [
     args: ~w(
       --config=tailwind.config.js
       --input=css/app.css
