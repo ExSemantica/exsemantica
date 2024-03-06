@@ -7,16 +7,23 @@ defmodule Exsemantica.Cache.Votes do
 
   require Logger
 
-  @spec modify({{:post | :comment, integer()}, integer()}) :: :ok
+  @spec modify({{:post | :comment, integer()}, integer()}) :: {:ok, integer()}
   @doc """
   Modifies the **cache entry**'s vote post or comment score.
   """
   def modify({otype_id, delta}) do
     Logger.debug("Modify #{inspect(otype_id)} by #{inspect(delta)}")
 
-    {:ok, _votes} = load(otype_id)
+    {:ok, votes} = load(otype_id)
 
-    :ok
+    votes = votes + delta
+
+    {:atomic, :ok} =
+      :mnesia.transaction(fn ->
+        :ok = :mnesia.write({Exsemantica.Cache.Vote, otype_id, votes})
+      end)
+
+    {:ok, votes}
   end
 
   @spec load({:post | :comment, integer()}) :: {:ok, integer()}
@@ -24,23 +31,24 @@ defmodule Exsemantica.Cache.Votes do
   Loads the **cache entry**'s vote post or comment score.
   """
   def load(otype_id) do
-    {:atomic, {Exsemantica.Cache.Vote, ^otype_id, votes}} = :mnesia.transaction(fn ->
-      {:atomic, retrieved_votes} =
-        :mnesia.index_read(Exsemantica.Cache.Vote, otype_id, :otype_id)
+    {:atomic, {Exsemantica.Cache.Vote, ^otype_id, votes}} =
+      :mnesia.transaction(fn ->
+        cached_vote_hit = :mnesia.read(Exsemantica.Cache.Vote, otype_id)
 
-      case retrieved_votes do
-        [] ->
-          Logger.debug("Load #{inspect(otype_id)} CACHE MISS")
-          votes = load_from_miss(otype_id)
-          vote_entry = {Exsemantica.Cache.Vote, otype_id, votes}
-          :ok = :mnesia.write(vote_entry)
-          vote_entry
+        case cached_vote_hit do
+          [vote_entry] ->
+            Logger.debug("Load #{inspect(otype_id)} CACHE HIT")
+            vote_entry
 
-        [vote_entry] ->
-          Logger.debug("Load #{inspect(otype_id)} CACHE HIT")
-          vote_entry
-      end
-    end)
+          [] ->
+            Logger.debug("Load #{inspect(otype_id)} CACHE MISS")
+            votes = load_from_miss(otype_id)
+            vote_entry = {Exsemantica.Cache.Vote, otype_id, votes}
+            :ok = :mnesia.write(vote_entry)
+            vote_entry
+        end
+      end)
+
     {:ok, votes}
   end
 

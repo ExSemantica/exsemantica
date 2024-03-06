@@ -33,7 +33,9 @@ defmodule Exsemantica.Application do
       # Start a worker by calling: Exsemantica.Worker.start_link(arg)
       # {Exsemantica.Worker, arg},
       # Start to serve requests, typically the last entry
-      ExsemanticaWeb.Endpoint
+      ExsemanticaWeb.Endpoint,
+
+      Exsemantica.Cache
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

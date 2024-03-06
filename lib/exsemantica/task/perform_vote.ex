@@ -24,16 +24,7 @@ defmodule Exsemantica.Task.PerformVote do
             vote.user_id == user_id
           end)
 
-        # Do cache
-        case type do
-          :upvote ->
-            Exsemantica.Cache.adjust_vote({:post, id}, 1)
-
-          :downvote ->
-            Exsemantica.Cache.adjust_vote({:post, id}, -1)
-        end
-
-        # Now do SQL
+        # Do SQL and then cache
         case vote do
           nil when type == :upvote ->
             post
@@ -41,27 +32,26 @@ defmodule Exsemantica.Task.PerformVote do
             |> Ecto.Changeset.change(%{user_id: user_id, is_downvote: false})
             |> Exsemantica.Repo.insert()
 
+            Exsemantica.Cache.adjust_vote({:post, id}, 1)
+
           nil when type == :downvote ->
             post
             |> Ecto.build_assoc(:votes)
             |> Ecto.Changeset.change(%{user_id: user_id, is_downvote: true})
             |> Exsemantica.Repo.insert()
 
+            Exsemantica.Cache.adjust_vote({:post, id}, -1)
+
           _non_nil_vote ->
             vote
             |> Exsemantica.Repo.delete()
-        end
 
-        {:ok,
-         Exsemantica.Repo.get(Exsemantica.Repo.Post, id)
-         |> Exsemantica.Repo.preload([:votes])
-         |> Map.get(:votes)
-         |> Enum.reduce(
-           0,
-           fn vote, count ->
-             if vote.is_downvote, do: count - 1, else: count + 1
-           end
-         )}
+            if vote.is_downvote do
+              Exsemantica.Cache.adjust_vote({:post, id}, 1)
+            else
+              Exsemantica.Cache.adjust_vote({:post, id}, -1)
+            end
+        end
     end
   end
 
@@ -84,16 +74,7 @@ defmodule Exsemantica.Task.PerformVote do
             vote.user_id == user_id
           end)
 
-        # Do cache
-        case type do
-          :upvote ->
-            Exsemantica.Cache.adjust_vote({:comment, id}, 1)
-
-          :downvote ->
-            Exsemantica.Cache.adjust_vote({:comment, id}, -1)
-        end
-
-        # Now do SQL
+        # Do SQL and then cache
         case vote do
           nil when type == :upvote ->
             comment
@@ -101,27 +82,26 @@ defmodule Exsemantica.Task.PerformVote do
             |> Ecto.Changeset.change(%{user_id: user_id, is_downvote: false})
             |> Exsemantica.Repo.insert()
 
+            Exsemantica.Cache.adjust_vote({:comment, id}, 1)
+
           nil when type == :downvote ->
             comment
             |> Ecto.build_assoc(:votes)
             |> Ecto.Changeset.change(%{user_id: user_id, is_downvote: true})
             |> Exsemantica.Repo.insert()
 
+            Exsemantica.Cache.adjust_vote({:comment, id}, -1)
+
           _non_nil_vote ->
             vote
             |> Exsemantica.Repo.delete()
-        end
 
-        {:ok,
-         Exsemantica.Repo.get(Exsemantica.Repo.Comment, id)
-         |> Exsemantica.Repo.preload([:votes])
-         |> Map.get(:votes)
-         |> Enum.reduce(
-           0,
-           fn vote, count ->
-             if vote.is_downvote, do: count - 1, else: count + 1
-           end
-         )}
+            if vote.is_downvote do
+              Exsemantica.Cache.adjust_vote({:comment, id}, 1)
+            else
+              Exsemantica.Cache.adjust_vote({:comment, id}, -1)
+            end
+        end
     end
   end
 end

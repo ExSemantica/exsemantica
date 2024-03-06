@@ -72,15 +72,8 @@ defmodule Exsemantica.Task.LoadAggregatePage do
            votes:
              posts
              |> Enum.map(fn post ->
-               {post.id,
-                post
-                |> Map.get(:votes)
-                |> Enum.reduce(
-                  0,
-                  fn vote, count ->
-                    if vote.is_downvote, do: count - 1, else: count + 1
-                  end
-                )}
+              {:ok, vote_count} = Exsemantica.Cache.fetch_vote({:post, post.id})
+               {post.id, vote_count}
              end)
              |> Map.new()
          }

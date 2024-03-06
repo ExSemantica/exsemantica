@@ -275,7 +275,17 @@ defmodule ExsemanticaWeb.MainLive do
          socket |> assign(data: new_data)
 
        :user ->
-         socket
+         old_data = socket.assigns.data
+         path = [:info, :posts, :votes]
+
+         new_data =
+           if Map.has_key?(get_in(old_data, path), post_id) do
+             old_data |> put_in(path ++ [post_id], vote_count)
+           else
+             old_data
+           end
+
+         socket |> assign(data: new_data)
      end}
   end
 

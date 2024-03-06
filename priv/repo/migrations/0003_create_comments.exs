@@ -6,6 +6,7 @@ defmodule Exsemantica.Repo.Migrations.CreateComments do
       add :hidden, :boolean, default: false, null: false
       add :contents, :text
       add :user_id, :id
+      add :post_id, :id
       add :parent_id, :id
       add :replies, {:array, :id}
       add :votes, {:array, :id}
