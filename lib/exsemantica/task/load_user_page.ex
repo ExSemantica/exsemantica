@@ -31,7 +31,7 @@ defmodule Exsemantica.Task.LoadUserPage do
     end
   end
 
-  defp fetch(:posts, id, %{load_by: :newest, page: page, options: %{preloads: preloads}}) do
+  defp fetch(:posts, id, %{load_by: :newest, page: page, options: options}) do
     all_count =
       Exsemantica.Repo.aggregate(
         from(p in Exsemantica.Repo.Post, where: p.user_id == ^id),
@@ -40,6 +40,7 @@ defmodule Exsemantica.Task.LoadUserPage do
 
     pages_total = div(all_count, @max_posts_per_page)
     offset = page * @max_posts_per_page
+    preloads = Map.get(options, :preloads, [])
 
     posts =
       if pages_total >= page do
@@ -60,26 +61,18 @@ defmodule Exsemantica.Task.LoadUserPage do
       end
 
     {:posts,
-     Map.merge(
-       %{
-         contents: posts,
-         pages_total: pages_total,
-         pages_began?: page < 1,
-         pages_ended?: page > pages_total - 1
-       },
-       if :votes in preloads do
-         %{
-           votes:
-             posts
-             |> Enum.map(fn post ->
-              {:ok, vote_count} = Exsemantica.Cache.fetch_vote({:post, post.id})
-               {post.id, vote_count}
-             end)
-             |> Map.new()
-         }
-       else
-         %{}
-       end
-     )}
+     %{
+       contents: posts,
+       pages_total: pages_total,
+       pages_began?: page < 1,
+       pages_ended?: page > pages_total - 1,
+       votes:
+         posts
+         |> Enum.map(fn post ->
+           {:ok, vote_count} = Exsemantica.Cache.fetch_vote({:post, post.id})
+           {post.id, vote_count}
+         end)
+         |> Map.new()
+     }}
   end
 end

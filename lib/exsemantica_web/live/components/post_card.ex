@@ -25,6 +25,9 @@ defmodule ExsemanticaWeb.Components.PostCard do
         <p>
           <%= assigns.entry.contents |> String.split(["\r", "\n"]) |> List.first() |> make_synopsis %>
         </p>
+        <%= for tag <- assigns.entry.tags do %>
+          <span class="text-sm rounded-full bg-slate-300 px-2">#<%= tag %></span>
+        <% end %>
         <%= case assigns.where do %>
           <% :aggregate -> %>
             <p>

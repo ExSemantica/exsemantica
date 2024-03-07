@@ -6,8 +6,6 @@ defmodule Exsemantica.Repo.Migrations.CreateCommentVotes do
       add :is_downvote, :boolean, default: false, null: false
       add :comment_id, :id
       add :user_id, :id
-
-      timestamps(type: :utc_datetime)
     end
 
     create index(:comment_votes, [:comment_id])

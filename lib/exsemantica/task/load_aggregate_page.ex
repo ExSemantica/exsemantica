@@ -2,7 +2,7 @@ defmodule Exsemantica.Task.LoadAggregatePage do
   @moduledoc """
   A task that loads an aggregate page's data
   """
-  @fetches ~w(posts)a
+  @fetches ~w(posts tags moderators)a
   @max_posts_per_page 10
   @behaviour Exsemantica.Task
   import Ecto.Query
@@ -31,7 +31,7 @@ defmodule Exsemantica.Task.LoadAggregatePage do
     end
   end
 
-  defp fetch(:posts, id, %{load_by: :newest, page: page, options: %{preloads: preloads}}) do
+  defp fetch(:posts, id, %{load_by: :newest, page: page, options: options}) do
     all_count =
       Exsemantica.Repo.aggregate(
         from(p in Exsemantica.Repo.Post, where: p.aggregate_id == ^id),
@@ -40,6 +40,7 @@ defmodule Exsemantica.Task.LoadAggregatePage do
 
     pages_total = div(all_count, @max_posts_per_page)
     offset = page * @max_posts_per_page
+    preloads = Map.get(options, :preloads, [])
 
     posts =
       if pages_total >= page do
@@ -60,26 +61,33 @@ defmodule Exsemantica.Task.LoadAggregatePage do
       end
 
     {:posts,
-     Map.merge(
-       %{
-         contents: posts,
-         pages_total: pages_total,
-         pages_began?: page < 1,
-         pages_ended?: page > pages_total - 1
-       },
-       if :votes in preloads do
-         %{
-           votes:
-             posts
-             |> Enum.map(fn post ->
-              {:ok, vote_count} = Exsemantica.Cache.fetch_vote({:post, post.id})
-               {post.id, vote_count}
-             end)
-             |> Map.new()
-         }
-       else
-         %{}
-       end
-     )}
+     %{
+       contents: posts,
+       pages_total: pages_total,
+       pages_began?: page < 1,
+       pages_ended?: page > pages_total - 1,
+       votes:
+         posts
+         |> Enum.map(fn post ->
+           {:ok, vote_count} = Exsemantica.Cache.fetch_vote({:post, post.id})
+           {post.id, vote_count}
+         end)
+         |> Map.new()
+     }}
+  end
+
+  defp fetch(:tags, id, _args) do
+    {:tags,
+       Exsemantica.Repo.all(
+         from p in Exsemantica.Repo.Aggregate, where: p.id == ^id, select: p.tags
+       )}
+  end
+
+  defp fetch(:moderators, id, _args) do
+    preloaded =
+      Exsemantica.Repo.get(Exsemantica.Repo.Aggregate, id)
+      |> Exsemantica.Repo.preload(:moderators)
+
+    {:moderators, preloaded.moderators}
   end
 end

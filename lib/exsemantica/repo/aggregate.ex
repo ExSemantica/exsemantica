@@ -9,6 +9,7 @@ defmodule Exsemantica.Repo.Aggregate do
     field :hidden, :boolean, default: false
     field :name, :string
     field :description, :string
+    field :tags, {:array, :string}
 
     has_many :posts, Exsemantica.Repo.Post
     many_to_many :subscriptions, Exsemantica.Repo.Aggregate, join_through: "subscriptions_users"

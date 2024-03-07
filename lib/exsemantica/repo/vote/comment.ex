@@ -10,8 +10,6 @@ defmodule Exsemantica.Repo.Vote.Comment do
 
     belongs_to :comment, Exsemantica.Repo.Comment, foreign_key: :comment_id
     belongs_to :user, Exsemantica.Repo.User, foreign_key: :user_id
-
-    timestamps(type: :utc_datetime)
   end
 
   @doc false

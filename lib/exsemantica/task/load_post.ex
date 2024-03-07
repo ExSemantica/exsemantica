@@ -2,7 +2,7 @@ defmodule Exsemantica.Task.LoadPost do
   @moduledoc """
   A task that loads an aggregate page's data
   """
-  @fetches ~w(comments vote_sum vote_deep)a
+  @fetches ~w(comments vote_sum vote_deep tags)a
   @behaviour Exsemantica.Task
   import Ecto.Query
 
@@ -59,5 +59,10 @@ defmodule Exsemantica.Task.LoadPost do
       )
 
     {:vote_deep, contents: preload.votes}
+  end
+
+  defp fetch(:tags, id, _args) do
+    {:tags, contents:
+     Exsemantica.Repo.all(from p in Exsemantica.Repo.Post, where: p.id == ^id, select: p.tags)}
   end
 end

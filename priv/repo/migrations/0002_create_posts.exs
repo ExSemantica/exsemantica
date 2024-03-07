@@ -11,6 +11,7 @@ defmodule Exsemantica.Repo.Migrations.CreatePosts do
       add :aggregate_id, :id
       add :votes, {:array, :id}
       add :comments, {:array, :id}
+      add :tags, {:array, :string}
 
       timestamps(type: :utc_datetime)
     end

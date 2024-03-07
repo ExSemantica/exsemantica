@@ -6,8 +6,6 @@ defmodule Exsemantica.Repo.Migrations.CreatePostVotes do
       add :is_downvote, :boolean, default: false, null: false
       add :post_id, :id
       add :user_id, :id
-
-      timestamps(type: :utc_datetime)
     end
 
     create index(:post_votes, [:user_id])

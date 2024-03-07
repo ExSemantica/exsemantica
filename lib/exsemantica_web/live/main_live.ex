@@ -83,7 +83,7 @@ defmodule ExsemanticaWeb.MainLive do
            load_by: :newest,
            page: 0,
            fetch?: ~w(posts)a,
-           options: %{preloads: ~w(votes)a}
+           options: %{}
          }),
        page_title: "Viewing /u/#{name}"
      )}
@@ -118,8 +118,8 @@ defmodule ExsemanticaWeb.MainLive do
            id: id,
            load_by: :newest,
            page: 0,
-           fetch?: ~w(posts)a,
-           options: %{preloads: ~w(votes)a}
+           fetch?: ~w(posts tags moderators)a,
+           options: %{}
          }),
        page_title: "Viewing /s/#{name}"
      )}
@@ -150,8 +150,7 @@ defmodule ExsemanticaWeb.MainLive do
        Exsemantica.Task.LoadPost.run(%{
          id: socket.assigns.post,
          aggregate_id: id,
-         fetch?: ~w(contents)a,
-         options: %{preloads: ~w(votes)a}
+         fetch?: ~w(comments vote_sum tags)a
        })
      end)}
   end

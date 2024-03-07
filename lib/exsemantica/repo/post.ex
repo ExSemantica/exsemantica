@@ -10,6 +10,7 @@ defmodule Exsemantica.Repo.Post do
     field :type, Ecto.Enum, values: [:self, :link]
     field :title, :string
     field :contents, :string
+    field :tags, {:array, :string}
 
     belongs_to :user, Exsemantica.Repo.User
     belongs_to :aggregate, Exsemantica.Repo.Aggregate

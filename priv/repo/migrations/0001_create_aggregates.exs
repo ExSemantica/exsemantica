@@ -7,6 +7,7 @@ defmodule Exsemantica.Repo.Migrations.CreateAggregates do
       add :name, :string
       add :description, :text
       add :posts, {:array, :id}
+      add :tags, {:array, :string}
 
       timestamps(type: :utc_datetime)
     end
