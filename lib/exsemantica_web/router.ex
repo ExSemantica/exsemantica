@@ -9,6 +9,7 @@ defmodule ExsemanticaWeb.Router do
     plug :fetch_session
     plug Guardian.Plug.VerifySession, claims: %{"typ" => "access"}, key: :token
     plug Guardian.Plug.LoadResource, allow_blank: true
+    plug ExsemanticaWeb.Auth.Check
     plug :fetch_live_flash
     plug :put_root_layout, html: {ExsemanticaWeb.Layouts, :root}
     plug :protect_from_forgery
@@ -23,10 +24,11 @@ defmodule ExsemanticaWeb.Router do
     pipe_through :browser
 
     live_session :main do
-      live "/", MainLive, :redirect_to_all
-      live "/s/:aggregate", MainLive, :aggregate
-      live "/s/:aggregate/post/:post", MainLive, :post
-      live "/u/:username", MainLive, :user
+      live "/", FrontPageLive, :redirect
+      live "/s/all", FrontPageLive
+      live "/s/:aggregate", AggregateLive
+      live "/s/:aggregate/post/:post", PostLive
+      live "/u/:username", UserLive
     end
   end
 

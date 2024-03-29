@@ -26,6 +26,7 @@ $ mix ecto.reset
 ```
 
 Start the Phoenix application. You should be able to connect to `http://localhost:4000`.
+
 ```shell
 $ iex -S mix phx.server
 ```

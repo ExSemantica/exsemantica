@@ -14,7 +14,9 @@
 
     <h2 class="text-lg font-bold">Moderators</h2>
     <%= for moderator <- @data.info.moderators do %>
-      <span class="text-sm rounded-full bg-green-300 px-2"><.link navigate={~p"/u/#{moderator.username}"}>/u/<%= moderator.username %></.link></span>
+      <span class="text-sm rounded-full bg-green-300 px-2">
+        <.link navigate={~p"/u/#{moderator.username}"}>/u/<%= moderator.username %></.link>
+      </span>
     <% end %>
     <h2 class="text-lg font-bold">Tags</h2>
     <%= for tag <- @data.aggregate.tags do %>

@@ -23,7 +23,7 @@ defmodule ExsemanticaWeb.Components.PostCard do
         </div>
         <h2 class="text-xl font-bold"><%= assigns.entry.title %></h2>
         <p>
-          <%= assigns.entry.contents |> String.split(["\r", "\n"]) |> List.first() |> make_synopsis %>
+          <%= assigns.entry.contents |> String.split(["\r", "\n"]) |> List.first("") |> make_synopsis %>
         </p>
         <%= for tag <- assigns.entry.tags do %>
           <span class="text-sm rounded-full bg-slate-300 px-2">#<%= tag %></span>
@@ -81,10 +81,7 @@ defmodule ExsemanticaWeb.Components.PostCard do
         vote_type: :upvote
       })
 
-    ExsemanticaWeb.Endpoint.broadcast("post", "recounted_votes", %{
-      id: socket.assigns.entry.id,
-      vote_count: vote_count
-    })
+    socket |> recount_broadcast(vote_count)
 
     {:noreply, socket}
   end
@@ -98,10 +95,7 @@ defmodule ExsemanticaWeb.Components.PostCard do
         vote_type: :downvote
       })
 
-    ExsemanticaWeb.Endpoint.broadcast("post", "recounted_votes", %{
-      id: socket.assigns.entry.id,
-      vote_count: vote_count
-    })
+    socket |> recount_broadcast(vote_count)
 
     {:noreply, socket}
   end
@@ -112,5 +106,25 @@ defmodule ExsemanticaWeb.Components.PostCard do
     else
       str
     end
+  end
+
+  defp recount_broadcast(socket, vote_count) do
+    ExsemanticaWeb.Endpoint.broadcast(
+      "aggregate:#{socket.assigns.entry.aggregate.id}",
+      "recounted_votes",
+      %{
+        id: socket.assigns.entry.id,
+        vote_count: vote_count
+      }
+    )
+
+    ExsemanticaWeb.Endpoint.broadcast(
+      "user:#{socket.assigns.entry.user.id}",
+      "recounted_votes",
+      %{
+        id: socket.assigns.entry.id,
+        vote_count: vote_count
+      }
+    )
   end
 end
