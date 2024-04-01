@@ -8,7 +8,7 @@ defmodule ExsemanticaWeb.FrontPageLive do
   # Mount
   # ===========================================================================
   def mount(_params, _session, socket) when socket.assigns.live_action == :redirect do
-    {:ok, socket |> push_patch(to: ~p"/s/all")}
+    {:ok, socket |> push_navigate(to: ~p"/s/all")}
   end
 
   def mount(_params, session, socket) do
