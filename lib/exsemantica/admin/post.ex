@@ -48,4 +48,10 @@ defmodule Exsemantica.Admin.Post do
     |> Ecto.Changeset.change(%{contents: contents})
     |> Exsemantica.Repo.update()
   end
+
+  def set_tags(id, tags) do
+    Exsemantica.Repo.get(Exsemantica.Repo.Post, id)
+    |> Ecto.Changeset.change(%{tags: tags})
+    |> Exsemantica.Repo.update()
+  end
 end

@@ -64,7 +64,7 @@ window.onLogin = () => {
                 acknowledgement.className = 'text-red-500 font-bold'
             } else {
                 setTimeout(() => {
-                    window.location.replace('/s/all')
+                    window.location.reload()
                 }, 1000)
             }
         })

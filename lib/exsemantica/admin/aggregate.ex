@@ -45,4 +45,10 @@ defmodule Exsemantica.Admin.Aggregate do
     |> Ecto.Changeset.change(%{description: description})
     |> Exsemantica.Repo.update()
   end
+
+  def set_tags(id, tags) do
+    Exsemantica.Repo.get(Exsemantica.Repo.Aggregate, id)
+    |> Ecto.Changeset.change(%{tags: tags})
+    |> Exsemantica.Repo.update()
+  end
 end
