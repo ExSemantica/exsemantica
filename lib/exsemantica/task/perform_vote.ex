@@ -46,11 +46,7 @@ defmodule Exsemantica.Task.PerformVote do
             vote
             |> Exsemantica.Repo.delete()
 
-            if vote.is_downvote do
-              Exsemantica.Cache.adjust_vote({:post, id}, 1)
-            else
-              Exsemantica.Cache.adjust_vote({:post, id}, -1)
-            end
+            revert_vote_in_cache({:post, id}, vote.is_downvote)
         end
     end
   end
@@ -96,12 +92,15 @@ defmodule Exsemantica.Task.PerformVote do
             vote
             |> Exsemantica.Repo.delete()
 
-            if vote.is_downvote do
-              Exsemantica.Cache.adjust_vote({:comment, id}, 1)
-            else
-              Exsemantica.Cache.adjust_vote({:comment, id}, -1)
-            end
+            revert_vote_in_cache({:comment, id}, vote.is_downvote)
         end
     end
+  end
+
+  defp revert_vote_in_cache(otype_id, false) do
+    Exsemantica.Cache.adjust_vote(otype_id, -1)
+  end
+  defp revert_vote_in_cache(otype_id, true) do
+    Exsemantica.Cache.adjust_vote(otype_id, 1)
   end
 end

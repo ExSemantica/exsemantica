@@ -1,4 +1,8 @@
 defmodule ExsemanticaWeb.Auth.Check do
+  @moduledoc """
+  A middleman Plug that checks authentication, optionally adds user information.
+  """
+
   use Plug.Builder
 
   def call(conn, _opts) do
