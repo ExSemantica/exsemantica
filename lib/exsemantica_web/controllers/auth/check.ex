@@ -15,9 +15,6 @@ defmodule ExsemanticaWeb.Auth.Check do
         |> put_session("user_id", myuser.id)
         |> put_session("user_auth", :ok)
 
-      # TODO: I want to make an "expired session" message appear then clear.
-      # I'm not quite sure how to clear it in LiveView cleanly.
-      # Let's not implement this just yet
       {:error, error} ->
         conn
         |> put_session("user_handle", nil)
