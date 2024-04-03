@@ -22,5 +22,13 @@
     <%= for tag <- @data.aggregate.tags do %>
       <span class="text-sm rounded-full bg-slate-300 px-2">#<%= tag %></span>
     <% end %>
+
+    <%= if is_integer(@user_id) do %>
+      <div class="flex">
+        <.link navigate={~p"/s/#{@data.aggregate.name}/create"} class="text-sm rounded-lg bg-slate-100 p-3 m-2 w-full shadow-xl">
+          Create post
+        </.link>
+      </div>
+    <% end %>
   </aside>
 </div>

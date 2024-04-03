@@ -34,7 +34,8 @@ defmodule ExsemanticaWeb.FrontPageLive do
      socket
      |> assign(
        loading: false,
-       delay: (DateTime.utc_now() |> DateTime.to_unix(:millisecond)) - socket.assigns.t0
+       delay: (DateTime.utc_now() |> DateTime.to_unix(:millisecond)) - socket.assigns.t0,
+       page_title: "Main Page"
      )}
   end
 

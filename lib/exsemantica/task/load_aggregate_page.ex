@@ -31,7 +31,7 @@ defmodule Exsemantica.Task.LoadAggregatePage do
     end
   end
 
-  defp fetch(:posts, id, %{load_by: :newest, page: page, options: options}) do
+  defp fetch(:posts, id, %{options: %{load_by: :newest, page: page} = options}) do
     all_count =
       Exsemantica.Repo.aggregate(
         from(p in Exsemantica.Repo.Post, where: p.aggregate_id == ^id),
@@ -78,9 +78,9 @@ defmodule Exsemantica.Task.LoadAggregatePage do
 
   defp fetch(:tags, id, _args) do
     {:tags,
-       Exsemantica.Repo.all(
-         from p in Exsemantica.Repo.Aggregate, where: p.id == ^id, select: p.tags
-       )}
+     Exsemantica.Repo.all(
+       from p in Exsemantica.Repo.Aggregate, where: p.id == ^id, select: p.tags
+     )}
   end
 
   defp fetch(:moderators, id, _args) do

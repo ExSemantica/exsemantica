@@ -52,10 +52,11 @@ defmodule ExsemanticaWeb.AggregateLive do
        data:
          Exsemantica.Task.LoadAggregatePage.run(%{
            id: id,
-           load_by: :newest,
-           page: 0,
            fetch?: ~w(posts tags moderators)a,
-           options: %{}
+           options: %{
+             load_by: :newest,
+             page: 0
+           }
          }),
        page_title: "Viewing /s/#{name}"
      )}
@@ -65,7 +66,7 @@ defmodule ExsemanticaWeb.AggregateLive do
   def handle_async(:load, {:ok, :not_found}, socket) do
     {:noreply,
      socket
-     |> redirect(to: ~p"/s/all")
+     |> push_navigate(to: ~p"/s/all")
      |> put_flash(:error, gettext("That aggregate does not exist"))}
   end
 
@@ -79,10 +80,8 @@ defmodule ExsemanticaWeb.AggregateLive do
     data =
       Exsemantica.Task.LoadAggregatePage.run(%{
         id: socket.assigns.id,
-        load_by: :newest,
-        page: socket.assigns.page + 1,
         fetch?: ~w(posts)a,
-        options: %{preloads: ~w(votes)a}
+        options: %{preloads: ~w(votes)a, load_by: :newest, page: socket.assigns.page + 1}
       })
 
     old_info = socket.assigns.data.info

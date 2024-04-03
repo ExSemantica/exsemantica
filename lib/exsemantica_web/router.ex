@@ -18,6 +18,8 @@ defmodule ExsemanticaWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug Guardian.Plug.VerifyHeader, claims: %{"typ" => "access"}, key: :token
+    plug Guardian.Plug.LoadResource, allow_blank: true
   end
 
   scope "/", ExsemanticaWeb do
@@ -27,6 +29,7 @@ defmodule ExsemanticaWeb.Router do
       live "/", FrontPageLive, :redirect
       live "/s/all", FrontPageLive
       live "/s/:aggregate", AggregateLive
+      live "/s/:aggregate/create", PostCreateLive
       live "/s/:aggregate/post/:post", PostLive
       live "/u/:username", UserLive
     end

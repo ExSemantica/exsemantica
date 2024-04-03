@@ -52,10 +52,11 @@ defmodule ExsemanticaWeb.UserLive do
        data:
          Exsemantica.Task.LoadUserPage.run(%{
            id: id,
-           load_by: :newest,
-           page: 0,
            fetch?: ~w(posts)a,
-           options: %{}
+           options: %{
+             load_by: :newest,
+             page: 0
+           }
          }),
        page_title: "Viewing /u/#{name}"
      )}
@@ -65,7 +66,7 @@ defmodule ExsemanticaWeb.UserLive do
   def handle_async(:load, {:ok, :not_found}, socket) do
     {:noreply,
      socket
-     |> redirect(to: ~p"/s/all")
+     |> push_navigate(to: ~p"/s/all")
      |> put_flash(:error, gettext("That user does not exist"))}
   end
 
@@ -79,10 +80,8 @@ defmodule ExsemanticaWeb.UserLive do
     data =
       Exsemantica.Task.LoadUserPage.run(%{
         id: socket.assigns.id,
-        load_by: :newest,
-        page: socket.assigns.page + 1,
         fetch?: ~w(posts)a,
-        options: %{preloads: ~w(votes)a}
+        options: %{preloads: ~w(votes)a, load_by: :newest, page: socket.assigns.page + 1}
       })
 
     old_info = socket.assigns.data.info
@@ -148,7 +147,7 @@ defmodule ExsemanticaWeb.UserLive do
     else
       ~H"""
       <.live_header myuser={assigns.user_handle} />
-      <div id="user" phx-viewport-bottom={!assigns.data.info.posts.pages_ended? && "load-more-user"}>
+      <div id="user" phx-viewport-bottom={!assigns.data.info.posts.pages_ended? && "load-more"}>
         <.live_body_user user_id={assigns.user_id} data={assigns.data} />
       </div>
       <.live_footer time={assigns.delay} />

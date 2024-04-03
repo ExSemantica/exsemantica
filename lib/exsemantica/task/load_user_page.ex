@@ -31,7 +31,7 @@ defmodule Exsemantica.Task.LoadUserPage do
     end
   end
 
-  defp fetch(:posts, id, %{load_by: :newest, page: page, options: options}) do
+  defp fetch(:posts, id, %{options: %{load_by: :newest, page: page} = options}) do
     all_count =
       Exsemantica.Repo.aggregate(
         from(p in Exsemantica.Repo.Post, where: p.user_id == ^id),
