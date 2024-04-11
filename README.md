@@ -1,6 +1,6 @@
 # exsemantica
 
-Open-source link aggregator.
+The backend of ExSemantica, an open-source link aggregator.
 
 ## Guidance
 
@@ -25,10 +25,10 @@ The PostgreSQL database should be initialized in first use.
 $ mix ecto.reset
 ```
 
-Start the Phoenix application. You should be able to connect to `http://localhost:4000`.
+Start the backend API and other services.
 
 ```shell
-$ iex -S mix phx.server
+$ iex -S mix
 ```
 
 ### Deploying

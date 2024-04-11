@@ -4,8 +4,8 @@ defmodule Exsemantica.MixProject do
   def project do
     [
       app: :exsemantica,
-      version: "0.9.0",
-      elixir: "~> 1.14",
+      version: "0.10.0",
+      elixir: "~> 1.16",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -13,96 +13,65 @@ defmodule Exsemantica.MixProject do
     ]
   end
 
-  # Configuration for the OTP application.
-  #
-  # Type `mix help compile.app` for more information.
+  # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {Exsemantica.Application, []},
-      extra_applications: [:logger, :runtime_tools, :os_mon, :mnesia]
+      extra_applications: [:logger, :mnesia],
+      mod: {Exsemantica.Application, []}
     ]
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(:test), do: ["lib"]
   defp elixirc_paths(_), do: ["lib"]
 
-  # Specifies your project dependencies.
-  #
-  # Type `mix help deps` for examples and options.
+  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # =======================================================================
-      # STOCK DEPENDENCIES
-      # =======================================================================
-      {:phoenix, "~> 1.7.11"},
-      {:phoenix_ecto, "~> 4.4"},
-      {:ecto_sql, "~> 3.10"},
-      {:postgrex, ">= 0.0.0"},
-      {:phoenix_html, "~> 4.0"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.20.2"},
-      {:floki, ">= 0.30.0", only: :test},
-      {:phoenix_live_dashboard, "~> 0.8.3"},
-      {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
-      {:heroicons,
-       github: "tailwindlabs/heroicons",
-       tag: "v2.1.1",
-       sparse: "optimized",
-       app: false,
-       compile: false,
-       depth: 1},
-      {:swoosh, "~> 1.5"},
-      {:finch, "~> 0.13"},
-      {:telemetry_metrics, "~> 0.6"},
-      {:telemetry_poller, "~> 1.0"},
-      {:gettext, "~> 0.20"},
-      {:jason, "~> 1.2"},
-      {:dns_cluster, "~> 0.1.1"},
-      {:bandit, "~> 1.2"},
-      # =======================================================================
-      # EXTERNAL DEPENDENCIES
-      # =======================================================================
-      # RATIONALE: Miscellaneous tracing
-      {:ecto_psql_extras, "~> 0.7"},
+      # {:dep_from_hexpm, "~> 0.3.0"},
+      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
 
-      # RATIONALE: Documentation for external developers
-      {:ex_doc, "~> 0.31", only: :dev, runtime: false},
-
-      # RATIONALE: Code cleanliness
+      # Keep code clean and organized.
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
 
-      # RATIONALE: Authenticate users
+      # Create documentation for ExSemantica
+      {:ex_doc, "~> 0.32", only: :dev, runtime: false},
+
+      # Helps auto-constrain information to ASCII
+      {:unidecode, "~> 1.0"},
+
+      # Authentication
       {:guardian, "~> 2.3"},
 
-      # RATIONALE: Password hashing
+      # Password hashing
       {:argon2_elixir, "~> 4.0"},
 
-      # RATIONALE: Username/aggregate automatic transliteration
-      {:unidecode, "~> 1.0"}
+      # Web service
+      {:bandit, "~> 1.4"},
+
+      # Database adapter framework
+      {:ecto, "~> 3.11"},
+
+      # Database SQL store
+      {:ecto_sql, "~> 3.11"},
+
+      # Database adapter to connect to PostgreSQL
+      {:postgrex, "~> 0.17"},
+
+      # JSON library
+      {:jason, "~> 1.4"},
+
+      # Localize API messages
+      {:gettext, "~> 0.24.0"}
     ]
   end
 
-  # Aliases are shortcuts or tasks specific to the current project.
-  # For example, to install project dependencies and perform other setup tasks, run:
-  #
-  #     $ mix setup
-  #
-  # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
+      setup: ["deps.get", "ecto.setup"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["tailwind exsemantica", "esbuild exsemantica"],
-      "assets.deploy": [
-        "tailwind exsemantica --minify",
-        "esbuild exsemantica --minify",
-        "phx.digest"
-      ]
     ]
   end
 end
