@@ -12,3 +12,6 @@ config :exsemantica, Exsemantica.Repo,
   database: "exsemantica_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2
+
+# English locale by default
+config :gettext, default_locale: "en"

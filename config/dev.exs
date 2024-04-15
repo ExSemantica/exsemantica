@@ -24,3 +24,6 @@ config :exsemantica, Exsemantica.ApplicationInfo,
 
 # 5 minutes per user token
 config :exsemantica, Exsemantica.Authentication, minutes_grace: 5
+
+# English locale by default
+config :gettext, default_locale: "en"
