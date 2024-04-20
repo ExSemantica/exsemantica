@@ -24,7 +24,7 @@ defmodule Exsemantica.ApplicationInfo do
         end
 
     # Put it in a persistent_term
-    :persistent_term.put(Exsemantica.ApplicationInfo.Version, version)
+    :persistent_term.put(__MODULE__.Version, version)
   end
 
   @doc """
