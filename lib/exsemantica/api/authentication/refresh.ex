@@ -1,13 +1,31 @@
 defmodule Exsemantica.API.Authentication.Refresh do
   import Exsemantica.Gettext
 
+  @errors_json %{
+    token_expired:
+      Jason.encode!(%{
+        e: "TOKEN_EXPIRED",
+        message: gettext("Your session has expired, please log in again.")
+      }),
+    malformed_token:
+      Jason.encode!(%{
+        e: "MALFORMED_TOKEN",
+        message: gettext("Malformed authorization token.")
+      }),
+    malformed_authorization:
+      Jason.encode!(%{
+        e: "MALFORMED_AUTHORIZATION",
+        message: gettext("Malformed authorization request, or not logged in.")
+      })
+  }
+
   use Plug.Builder
 
   def init(opts) do
     opts
   end
 
-  def call(conn, opts) do
+  def call(conn, _opts) do
     bearer =
       conn |> get_req_header("authorization") |> Exsemantica.Authentication.extract_bearer()
 
@@ -37,10 +55,7 @@ defmodule Exsemantica.API.Authentication.Refresh do
             |> put_resp_content_type("application/json")
             |> send_resp(
               401,
-              Jason.encode!(%{
-                e: "TOKEN_EXPIRED",
-                message: gettext("Your session has expired, please log in again.")
-              })
+              @errors_json.token_expired
             )
 
           {:error, _} ->
@@ -48,10 +63,7 @@ defmodule Exsemantica.API.Authentication.Refresh do
             |> put_resp_content_type("application/json")
             |> send_resp(
               400,
-              Jason.encode!(%{
-                e: "MALFORMED_AUTHORIZATION_TOKEN",
-                message: gettext("Malformed authorization token.")
-              })
+              @errors_json.malformed_token
             )
         end
 
@@ -60,10 +72,7 @@ defmodule Exsemantica.API.Authentication.Refresh do
         |> put_resp_content_type("application/json")
         |> send_resp(
           401,
-          Jason.encode!(%{
-            e: "MALFORMED_AUTHORIZATION",
-            message: gettext("Malformed request, or not logged in.")
-          })
+          @errors_json.malformed_authorization
         )
     end
   end

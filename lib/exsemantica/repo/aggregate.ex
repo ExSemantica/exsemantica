@@ -6,14 +6,14 @@ defmodule Exsemantica.Repo.Aggregate do
   import Ecto.Changeset
 
   schema "aggregates" do
-    field :hidden, :boolean, default: false
-    field :name, :string
-    field :description, :string
-    field :tags, {:array, :string}
+    field(:hidden, :boolean, default: false)
+    field(:name, :string)
+    field(:description, :string)
+    field(:tags, {:array, :string})
 
-    has_many :posts, Exsemantica.Repo.Post
-    many_to_many :subscriptions, Exsemantica.Repo.Aggregate, join_through: "subscriptions_users"
-    many_to_many :moderators, Exsemantica.Repo.User, join_through: "moderators_aggregates"
+    has_many(:posts, Exsemantica.Repo.Post)
+    many_to_many(:subscriptions, Exsemantica.Repo.Aggregate, join_through: "subscriptions_users")
+    many_to_many(:moderators, Exsemantica.Repo.User, join_through: "moderators_aggregates")
 
     timestamps(type: :utc_datetime)
   end

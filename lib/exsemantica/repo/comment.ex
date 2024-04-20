@@ -6,16 +6,16 @@ defmodule Exsemantica.Repo.Comment do
   import Ecto.Changeset
 
   schema "comments" do
-    field :hidden, :boolean, default: false
-    field :contents, :string
+    field(:hidden, :boolean, default: false)
+    field(:contents, :string)
 
-    belongs_to :user, Exsemantica.Repo.User, foreign_key: :user_id
-    belongs_to :post, Exsemantica.Repo.Post, foreign_key: :post_id
+    belongs_to(:user, Exsemantica.Repo.User, foreign_key: :user_id)
+    belongs_to(:post, Exsemantica.Repo.Post, foreign_key: :post_id)
 
-    belongs_to :parent, Exsemantica.Repo.Comment, foreign_key: :parent_id
-    has_many :replies, Exsemantica.Repo.Comment, foreign_key: :parent_id
+    belongs_to(:parent, Exsemantica.Repo.Comment, foreign_key: :parent_id)
+    has_many(:replies, Exsemantica.Repo.Comment, foreign_key: :parent_id)
 
-    has_many :votes, Exsemantica.Repo.Vote.Comment, foreign_key: :comment_id
+    has_many(:votes, Exsemantica.Repo.Vote.Comment, foreign_key: :comment_id)
 
     timestamps(type: :utc_datetime)
   end

@@ -37,10 +37,14 @@ defmodule Exsemantica.API do
   plug(:match)
   plug(:dispatch)
 
-  get("/.well-known/exsemantica/application", do: conn |> __MODULE__.WellKnown.Application.call([]))
+  get("/.well-known/exsemantica/application",
+    do: conn |> __MODULE__.WellKnown.Application.call([])
+  )
+
   post("/authentication/log_in", do: conn |> __MODULE__.Authentication.LogIn.call([]))
   post("/authentication/refresh", do: conn |> __MODULE__.Authentication.Refresh.call([]))
   post("/authentication/register", do: conn |> __MODULE__.Authentication.Register.call([]))
+
   match _ do
     conn
     |> put_resp_content_type("application/json")

@@ -6,17 +6,17 @@ defmodule Exsemantica.Repo.Post do
   import Ecto.Changeset
 
   schema "posts" do
-    field :hidden, :boolean, default: false
-    field :type, Ecto.Enum, values: [:self, :link]
-    field :title, :string
-    field :contents, :string
-    field :tags, {:array, :string}
+    field(:hidden, :boolean, default: false)
+    field(:type, Ecto.Enum, values: [:self, :link])
+    field(:title, :string)
+    field(:contents, :string)
+    field(:tags, {:array, :string})
 
-    belongs_to :user, Exsemantica.Repo.User
-    belongs_to :aggregate, Exsemantica.Repo.Aggregate
+    belongs_to(:user, Exsemantica.Repo.User)
+    belongs_to(:aggregate, Exsemantica.Repo.Aggregate)
 
-    has_many :votes, Exsemantica.Repo.Vote.Post, foreign_key: :post_id
-    has_many :comments, Exsemantica.Repo.Comment, foreign_key: :post_id
+    has_many(:votes, Exsemantica.Repo.Vote.Post, foreign_key: :post_id)
+    has_many(:comments, Exsemantica.Repo.Comment, foreign_key: :post_id)
 
     timestamps(type: :utc_datetime)
   end

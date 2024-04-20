@@ -28,9 +28,10 @@ defmodule Exsemantica.Administration.Aggregate do
 
   def remove_moderators(id, user_ids) do
     Exsemantica.Repo.delete_all(
-      from m in "moderators_aggregates",
+      from(m in "moderators_aggregates",
         where: m.user_id in ^user_ids and m.aggregate_id == ^id,
         select: %{aggregate_id: m.aggregate_id, user_id: m.user_id}
+      )
     )
   end
 

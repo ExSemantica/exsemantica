@@ -6,10 +6,10 @@ defmodule Exsemantica.Repo.Vote.Comment do
   import Ecto.Changeset
 
   schema "comment_votes" do
-    field :is_downvote, :boolean, default: false
+    field(:is_downvote, :boolean, default: false)
 
-    belongs_to :comment, Exsemantica.Repo.Comment, foreign_key: :comment_id
-    belongs_to :user, Exsemantica.Repo.User, foreign_key: :user_id
+    belongs_to(:comment, Exsemantica.Repo.Comment, foreign_key: :comment_id)
+    belongs_to(:user, Exsemantica.Repo.User, foreign_key: :user_id)
   end
 
   @doc false

@@ -1,13 +1,21 @@
 defmodule Exsemantica.API.Authentication.Register do
   import Exsemantica.Gettext
 
+  @errors_json %{
+    invite_invalid:
+      Jason.encode!(%{
+        e: "INVITE_INVALID",
+        message: gettext("Invite is invalid or not authorized.")
+      })
+  }
+
   use Plug.Builder
 
   def init(opts) do
     opts
   end
 
-  def call(conn, opts) do
+  def call(conn, _opts) do
     username = conn.body_params["username"]
     password = conn.body_params["password"]
     invite = conn.body_params["invite"]
@@ -29,10 +37,7 @@ defmodule Exsemantica.API.Authentication.Register do
         |> put_resp_content_type("application/json")
         |> send_resp(
           401,
-          Jason.encode!(%{
-            e: "INVITE_INVALID",
-            message: gettext("Invite is invalid or not authorized.")
-          })
+          @errors_json.invite_invalid
         )
     end
   end

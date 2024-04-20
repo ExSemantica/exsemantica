@@ -1,13 +1,26 @@
 defmodule Exsemantica.API.Authentication.LogIn do
   import Exsemantica.Gettext
 
+  @errors_json %{
+    user_not_found:
+      Jason.encode!(%{
+        e: "USER_NOT_FOUND",
+        message: gettext("That user does not exist.")
+      }),
+    secret_incorrect:
+      Jason.encode!(%{
+        e: "SECRET_INCORRECT",
+        message: gettext("Incorrect username, password, or other secret.")
+      })
+  }
+
   use Plug.Builder
 
   def init(opts) do
     opts
   end
 
-  def call(conn, opts) do
+  def call(conn, _opts) do
     username = conn.body_params["username"]
     password = conn.body_params["password"]
 
@@ -35,10 +48,7 @@ defmodule Exsemantica.API.Authentication.LogIn do
         |> put_resp_content_type("application/json")
         |> send_resp(
           404,
-          Jason.encode!(%{
-            e: "USER_NOT_FOUND",
-            message: gettext("That user does not exist.")
-          })
+          @errors_json.user_not_found
         )
 
       {:error, :unauthorized} ->
@@ -46,10 +56,7 @@ defmodule Exsemantica.API.Authentication.LogIn do
         |> put_resp_content_type("application/json")
         |> send_resp(
           401,
-          Jason.encode!(%{
-            e: "SECRET_INCORRECT",
-            message: gettext("Incorrect username, password, or other secret.")
-          })
+          @errors_json.secret_incorrect
         )
     end
   end

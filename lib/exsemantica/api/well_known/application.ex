@@ -10,7 +10,7 @@ defmodule Exsemantica.API.WellKnown.Application do
     opts
   end
 
-  def call(conn, opts) do
+  def call(conn, _opts) do
     conn
     |> put_resp_content_type("application/json")
     |> send_resp(

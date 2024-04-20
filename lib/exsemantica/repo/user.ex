@@ -6,20 +6,20 @@ defmodule Exsemantica.Repo.User do
   import Ecto.Changeset
 
   schema "users" do
-    field :hidden, :boolean, default: false
-    field :username, :string
-    field :password, :string, redact: true
-    field :biography, :string
-    field :email, :string
+    field(:hidden, :boolean, default: false)
+    field(:username, :string)
+    field(:password, :string, redact: true)
+    field(:biography, :string)
+    field(:email, :string)
 
-    has_many :posts, Exsemantica.Repo.Post, foreign_key: :user_id
-    has_many :comments, Exsemantica.Repo.Comment, foreign_key: :user_id
+    has_many(:posts, Exsemantica.Repo.Post, foreign_key: :user_id)
+    has_many(:comments, Exsemantica.Repo.Comment, foreign_key: :user_id)
 
-    has_many :comment_votes, Exsemantica.Repo.Vote.Comment, foreign_key: :user_id
-    has_many :post_votes, Exsemantica.Repo.Vote.Post, foreign_key: :user_id
+    has_many(:comment_votes, Exsemantica.Repo.Vote.Comment, foreign_key: :user_id)
+    has_many(:post_votes, Exsemantica.Repo.Vote.Post, foreign_key: :user_id)
 
-    many_to_many :subscriptions, Exsemantica.Repo.Aggregate, join_through: "subscriptions_users"
-    many_to_many :aggregates, Exsemantica.Repo.Aggregate, join_through: "moderators_aggregates"
+    many_to_many(:subscriptions, Exsemantica.Repo.Aggregate, join_through: "subscriptions_users")
+    many_to_many(:aggregates, Exsemantica.Repo.Aggregate, join_through: "moderators_aggregates")
 
     timestamps(type: :utc_datetime)
   end
