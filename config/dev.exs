@@ -4,7 +4,7 @@ import Config
 config :exsemantica, Exsemantica.Repo,
   username: "postgres",
   password: "postgres",
-  hostname: "localhost",
+  hostname: "exsemanica-postgres",
   database: "exsemantica_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
@@ -24,6 +24,3 @@ config :exsemantica, Exsemantica.ApplicationInfo,
 
 # 5 minutes per user token
 config :exsemantica, Exsemantica.Authentication, minutes_grace: 5
-
-# English locale by default
-config :gettext, default_locale: "en"

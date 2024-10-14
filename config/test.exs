@@ -8,10 +8,8 @@ import Config
 config :exsemantica, Exsemantica.Repo,
   username: "postgres",
   password: "postgres",
-  hostname: "localhost",
+  hostname: "exsemantica-postgres",
   database: "exsemantica_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2
 
-# English locale by default
-config :gettext, default_locale: "en"
