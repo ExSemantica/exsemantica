@@ -112,7 +112,7 @@ defmodule Exsemantica.Chat do
     # and then iterate through them
     for message <- messages do
       {:ok, peer} = socket |> ThousandIsland.Socket.peername()
-      Logger.debug(inspect message, peer: peer)
+      Logger.debug(inspect(message, peer: peer))
       process_state(message, socket)
     end
 
@@ -334,7 +334,9 @@ defmodule Exsemantica.Chat do
   # Login
   # ===========================================================================
   defp try_login(socket, socket_state) do
-    case Authentication.check_user(socket_state.handle, socket_state.password) do
+    user = IO.inspect(Authentication.check_user(socket_state.handle, socket_state.password))
+
+    case user do
       {:ok, user_data} ->
         Registry.update_value(
           __MODULE__.Registry,
