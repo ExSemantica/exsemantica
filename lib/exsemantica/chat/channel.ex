@@ -11,7 +11,7 @@ defmodule Exsemantica.Chat.Channel do
   # ===========================================================================
   # Use these calls
   # ===========================================================================
-  def start_link(args: args, name: name) do
+  def start_link(args, name: name) do
     GenServer.start_link(__MODULE__, args, name: name)
   end
 
