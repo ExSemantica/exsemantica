@@ -12,7 +12,7 @@ defmodule Exsemantica.Chat.ChannelSupervisor do
   def start_child(aggregate) do
     DynamicSupervisor.start_child(
       __MODULE__,
-      {Chat.Channel, aggregate: aggregate}
+      {Chat.Channel, aggregate}
     )
   end
 
