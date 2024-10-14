@@ -4,7 +4,7 @@ import Config
 config :exsemantica, Exsemantica.Repo,
   username: "postgres",
   password: "postgres",
-  hostname: "exsemanica-postgres",
+  hostname: "exsemantica-postgres",
   database: "exsemantica_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
