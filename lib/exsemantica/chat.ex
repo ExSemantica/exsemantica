@@ -189,7 +189,7 @@ defmodule Exsemantica.Chat do
 
   # PASS
   defp process_state(%__MODULE__.Message{command: "PASS", params: [pass]}, socket) do
-    [{_socket, socket_state}] = Registry.lookup(Chat.Registry, socket.socket)
+    [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, socket.socket)
 
     if socket_state.state == :authentication do
       Registry.update_value(
