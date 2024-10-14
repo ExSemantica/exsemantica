@@ -299,6 +299,7 @@ defmodule Exsemantica.Chat do
     socket
   end
 
+  # PRIVMSG
   defp process_state(
          %__MODULE__.Message{command: "PRIVMSG", params: channels, trailing: message},
          socket
@@ -328,6 +329,9 @@ defmodule Exsemantica.Chat do
 
     socket
   end
+  
+  # TODO: Add WHO command, might make HexChat happy
+  # TODO: Add IRC chanop commands based on aggregate moderator listings
 
   # Undefined command
   defp process_state(_message, socket) do
