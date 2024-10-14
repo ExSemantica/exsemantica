@@ -182,9 +182,11 @@ defmodule Exsemantica.Chat do
           }
         )
 
-        if not is_nil(socket_state.password) and not is_nil(socket_state.handle) do
-          socket |> try_login(socket_state.handle, socket_state.password)
-        end
+      [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, socket.socket)
+
+      if not is_nil(socket_state.password) and not is_nil(socket_state.handle) do
+        socket |> try_login
+      end
     end
 
     socket
@@ -203,9 +205,11 @@ defmodule Exsemantica.Chat do
           | password: pass
         }
       )
+    
+      [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, socket.socket)
 
       if not is_nil(socket_state.password) and not is_nil(socket_state.handle) do
-        socket |> try_login(socket_state.handle, socket_state.password)
+        socket |> try_login
       end
     end
 
@@ -333,8 +337,10 @@ defmodule Exsemantica.Chat do
   # ===========================================================================
   # Login
   # ===========================================================================
-  defp try_login(socket,handle, password) do
-    user = IO.inspect(Authentication.check_user(handle, password))
+  defp try_login(socket) do
+    [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, socket.socket)
+
+    user = IO.inspect(Authentication.check_user(socket_state.handle, socket_state.password))
 
     case user do
       {:ok, user_data} ->
