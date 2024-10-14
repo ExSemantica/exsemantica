@@ -7,12 +7,16 @@ defmodule Exsemantica.Application do
 
   @impl true
   def start(_type, _args) do
-    Exsemantica.ApplicationInfo.reset()
+    Exsemantica.ApplicationInfo.refresh()
 
     children = [
       # Starts a worker by calling: Exsemantica.Worker.start_link(arg)
       # {Exsemantica.Worker, arg}
       {Bandit, plug: Exsemantica.API},
+      {Registry, keys: :unique, name: Exsemantica.Chat.Registry},
+      {ThousandIsland, port: 6667, handler_module: Exsemantica.Chat},
+      Exsemantica.Chat.ChannelSupervisor,
+      {Registry, keys: :unique, name: Exsemantica.Chat.ChannelRegistry},
       Exsemantica.Repo,
       Exsemantica.Cache
     ]

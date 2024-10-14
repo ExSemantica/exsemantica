@@ -56,7 +56,10 @@ defmodule Exsemantica.MixProject do
       {:ecto_sql, "~> 3.12"},
 
       # Database adapter to connect to PostgreSQL
-      {:postgrex, "~> 0.19"}
+      {:postgrex, "~> 0.19"},
+
+      # Framework for TCP-based chat service
+      {:thousand_island, "~> 1.3"}
     ]
   end
 
