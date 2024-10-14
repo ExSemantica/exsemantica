@@ -10,10 +10,7 @@ defmodule Exsemantica.Chat.ChannelSupervisor do
   Allows for dynamic, lazy starting of aggregate channels.
   """
   def start_child(aggregate) do
-    DynamicSupervisor.start_child(
-      __MODULE__,
-      {Chat.Channel, aggregate}
-    )
+    DynamicSupervisor.start_child(__MODULE__, {Chat.Channel, aggregate: aggregate})
   end
 
   @impl true

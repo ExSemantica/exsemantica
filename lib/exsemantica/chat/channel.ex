@@ -11,9 +11,9 @@ defmodule Exsemantica.Chat.Channel do
   # ===========================================================================
   # Use these calls
   # ===========================================================================
-  def start_link(aggregate) do
+  def start_link(init_arg, aggregate: aggregate) do
     where = {:via, Registry, {Chat.ChannelRegistry, aggregate |> String.downcase()}}
-    GenServer.start_link(__MODULE__, aggregate: aggregate, name: where)
+    GenServer.start_link(__MODULE__, [init_arg, aggregate: aggregate], name: where)
   end
 
   def join(pid, joiner, on_success_pid) do
