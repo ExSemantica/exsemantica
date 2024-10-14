@@ -12,9 +12,7 @@ defmodule Exsemantica.Chat.ChannelSupervisor do
   def start_child(aggregate) do
     DynamicSupervisor.start_child(
       __MODULE__,
-      {Chat.Channel,
-       [[aggregate: aggregate],
-       name: {:via, Registry, {Chat.ChannelRegistry, aggregate |> String.downcase()}}]}
+      {Chat.Channel, aggregate: aggregate}
     )
   end
 
