@@ -1,16 +1,12 @@
 defmodule Exsemantica.API.Authentication.LogIn do
-  import Exsemantica.Gettext
-
   @errors_json %{
     user_not_found:
-      Jason.encode!(%{
-        e: "USER_NOT_FOUND",
-        message: gettext("That user does not exist.")
+      :json.encode(%{
+        e: "USER_NOT_FOUND"
       }),
     secret_incorrect:
-      Jason.encode!(%{
-        e: "SECRET_INCORRECT",
-        message: gettext("Incorrect username, password, or other secret.")
+      :json.encode(%{
+        e: "SECRET_INCORRECT"
       })
   }
 
@@ -35,11 +31,10 @@ defmodule Exsemantica.API.Authentication.LogIn do
         |> put_resp_content_type("application/json")
         |> send_resp(
           200,
-          Jason.encode!(%{
+          :json.encode(%{
             e: "OK",
             token: token,
-            username: user_struct.username,
-            message: gettext("Signed in as %{user}.", user: user_struct.username)
+            username: user_struct.username
           })
         )
 

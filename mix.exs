@@ -5,7 +5,7 @@ defmodule Exsemantica.MixProject do
     [
       app: :exsemantica,
       version: "0.10.0",
-      elixir: "~> 1.16",
+      elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -35,7 +35,7 @@ defmodule Exsemantica.MixProject do
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
 
       # Create documentation for ExSemantica
-      {:ex_doc, "~> 0.32", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
 
       # Helps auto-constrain information to ASCII
       {:unidecode, "~> 1.0"},
@@ -44,25 +44,19 @@ defmodule Exsemantica.MixProject do
       {:guardian, "~> 2.3"},
 
       # Password hashing
-      {:argon2_elixir, "~> 4.0"},
+      {:argon2_elixir, "~> 4.1"},
 
       # Web service
-      {:bandit, "~> 1.4"},
+      {:bandit, "~> 1.5"},
 
       # Database adapter framework
-      {:ecto, "~> 3.11"},
+      {:ecto, "~> 3.12"},
 
       # Database SQL store
-      {:ecto_sql, "~> 3.11"},
+      {:ecto_sql, "~> 3.12"},
 
       # Database adapter to connect to PostgreSQL
-      {:postgrex, "~> 0.17"},
-
-      # JSON library
-      {:jason, "~> 1.4"},
-
-      # Localize API messages
-      {:gettext, "~> 0.24.0"}
+      {:postgrex, "~> 0.19"}
     ]
   end
 

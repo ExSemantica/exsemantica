@@ -2,28 +2,22 @@ defmodule Exsemantica.API do
   @moduledoc """
   Application Programming Interface root route
   """
-  import Exsemantica.Gettext
-
   @errors_json %{
     bad_request:
-      Jason.encode!(%{
+      :json.encode(%{
         e: "BAD_REQUEST",
-        message: gettext("Invalid data or other bad request.")
       }),
     bad_data_type:
-      Jason.encode!(%{
+      :json.encode(%{
         e: "BAD_DATA_TYPE",
-        message: gettext("Bad content type.")
       }),
     internal_server_error:
-      Jason.encode!(%{
+      :json.encode(%{
         e: "INTERNAL_SERVER_ERROR",
-        message: gettext("Something went wrong.")
       }),
     endpoint_not_found:
-      Jason.encode!(%{
+      :json.encode(%{
         e: "ENDPOINT_NOT_FOUND",
-        message: gettext("That endpoint currently does not exist.")
       })
   }
 
@@ -31,7 +25,7 @@ defmodule Exsemantica.API do
   use Plug.ErrorHandler
 
   plug(Plug.Parsers,
-    parsers: [:urlencoded, {:json, json_decoder: Jason}]
+    parsers: [:urlencoded, {:json, json_decoder: {:json, :decode, []}}]
   )
 
   plug(:match)

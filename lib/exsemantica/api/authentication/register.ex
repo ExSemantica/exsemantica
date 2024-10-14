@@ -1,11 +1,8 @@
 defmodule Exsemantica.API.Authentication.Register do
-  import Exsemantica.Gettext
-
   @errors_json %{
     invite_invalid:
-      Jason.encode!(%{
+      :json.encode(%{
         e: "INVITE_INVALID",
-        message: gettext("Invite is invalid or not authorized.")
       })
   }
 
@@ -26,9 +23,8 @@ defmodule Exsemantica.API.Authentication.Register do
         |> put_resp_content_type("application/json")
         |> send_resp(
           501,
-          Jason.encode!(%{
+          :json.encode(%{
             e: "NOT_IMPLEMENTED",
-            message: gettext("This endpoint is currently not implemented.")
           })
         )
 

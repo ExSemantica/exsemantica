@@ -1,21 +1,16 @@
 defmodule Exsemantica.API.Authentication.Refresh do
-  import Exsemantica.Gettext
-
   @errors_json %{
     token_expired:
-      Jason.encode!(%{
+      :json.encode(%{
         e: "TOKEN_EXPIRED",
-        message: gettext("Your session has expired, please log in again.")
       }),
     malformed_token:
-      Jason.encode!(%{
+      :json.encode(%{
         e: "MALFORMED_TOKEN",
-        message: gettext("Malformed authorization token.")
       }),
     malformed_authorization:
-      Jason.encode!(%{
+      :json.encode(%{
         e: "MALFORMED_AUTHORIZATION",
-        message: gettext("Malformed authorization request, or not logged in.")
       })
   }
 
@@ -44,7 +39,7 @@ defmodule Exsemantica.API.Authentication.Refresh do
             |> put_resp_content_type("application/json")
             |> send_resp(
               200,
-              Jason.encode!(%{
+              :json.encode(%{
                 e: "OK",
                 token: new_token
               })
