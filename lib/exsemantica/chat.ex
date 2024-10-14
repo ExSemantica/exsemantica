@@ -183,7 +183,7 @@ defmodule Exsemantica.Chat do
         )
 
         if not is_nil(socket_state.password) and not is_nil(socket_state.handle) do
-          socket |> try_login(socket_state)
+          socket |> try_login(socket_state.handle, socket_state.password)
         end
     end
 
@@ -205,7 +205,7 @@ defmodule Exsemantica.Chat do
       )
 
       if not is_nil(socket_state.password) and not is_nil(socket_state.handle) do
-        socket |> try_login(socket_state)
+        socket |> try_login(socket_state.handle, socket_state.password)
       end
     end
 
@@ -333,8 +333,8 @@ defmodule Exsemantica.Chat do
   # ===========================================================================
   # Login
   # ===========================================================================
-  defp try_login(socket, socket_state) do
-    user = IO.inspect(Authentication.check_user(socket_state.handle, socket_state.password))
+  defp try_login(socket,handle, password) do
+    user = IO.inspect(Authentication.check_user(handle, password))
 
     case user do
       {:ok, user_data} ->
