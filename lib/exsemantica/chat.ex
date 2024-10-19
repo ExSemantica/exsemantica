@@ -378,7 +378,10 @@ defmodule Exsemantica.Chat do
             h1 = v.handle |> String.downcase()
             h2 = user_data.username |> String.downcase()
 
-            h1 == h2 && is_binary(v.user_id)
+            IO.inspect h1
+            IO.inspect h2
+
+            h1 == h2 && :ok == v.password
           end)
 
         if collision? do
