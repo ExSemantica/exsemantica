@@ -111,12 +111,9 @@ defmodule Exsemantica.Chat do
   # ===========================================================================
   @impl GenServer
   def handle_info(:ping, {socket, state}) do
-    {:ok, hostchar} = :inet.gethostname()
-    hostname = hostchar |> to_string()
-
     socket
     |> ThousandIsland.Socket.send(
-      %__MODULE__.Message{command: "PING", trailing: hostname}
+      %__MODULE__.Message{command: "PING", trailing: ApplicationInfo.get_chat_hostname()}
       |> __MODULE__.Message.encode()
     )
 
@@ -239,11 +236,12 @@ defmodule Exsemantica.Chat do
   end
 
   # PING
-  defp process_state(%__MODULE__.Message{command: "PING"}, socket) do
+  defp process_state(%__MODULE__.Message{command: "PING", params: params}, socket) do
     socket
     |> ThousandIsland.Socket.send(
       %__MODULE__.Message{
-        command: "PONG"
+        command: "PONG",
+        params: params
       }
       |> __MODULE__.Message.encode()
     )
@@ -420,6 +418,7 @@ defmodule Exsemantica.Chat do
           },
           # TODO: Add supported caps here
           %__MODULE__.Message{
+            prefix: ApplicationInfo.get_chat_hostname(),
             command: "005",
             params: [socket_state.handle],
             trailing: "are supported by this server"
