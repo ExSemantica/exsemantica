@@ -413,6 +413,11 @@ defmodule Exsemantica.Chat do
             command: "004",
             params: [socket_state.handle, "exsemantica", vsn]
           },
+# TODO: Add supported caps here
+          %__MODULE__.Message{
+            command: "005",
+            trailing: "are supported by this server"
+          },
           %__MODULE__.Message{
             command: "422",
             params: [socket_state.handle],
