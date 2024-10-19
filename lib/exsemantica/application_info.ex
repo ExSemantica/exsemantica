@@ -27,6 +27,10 @@ defmodule Exsemantica.ApplicationInfo do
 
     # Put it in a persistent_term
     :persistent_term.put(__MODULE__.Version, version)
+
+    # Put the chat hostname in a persistent_term so we can send it as a prefix
+    # HexChat is picky about it
+    :persistent_term.put(__MODULE__.ChatHostname, Application.get_env(:exsemantica, __MODULE__)[:chat_hostname])
   end
 
   @doc """
@@ -46,4 +50,12 @@ defmodule Exsemantica.ApplicationInfo do
   function.
   """
   def get_last_refreshed, do: :persistent_term.get(__MODULE__.LastRefreshed)
+
+  @doc """
+  Gets the IRC hostname.
+
+  Call `Exsemantica.ApplicationInfo.refresh` once before using this
+  function.
+  """
+  def get_chat_hostname, do: :persistent_term.get(__MODULE__.ChatHostname)
 end

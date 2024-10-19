@@ -312,6 +312,7 @@ defmodule Exsemantica.Chat do
           socket
           |> ThousandIsland.Socket.send(
             %__MODULE__.Message{
+              prefix: ApplicationInfo.get_chat_hostname(),
               command: "403",
               params: [socket_state.handle, channel],
               trailing: "No such channel/aggregate"
@@ -343,6 +344,7 @@ defmodule Exsemantica.Chat do
           socket
           |> ThousandIsland.Socket.send(
             %__MODULE__.Message{
+              prefix: ApplicationInfo.get_chat_hostname(),
               command: "403",
               params: [socket_state.handle, channel],
               trailing: "No such channel/aggregate"
@@ -386,8 +388,6 @@ defmodule Exsemantica.Chat do
           }
         )
 
-        {:ok, hostname} = :inet.gethostname()
-        hostname = hostname |> to_string()
         vsn = ApplicationInfo.get_version()
 
         refreshed =
@@ -395,21 +395,26 @@ defmodule Exsemantica.Chat do
 
         burst = [
           %__MODULE__.Message{
+            prefix: ApplicationInfo.get_chat_hostname(),
             command: "001",
             params: [socket_state.handle],
             trailing: "Welcome to ExSemantica chat, #{socket_state.handle}"
           },
           %__MODULE__.Message{
+            prefix: ApplicationInfo.get_chat_hostname(),
             command: "002",
             params: [socket_state.handle],
-            trailing: "Your host is #{hostname}, running version #{vsn}"
+            trailing:
+              "Your host is #{ApplicationInfo.get_chat_hostname()}, running version #{vsn}"
           },
           %__MODULE__.Message{
+            prefix: ApplicationInfo.get_chat_hostname(),
             command: "003",
             params: [socket_state.handle],
             trailing: "This server was last (re)started #{refreshed}"
           },
           %__MODULE__.Message{
+            prefix: ApplicationInfo.get_chat_hostname(),
             command: "004",
             params: [socket_state.handle, "exsemantica", vsn]
           },
@@ -420,6 +425,7 @@ defmodule Exsemantica.Chat do
             trailing: "are supported by this server"
           },
           %__MODULE__.Message{
+            prefix: ApplicationInfo.get_chat_hostname(),
             command: "422",
             params: [socket_state.handle],
             trailing: "MOTD File is unimplemented"

@@ -2,6 +2,7 @@ defmodule Exsemantica.Chat.Channel do
   @moduledoc """
   IRC channel PubSub
   """
+  alias Exsemantica.ApplicationInfo
   alias Exsemantica.Chat
 
   import Ecto.Query
@@ -232,6 +233,7 @@ defmodule Exsemantica.Chat.Channel do
     socket
     |> ThousandIsland.Socket.send(
       %Chat.Message{
+        prefix: ApplicationInfo.get_chat_hostname(),
         command: "442",
         params: [parter_state.handle, channel],
         trailing: "You're not on that channel"
@@ -245,11 +247,13 @@ defmodule Exsemantica.Chat.Channel do
   defp on_send_topic(socket, channel, my_state, topic, refreshed) do
     burst = [
       %Chat.Message{
+        prefix: ApplicationInfo.get_chat_hostname(),
         command: "332",
         params: [my_state.handle, channel],
         trailing: topic
       },
       %Chat.Message{
+        prefix: ApplicationInfo.get_chat_hostname(),
         command: "333",
         params: [my_state.handle, channel, "Services", refreshed]
       }
@@ -273,11 +277,13 @@ defmodule Exsemantica.Chat.Channel do
 
     burst = [
       %Chat.Message{
+        prefix: ApplicationInfo.get_chat_hostname(),
         command: "353",
         params: [my_state.handle, "=", channel],
         trailing: handles
       },
       %Chat.Message{
+        prefix: ApplicationInfo.get_chat_hostname(),
         command: "366",
         params: [my_state.handle, channel],
         trailing: "End of /NAMES list"
