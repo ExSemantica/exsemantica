@@ -16,7 +16,7 @@ defmodule Exsemantica.Chat do
   @timeout_auth 10_000
 
   # Ping interval in milliseconds
-  @ping_interval 15_000
+  @ping_interval 60_000
 
   defmodule SocketState do
     @moduledoc """
@@ -245,7 +245,7 @@ defmodule Exsemantica.Chat do
     [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, socket.socket)
 
     for channel <- channels do
-      join_stat = IO.inspect __MODULE__.ChannelSupervisor.start_child(channel |> String.replace_prefix("#", ""))
+      join_stat = __MODULE__.ChannelSupervisor.start_child(channel |> String.replace_prefix("#", ""))
 
       case join_stat do
         {:ok, pid} ->

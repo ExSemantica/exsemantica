@@ -63,7 +63,7 @@ defmodule Exsemantica.Chat.Channel do
       {:noreply, state}
     else
       # get joining user's info
-      [{_socket, joiner_state}] = Registry.lookup(Chat.Registry, joiner.socket)
+      [{_socket, joiner_state}] = IO.inspect Registry.lookup(Chat.Registry, joiner.socket)
 
       # add the user to the socket list
       state = put_in(state, [:sockets, joiner.socket], joiner)
