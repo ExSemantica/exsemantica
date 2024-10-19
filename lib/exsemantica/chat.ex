@@ -379,7 +379,7 @@ defmodule Exsemantica.Chat do
         # Runes to select all values
         collision? =
           Registry.select(__MODULE__.Registry, [{{:"$1", :"$2", :"$3"}, [], [:"$3"]}])
-          |> Enum.any?(fn [{_k, v}] ->
+          |> Enum.any?(fn v ->
             h1 = v.handle |> String.downcase()
             h2 = user_data.username |> String.downcase()
 
