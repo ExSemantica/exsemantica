@@ -378,7 +378,7 @@ defmodule Exsemantica.Chat do
             h1 = v.handle |> String.downcase()
             h2 = user_data.username |> String.downcase()
 
-            h1 == h2
+            h1 == h2 && v.password == :ok
           end)
 
         if collision? do
@@ -395,6 +395,18 @@ defmodule Exsemantica.Chat do
 
           socket |> quit(socket_state, "Nickname is already in use")
         else
+          Registry.update_value(
+          __MODULE__.Registry,
+          socket.socket,
+          &%__MODULE__.SocketState{
+            &1
+            | handle: user_data.username,
+              password: :ok,
+              user_id: user_data.username,
+              vhost: "user/" <> user_data.username,
+              state: :pinging
+          }
+        )
           vsn = ApplicationInfo.get_version()
 
           refreshed =
