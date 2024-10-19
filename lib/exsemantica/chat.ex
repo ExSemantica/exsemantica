@@ -378,9 +378,7 @@ defmodule Exsemantica.Chat do
             h1 = v.handle |> String.downcase()
             h2 = user_data.username |> String.downcase()
 
-            IO.inspect h1
-            IO.inspect h2
-            IO.inspect v.password
+            IO.inspect v.state
 
             h1 == h2 && :ok == v.password
           end)
