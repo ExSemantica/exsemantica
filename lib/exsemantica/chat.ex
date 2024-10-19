@@ -373,22 +373,11 @@ defmodule Exsemantica.Chat do
     user = Authentication.check_user(socket_state.handle, socket_state.password)
 
     case user do
-      {:ok, user_data} ->          Registry.update_value(
-            __MODULE__.Registry,
-            socket.socket,
-            &%__MODULE__.SocketState{
-              &1
-              | handle: user_data.username,
-                password: :ok,
-                user_id: user_data.username,
-                vhost: "user/" <> user_data.username,
-                state: :pinging
-            }
-          )
+      {:ok, user_data} ->
         collision? =
           Registry.keys(__MODULE__.Registry, self())
           |> Enum.map(fn k -> Registry.lookup(__MODULE__.Registry, k) end)
-          |> Enum.any?(fn [{_k, v}] -> v.handle == user_data.username end)
+          |> Enum.any?(fn [{_k, v}] -> v.handle |> String.downcase() == user_data.username |> String.downcase() end)
 
         if collision? do
           socket
