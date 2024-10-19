@@ -373,7 +373,18 @@ defmodule Exsemantica.Chat do
     user = Authentication.check_user(socket_state.handle, socket_state.password)
 
     case user do
-      {:ok, user_data} ->
+      {:ok, user_data} ->          Registry.update_value(
+            __MODULE__.Registry,
+            socket.socket,
+            &%__MODULE__.SocketState{
+              &1
+              | handle: user_data.username,
+                password: :ok,
+                user_id: user_data.username,
+                vhost: "user/" <> user_data.username,
+                state: :pinging
+            }
+          )
         collision? =
           Registry.keys(__MODULE__.Registry, self())
           |> Enum.map(fn k -> Registry.lookup(__MODULE__.Registry, k) end)
@@ -393,18 +404,7 @@ defmodule Exsemantica.Chat do
 
           socket |> quit(socket_state, "Nickname is already in use")
         else
-          Registry.update_value(
-            __MODULE__.Registry,
-            socket.socket,
-            &%__MODULE__.SocketState{
-              &1
-              | handle: user_data.username,
-                password: :ok,
-                user_id: user_data.username,
-                vhost: "user/" <> user_data.username,
-                state: :pinging
-            }
-          )
+
 
           vsn = ApplicationInfo.get_version()
 
