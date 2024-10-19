@@ -377,7 +377,9 @@ defmodule Exsemantica.Chat do
         collision? =
           Registry.keys(__MODULE__.Registry, self())
           |> Enum.map(fn k -> Registry.lookup(__MODULE__.Registry, k) end)
-          |> Enum.any?(fn [{_k, v}] -> v.handle |> String.downcase() == user_data.username |> String.downcase() end)
+          |> Enum.any?(fn [{_k, v}] ->
+            v.handle |> String.downcase() == user_data.username |> String.downcase()
+          end)
 
         if collision? do
           socket
@@ -393,8 +395,6 @@ defmodule Exsemantica.Chat do
 
           socket |> quit(socket_state, "Nickname is already in use")
         else
-
-
           vsn = ApplicationInfo.get_version()
 
           refreshed =
