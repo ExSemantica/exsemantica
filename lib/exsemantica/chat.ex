@@ -26,22 +26,28 @@ defmodule Exsemantica.Chat do
     defstruct [:state, :handle, :password, :user_id, :vhost, :ping_timer, :channels]
   end
 
-  @doc """
-  Tells the server that this client has joined a specific channel PID
-
-  Do not call this, it is usually up to the Channel to call this
-  """
+  @deprecated "Use state get/put functions instead."
   def successful_join(pid, channel, key) do
     GenServer.cast(pid, {:successful_join, channel, key})
   end
 
-  @doc """
-  Tells the server that this client has parted a specific channel PID
-
-  Do not call this, it is usually up to the Channel to call this
-  """
+  @deprecated "Use state get/put functions instead."
   def successful_quit(pid, channel, key) do
     GenServer.cast(pid, {:successful_quit, channel, key})
+  end
+
+  @doc """
+  Gets the registry state of a certain socket
+  """
+  def get_state(pid, key, reply_to) do
+    GenServer.cast(pid, {:get_state, key, reply_to})
+  end
+
+  @doc """
+  Puts a new registry state in the socket
+  """
+  def put_state(pid, key, what) do
+    GenServer.cast(pid, {:put_state, key, what})
   end
 
   # ===========================================================================
@@ -80,6 +86,22 @@ defmodule Exsemantica.Chat do
       key,
       &%__MODULE__.SocketState{&1 | channels: MapSet.delete(&1.channels, channel)}
     )
+
+    {:noreply, {socket, state}, socket.read_timeout}
+  end
+
+  @impl GenServer
+  def handle_cast({:get_state, key, reply_to}, {socket, state}) do
+    [{_socket, socket_state}] = Registry.lookup(Chat.Registry, key)
+
+    Process.send(reply_to, {:socket_state, {key, socket_state}}, [])
+
+    {:noreply, {socket, state}, socket.read_timeout}
+  end
+
+  @impl GenServer
+  def handle_cast({:put_state, key, fun}, {socket, state}) do
+    Registry.update_value(__MODULE__.Registry, key, fun)
 
     {:noreply, {socket, state}, socket.read_timeout}
   end
@@ -245,7 +267,8 @@ defmodule Exsemantica.Chat do
     [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, socket.socket)
 
     for channel <- channels do
-      join_stat = __MODULE__.ChannelSupervisor.start_child(channel |> String.replace_prefix("#", ""))
+      join_stat =
+        __MODULE__.ChannelSupervisor.start_child(channel)
 
       case join_stat do
         {:ok, pid} ->
@@ -311,10 +334,10 @@ defmodule Exsemantica.Chat do
     for channel <- channels do
       case Registry.lookup(
              __MODULE__.ChannelRegistry,
-             channel |> String.replace_prefix("#", "") |> String.downcase()
+             channel |> String.downcase()
            ) do
         [{pid, _name}] ->
-          __MODULE__.Channel.send(pid, socket, message)
+          __MODULE__.Channel.send(pid, socket, self(), message)
 
         [] ->
           socket
