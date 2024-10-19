@@ -20,8 +20,10 @@ config :logger, :console, format: "[$level] $message\n"
 
 # Commit SHA for Git, displayed throughout the site
 # Also define a hostname
+commit_sha_result = System.cmd("git", ["rev-parse", "--short", "HEAD"])
+
 config :exsemantica, Exsemantica.ApplicationInfo,
-  commit_sha_result: System.cmd("git", ["rev-parse", "--short", "HEAD"]),
+  commit_sha_result: commit_sha_result,
   chat_hostname: "192.168.88.19"
 
 # 5 minutes per user token
