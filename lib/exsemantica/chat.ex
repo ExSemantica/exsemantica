@@ -378,7 +378,10 @@ defmodule Exsemantica.Chat do
           Registry.keys(__MODULE__.Registry, self())
           |> Enum.map(fn k -> Registry.lookup(__MODULE__.Registry, k) end)
           |> Enum.any?(fn [{_k, v}] ->
-            v.handle |> String.downcase() == user_data.username |> String.downcase()
+            h1 = v.handle |> String.downcase()
+            h2 = user_data.username |> String.downcase()
+
+            h1 == h2
           end)
 
         if collision? do
