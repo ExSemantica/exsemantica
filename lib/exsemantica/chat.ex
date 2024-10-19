@@ -9,7 +9,6 @@ defmodule Exsemantica.Chat do
   alias Exsemantica.Authentication
   alias Exsemantica.Constrain
   use ThousandIsland.Handler
-  require Logger
 
   # Wait this long in milliseconds for NICK and PASS before disconnecting
   # Note that USER isn't implemented here
@@ -130,8 +129,6 @@ defmodule Exsemantica.Chat do
 
     # and then iterate through them
     for message <- messages do
-      {:ok, peer} = socket |> ThousandIsland.Socket.peername()
-      Logger.debug(inspect(message, peer: peer))
       process_state(message, socket)
     end
 
