@@ -92,7 +92,7 @@ defmodule Exsemantica.Chat do
 
   @impl GenServer
   def handle_cast({:get_state, key, reply_to}, {socket, state}) do
-    [{_socket, socket_state}] = Registry.lookup(Chat.Registry, key)
+    [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, key)
 
     Process.send(reply_to, {:socket_state, {key, socket_state}}, [])
 
