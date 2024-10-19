@@ -242,8 +242,6 @@ defmodule Exsemantica.Chat.Channel do
         s_state.handle
       end)
 
-    IO.inspect handles
-
     burst = [
       %Chat.Message{
         command: "353",

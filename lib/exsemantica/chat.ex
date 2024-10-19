@@ -182,11 +182,11 @@ defmodule Exsemantica.Chat do
           }
         )
 
-      [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, socket.socket)
+        [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, socket.socket)
 
-      if not is_nil(socket_state.password) and not is_nil(socket_state.handle) do
-        socket |> try_login
-      end
+        if not is_nil(socket_state.password) and not is_nil(socket_state.handle) do
+          socket |> try_login
+        end
     end
 
     socket
@@ -205,7 +205,7 @@ defmodule Exsemantica.Chat do
           | password: pass
         }
       )
-    
+
       [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, socket.socket)
 
       if not is_nil(socket_state.password) and not is_nil(socket_state.handle) do
@@ -245,7 +245,10 @@ defmodule Exsemantica.Chat do
     [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, socket.socket)
 
     for channel <- channels do
-      case __MODULE__.ChannelSupervisor.start_child(channel |> String.replace_prefix("#", "")) do
+      join_stat = IO.inspect
+      __MODULE__.ChannelSupervisor.start_child(channel |> String.replace_prefix("#", ""))
+
+      case join_stat do
         {:ok, pid} ->
           __MODULE__.Channel.join(pid, socket, self())
 
@@ -329,7 +332,7 @@ defmodule Exsemantica.Chat do
 
     socket
   end
-  
+
   # TODO: Add WHO command, might make HexChat happy
   # TODO: Add IRC chanop commands based on aggregate moderator listings
 
