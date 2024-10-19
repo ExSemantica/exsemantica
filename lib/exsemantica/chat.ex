@@ -346,7 +346,7 @@ defmodule Exsemantica.Chat do
   defp try_login(socket) do
     [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, socket.socket)
 
-    user = IO.inspect(Authentication.check_user(socket_state.handle, socket_state.password))
+    user = Authentication.check_user(socket_state.handle, socket_state.password)
 
     case user do
       {:ok, user_data} ->
