@@ -303,7 +303,7 @@ defmodule Exsemantica.Chat do
     for channel <- channels do
       case Registry.lookup(
              __MODULE__.ChannelRegistry,
-             channel |> String.replace_prefix("#", "") |> String.downcase()
+             channel |> String.downcase()
            ) do
         [{pid, _name}] ->
           __MODULE__.Channel.part(pid, socket, self(), reason)
