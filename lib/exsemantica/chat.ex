@@ -376,11 +376,22 @@ defmodule Exsemantica.Chat do
       {:ok, user_data} ->
         collision? =
           Registry.keys(__MODULE__.Registry, self())
-          |> Enum.map(&Registry.lookup/2)
+          |> Enum.map(fn k -> Registry.lookup(__MODULE__.Registry, k) end)
           |> Enum.any?(fn {_k, v} -> v.handle == user_data.username end)
 
         if collision? do
-          socket |> quit(socket_state, "You are already logged in")
+          socket
+          |> ThousandIsland.Socket.send(
+            %__MODULE__.Message{
+              prefix: ApplicationInfo.get_chat_hostname(),
+              command: "433",
+              params: [user_data.username],
+              trailing: "Nickname is already in use"
+            }
+            |> __MODULE__.Message.encode()
+          )
+
+          socket |> quit(socket_state, "Nickname is already in use")
         else
           Registry.update_value(
             __MODULE__.Registry,
