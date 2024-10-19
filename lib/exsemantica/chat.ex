@@ -245,8 +245,7 @@ defmodule Exsemantica.Chat do
     [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, socket.socket)
 
     for channel <- channels do
-      join_stat = IO.inspect
-      __MODULE__.ChannelSupervisor.start_child(channel |> String.replace_prefix("#", ""))
+      join_stat = IO.inspect __MODULE__.ChannelSupervisor.start_child(channel |> String.replace_prefix("#", ""))
 
       case join_stat do
         {:ok, pid} ->
