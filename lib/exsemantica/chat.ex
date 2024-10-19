@@ -17,6 +17,10 @@ defmodule Exsemantica.Chat do
   # Ping interval in milliseconds
   @ping_interval 60_000
 
+  # Maximum users who can join
+  # TODO: Make this a config variable
+  @max_users 1024
+
   defmodule SocketState do
     @moduledoc """
     Stored in the registry with the ThousandIsland socket as the key
@@ -368,17 +372,18 @@ defmodule Exsemantica.Chat do
     [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, socket.socket)
 
     user = Authentication.check_user(socket_state.handle, socket_state.password)
+    count = Registry.count(__MODULE__.Registry)
 
     case user do
-      {:ok, user_data} ->
+      {:ok, user_data} when count <= @max_users ->
+        # Runes to select all values
         collision? =
-          Registry.keys(__MODULE__.Registry, self())
-          |> Enum.map(fn k -> Registry.lookup(__MODULE__.Registry, k) end)
+          Registry.select(__MODULE__.Registry, [{{:"$1", :"$2", :"$3"}, [], [:"$3"]}])
           |> Enum.any?(fn [{_k, v}] ->
             h1 = v.handle |> String.downcase()
             h2 = user_data.username |> String.downcase()
 
-            IO.inspect v.state
+            IO.inspect(v.state)
 
             h1 == h2 && :ok == v.password
           end)
@@ -461,6 +466,9 @@ defmodule Exsemantica.Chat do
 
           socket
         end
+
+      {:ok, _} ->
+        socket |> quit(socket_state, "Too many users on this server")
 
       {:error, :unauthorized} ->
         socket |> quit(socket_state, "Incorrect username or password")
