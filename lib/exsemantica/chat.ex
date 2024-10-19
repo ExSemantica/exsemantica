@@ -380,6 +380,7 @@ defmodule Exsemantica.Chat do
 
             IO.inspect h1
             IO.inspect h2
+            IO.inspect v.password
 
             h1 == h2 && :ok == v.password
           end)
