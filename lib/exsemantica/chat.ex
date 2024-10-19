@@ -377,7 +377,7 @@ defmodule Exsemantica.Chat do
         collision? =
           Registry.keys(__MODULE__.Registry, self())
           |> Enum.map(fn k -> Registry.lookup(__MODULE__.Registry, k) end)
-          |> Enum.any?(fn {_k, v} -> v.handle == user_data.username end)
+          |> Enum.any?(fn [{_k, v}] -> v.handle == user_data.username end)
 
         if collision? do
           socket
