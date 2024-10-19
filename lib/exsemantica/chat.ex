@@ -374,69 +374,78 @@ defmodule Exsemantica.Chat do
 
     case user do
       {:ok, user_data} ->
-        Registry.update_value(
-          __MODULE__.Registry,
-          socket.socket,
-          &%__MODULE__.SocketState{
-            &1
-            | handle: user_data.username,
-              password: :ok,
-              user_id: user_data.username,
-              vhost: "user/" <> user_data.username,
-              state: :pinging
-          }
-        )
+        collision? =
+          Registry.keys(__MODULE__.Registry, self())
+          |> Enum.map(&Registry.lookup/2)
+          |> Enum.any?(fn {_k, v} -> v.handle == user_data.username end)
 
-        vsn = ApplicationInfo.get_version()
+        if collision? do
+          socket |> quit(socket_state, "You are already logged in")
+        else
+          Registry.update_value(
+            __MODULE__.Registry,
+            socket.socket,
+            &%__MODULE__.SocketState{
+              &1
+              | handle: user_data.username,
+                password: :ok,
+                user_id: user_data.username,
+                vhost: "user/" <> user_data.username,
+                state: :pinging
+            }
+          )
 
-        refreshed =
-          ApplicationInfo.get_last_refreshed() |> Calendar.strftime("%a, %-d %b %Y %X %Z")
+          vsn = ApplicationInfo.get_version()
 
-        burst = [
-          %__MODULE__.Message{
-            prefix: ApplicationInfo.get_chat_hostname(),
-            command: "001",
-            params: [socket_state.handle],
-            trailing: "Welcome to ExSemantica chat, #{socket_state.handle}"
-          },
-          %__MODULE__.Message{
-            prefix: ApplicationInfo.get_chat_hostname(),
-            command: "002",
-            params: [socket_state.handle],
-            trailing:
-              "Your host is #{ApplicationInfo.get_chat_hostname()}, running version #{vsn}"
-          },
-          %__MODULE__.Message{
-            prefix: ApplicationInfo.get_chat_hostname(),
-            command: "003",
-            params: [socket_state.handle],
-            trailing: "This server was last (re)started #{refreshed}"
-          },
-          %__MODULE__.Message{
-            prefix: ApplicationInfo.get_chat_hostname(),
-            command: "004",
-            params: [socket_state.handle, "exsemantica", vsn]
-          },
-          # TODO: Add supported caps here
-          %__MODULE__.Message{
-            prefix: ApplicationInfo.get_chat_hostname(),
-            command: "005",
-            params: [socket_state.handle],
-            trailing: "are supported by this server"
-          },
-          %__MODULE__.Message{
-            prefix: ApplicationInfo.get_chat_hostname(),
-            command: "422",
-            params: [socket_state.handle],
-            trailing: "MOTD File is unimplemented"
-          }
-        ]
+          refreshed =
+            ApplicationInfo.get_last_refreshed() |> Calendar.strftime("%a, %-d %b %Y %X %Z")
 
-        for b <- burst do
-          socket |> ThousandIsland.Socket.send(b |> __MODULE__.Message.encode())
+          burst = [
+            %__MODULE__.Message{
+              prefix: ApplicationInfo.get_chat_hostname(),
+              command: "001",
+              params: [socket_state.handle],
+              trailing: "Welcome to ExSemantica chat, #{socket_state.handle}"
+            },
+            %__MODULE__.Message{
+              prefix: ApplicationInfo.get_chat_hostname(),
+              command: "002",
+              params: [socket_state.handle],
+              trailing:
+                "Your host is #{ApplicationInfo.get_chat_hostname()}, running version #{vsn}"
+            },
+            %__MODULE__.Message{
+              prefix: ApplicationInfo.get_chat_hostname(),
+              command: "003",
+              params: [socket_state.handle],
+              trailing: "This server was last (re)started #{refreshed}"
+            },
+            %__MODULE__.Message{
+              prefix: ApplicationInfo.get_chat_hostname(),
+              command: "004",
+              params: [socket_state.handle, "exsemantica", vsn]
+            },
+            # TODO: Add supported caps here
+            %__MODULE__.Message{
+              prefix: ApplicationInfo.get_chat_hostname(),
+              command: "005",
+              params: [socket_state.handle],
+              trailing: "are supported by this server"
+            },
+            %__MODULE__.Message{
+              prefix: ApplicationInfo.get_chat_hostname(),
+              command: "422",
+              params: [socket_state.handle],
+              trailing: "MOTD File is unimplemented"
+            }
+          ]
+
+          for b <- burst do
+            socket |> ThousandIsland.Socket.send(b |> __MODULE__.Message.encode())
+          end
+
+          socket
         end
-
-        socket
 
       {:error, :unauthorized} ->
         socket |> quit(socket_state, "Incorrect username or password")
