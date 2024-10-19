@@ -412,6 +412,11 @@ defmodule Exsemantica.Chat do
           %__MODULE__.Message{
             command: "004",
             params: [socket_state.handle, "exsemantica", vsn]
+          },
+          %__MODULE__.Message{
+            command: "422",
+            params: [socket_state.handle],
+            trailing: "MOTD File is unimplemented"
           }
         ]
 
