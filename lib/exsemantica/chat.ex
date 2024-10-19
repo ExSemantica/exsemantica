@@ -236,12 +236,12 @@ defmodule Exsemantica.Chat do
   end
 
   # PING
-  defp process_state(%__MODULE__.Message{command: "PING", params: params}, socket) do
+  defp process_state(%__MODULE__.Message{command: "PING"}, socket) do
     socket
     |> ThousandIsland.Socket.send(
       %__MODULE__.Message{
-        command: "PONG",
-        params: params
+        prefix: ApplicationInfo.get_chat_hostname(),
+        command: "PONG"
       }
       |> __MODULE__.Message.encode()
     )
@@ -279,6 +279,7 @@ defmodule Exsemantica.Chat do
           socket
           |> ThousandIsland.Socket.send(
             %__MODULE__.Message{
+              prefix: ApplicationInfo.get_chat_hostname(),
               command: "403",
               params: [socket_state.handle, channel],
               trailing: "No such channel/aggregate"
