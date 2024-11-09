@@ -1,4 +1,4 @@
-ARG MIX_ENV="prod" # The Mix environment to build
+ARG MIX_ENV="dev" # The Mix environment to build
 
 ARG USE_ERLANG="27.1.2" # The Erlang/OTP version to use
 ARG USE_ELIXIR="1.17.3" # The Elixir version to use
@@ -7,8 +7,12 @@ ARG USE_ALPINE="3.20.3" # The Alpine Linux OS version to use
 # === BUILDER =================================================================
 FROM hexpm/elixir:${USE_ELIXIR}-erlang-${USE_ERLANG}-alpine-${USE_ALPINE} as build
 
+# Install build dependencies
 # NOTE: Argon2 NIFs are being used by the password hasher
 RUN apk add --no-cache build-base git python3 curl argon2
+
+# Set work directory
+WORKDIR /app
 
 # Export Mix environment (dev, prod, test)
 ARG MIX_ENV
