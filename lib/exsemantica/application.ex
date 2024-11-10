@@ -16,6 +16,7 @@ defmodule Exsemantica.Application do
       {Registry, keys: :unique, name: Exsemantica.Chat.UserRegistry},
       {ThousandIsland, port: 6667, handler_module: Exsemantica.Chat},
       Exsemantica.Chat.ChannelSupervisor,
+      Exsemantica.Chat.UserSupervisor,
       {Registry, keys: :unique, name: Exsemantica.Chat.ChannelRegistry},
       Exsemantica.Repo,
       Exsemantica.Cache
