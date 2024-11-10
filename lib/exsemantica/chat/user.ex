@@ -6,7 +6,7 @@ defmodule Exsemantica.Chat.User do
   alias Exsemantica.Chat
 
   def start_link(_init_arg, handle: handle) do
-    where = {:via, Registry, {Chat.UserRegistry, handle |> String.downcase()}}
+    where = {:via, Registry, {Chat.UserRegistry, handle}}
 
     Agent.start_link(
       fn ->
@@ -16,13 +16,21 @@ defmodule Exsemantica.Chat.User do
     )
   end
 
-  def channel_join(pid, channel) do
+  def get_handle(pid) do
+    Agent.get(pid, & &1.handle)
+  end
+
+  def get_channels(pid) do
+    Agent.get(pid, &(&1.channels |> MapSet.to_list()))
+  end
+
+  def join(pid, channel) do
     Agent.update(pid, fn state ->
       %{state | channels: state.channels |> MapSet.put(channel)}
     end)
   end
 
-  def channel_leave(pid, channel) do
+  def part(pid, channel) do
     Agent.update(pid, fn state ->
       %{state | channels: state.channels |> MapSet.delete(channel)}
     end)

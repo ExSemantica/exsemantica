@@ -13,20 +13,20 @@ defmodule Exsemantica.Chat.Channel do
   # Use these calls
   # ===========================================================================
   def start_link(_init_arg, aggregate: aggregate) do
-    where = {:via, Registry, {Chat.ChannelRegistry, aggregate |> String.downcase()}}
+    where = {:via, Registry, {Chat.ChannelRegistry, aggregate}}
     GenServer.start_link(__MODULE__, [aggregate: aggregate], name: where)
   end
 
-  def join(pid, joiner, on_success_pid) do
-    GenServer.cast(pid, {:join, joiner, on_success_pid})
+  def join(pid, joiner) do
+    GenServer.cast(pid, {:join, joiner})
   end
 
-  def part(pid, leaver, on_success_pid, reason \\ nil) do
-    GenServer.cast(pid, {:part, leaver, on_success_pid, reason})
+  def part(pid, leaver, reason \\ nil) do
+    GenServer.cast(pid, {:part, leaver, reason})
   end
 
-  def send(pid, talker, on_success_pid, message) do
-    GenServer.cast(pid, {:send, talker, on_success_pid, message})
+  def send(pid, talker, message) do
+    GenServer.cast(pid, {:send, talker, message})
   end
 
   def quit(pid, quitter) do
@@ -35,6 +35,10 @@ defmodule Exsemantica.Chat.Channel do
 
   def get_users(pid) do
     GenServer.call(pid, :get_users)
+  end
+
+  def get_name(pid) do
+    GenServer.call(pid, :get_name)
   end
 
   # ===========================================================================
@@ -46,9 +50,9 @@ defmodule Exsemantica.Chat.Channel do
       {:ok, info} ->
         {:ok,
          %{
-           channel: info.name,
+           channel: info.name |> String.downcase(),
            topic: info.description,
-           sockets: %{},
+           users: [],
            created: DateTime.utc_now() |> DateTime.to_unix()
          }}
 
@@ -58,127 +62,96 @@ defmodule Exsemantica.Chat.Channel do
   end
 
   @impl true
-  def handle_cast({:join, joiner, on_success_pid}, state) do
-    if Map.has_key?(state.sockets, joiner.socket) do
+  def handle_cast(
+        {:join, {joiner_socket, joiner_state = %{user_pid: user_pid}}},
+        state = %{users: users, channel: channel, topic: topic, created: created}
+      ) do
+    if {joiner_socket, user_pid} in users do
       # we're already in the channel
       {:noreply, state}
     else
-      # get joining user's info
-      joiner_socket = joiner.socket
-      Chat.get_state(on_success_pid, joiner_socket, self())
+      # add the user to the socket list
+      state = %{state | users: [{joiner_socket, user_pid} | users]}
 
-      receive do
-        {:socket_state, {^joiner_socket, joiner_state}} ->
-          # add the user to the socket list
-          state = put_in(state, [:sockets, joiner_socket], joiner)
-
-          # send the join message to everyone
-          for {_, s} <- state.sockets do
-            s |> on_join(state.channel, joiner_state)
-          end
-
-          # send topic to joined user, then send people in channel to joined user
-          joiner
-          |> on_send_topic(state.channel, joiner_state, state.topic, state.created)
-          |> on_send_names(state.channel, joiner_state, state.sockets)
-
-          Chat.put_state(
-            on_success_pid,
-            joiner_socket,
-            &%Chat.SocketState{&1 | channels: MapSet.put(&1.channels, state.channel)}
-          )
-
-          {:noreply, state}
-      after
-        3000 ->
-          raise "Timeout on join call!"
+      # send the join message to everyone
+      for {other_socket, _other_pid} <- users do
+        other_socket |> on_join(state.channel, joiner_state)
       end
+
+      # send topic to joined user, then send people in channel to joined user
+      joiner_socket
+      |> on_send_topic(channel, joiner_state, topic, created)
+      |> on_send_names(channel, joiner_state, state.users)
+
+      Chat.User.join(user_pid, channel)
+
+      {:noreply, state}
     end
   end
 
   @impl true
-  def handle_cast({:part, leaver, on_success_pid, reason}, state) do
-    # get leaving user's info
-    leaver_socket = leaver.socket
-    Chat.get_state(on_success_pid, leaver_socket, self())
+  def handle_cast(
+        {:part, {leaver_socket, leaver_state = %{user_pid: user_pid}}, reason},
+        state = %{users: users, channel: channel}
+      ) do
+    if {leaver_socket, user_pid} in users do
+      # we're in the channel
+      for {other_socket, _other_pid} <- users do
+        other_socket |> on_part(channel, leaver_state, reason)
+      end
 
-    receive do
-      {:socket_state, {^leaver_socket, leaver_state}} ->
-        if Map.has_key?(state.sockets, leaver_socket) do
-          # we're in the channel
-          for {_, s} <- state.sockets do
-            s |> on_part(state.channel, leaver_state, reason)
-          end
+      Chat.User.part(user_pid, channel)
 
-          Chat.put_state(
-            on_success_pid,
-            leaver_socket,
-            &%Chat.SocketState{&1 | channels: MapSet.delete(&1.channels, state.channel)}
-          )
+      {:noreply, %{state | users: users |> List.delete({leaver_socket, user_pid})}}
+    else
+      # we're not in the channel
+      leaver_socket
+      |> on_user_not_on_channel(channel, leaver_state)
 
-          {_, state} = pop_in(state, [:sockets, leaver_socket])
-
-          {:noreply, state}
-        else
-          # we're not in the channel
-          leaver
-          |> on_user_not_on_channel(state.channel, leaver_state)
-
-          {:noreply, state}
-        end
-    after
-      3000 ->
-        raise "Timeout on part call!"
+      {:noreply, state}
     end
   end
 
   @impl true
-  def handle_cast({:quit, quitter}, state) do
+  def handle_cast({:quit, {quitter_socket, %{user_pid: user_pid}}}, state = %{users: users}) do
     # We already sent a quit message
-
-    {_, state} = pop_in(state, [:sockets, quitter.socket])
-
-    {:noreply, state}
+    {:noreply, %{state | users: users |> List.delete({quitter_socket, user_pid})}}
   end
 
   @impl true
-  def handle_cast({:send, talker, on_success_pid, message}, state) do
-    # get talking user's info
-    talker_socket = talker.socket
-    Chat.get_state(on_success_pid, talker_socket, self())
-
-    receive do
-      {:socket_state, {^talker_socket, talker_state}} ->
-        if Map.has_key?(state.sockets, talker_socket) do
-          # we're in the channel
-          receivers =
-            state.sockets
-            |> Map.delete(talker_socket)
-
-          for {_, s} <- receivers do
-            s |> on_talk(state.channel, talker_state, message)
-          end
-
-          {:noreply, state}
-        else
-          # we're not in the channel
-
-          # this isn't IRC spec but we can sway things, all channels can't accept
-          # external messages
-          talker
-          |> on_user_not_on_channel(state.channel, talker_state)
-
-          {:noreply, state}
+  def handle_cast(
+        {:send, {talker_socket, talker_state = %{requested_handle: user_handle, user_pid: user_pid}}, message},
+        state = %{users: users, channel: channel}
+      ) do
+    if {talker_socket, user_pid} in users do
+      # we're in the channel
+      for {receiver_socket, receiver_pid} <- users do
+        if user_pid != receiver_pid do
+          receiver_socket |> on_talk(channel, user_handle, message)
         end
-    after
-      3000 ->
-        raise "Timeout on talk call!"
+      end
+
+      {:noreply, state}
+    else
+      # we're not in the channel
+
+      # this isn't IRC spec but we can sway things, all channels can't accept
+      # external messages
+      talker_socket
+      |> on_user_not_on_channel(channel, talker_state)
+
+      {:noreply, state}
     end
   end
 
   @impl true
-  def handle_call(:get_users, _from, state) do
-    {:reply, state.sockets, state}
+  def handle_call(:get_users, _from, state = %{users: users}) do
+    {:reply, users, state}
+  end
+
+  @impl true
+  def handle_call(:get_name, _from, state = %{channel: channel}) do
+    {:reply, channel, state}
   end
 
   # ===========================================================================
@@ -191,7 +164,7 @@ defmodule Exsemantica.Chat.Channel do
         prefix: joiner_state |> Chat.HostMask.get(),
         command: "JOIN",
         params: [channel],
-        trailing: "Test User"
+        trailing: "Exsemantica User"
       }
       |> Chat.Message.encode()
     )
@@ -235,7 +208,7 @@ defmodule Exsemantica.Chat.Channel do
       %Chat.Message{
         prefix: ApplicationInfo.get_chat_hostname(),
         command: "442",
-        params: [parter_state.handle, channel],
+        params: [parter_state.requested_handle, channel],
         trailing: "You're not on that channel"
       }
       |> Chat.Message.encode()
@@ -245,17 +218,18 @@ defmodule Exsemantica.Chat.Channel do
   end
 
   defp on_send_topic(socket, channel, my_state, topic, refreshed) do
+    handle = my_state.requested_handle
     burst = [
       %Chat.Message{
         prefix: ApplicationInfo.get_chat_hostname(),
         command: "332",
-        params: [my_state.handle, channel],
+        params: [handle, channel],
         trailing: topic
       },
       %Chat.Message{
         prefix: ApplicationInfo.get_chat_hostname(),
         command: "333",
-        params: [my_state.handle, channel, "Services", refreshed]
+        params: [handle, channel, "Services", refreshed]
       }
     ]
 
@@ -268,24 +242,25 @@ defmodule Exsemantica.Chat.Channel do
   end
 
   defp on_send_names(socket, channel, my_state, everyone) do
+    handle = my_state.requested_handle
+
     handles =
       everyone
-      |> Enum.map_join(" ", fn {_, s} ->
-        [{_socket, s_state}] = Registry.lookup(Chat.Registry, s.socket)
-        s_state.handle
+      |> Enum.map_join(" ", fn {_socket, user_pid} ->
+        Chat.User.get_handle(user_pid)
       end)
 
     burst = [
       %Chat.Message{
         prefix: ApplicationInfo.get_chat_hostname(),
         command: "353",
-        params: [my_state.handle, "=", channel],
+        params: [handle, "=", channel],
         trailing: handles
       },
       %Chat.Message{
         prefix: ApplicationInfo.get_chat_hostname(),
         command: "366",
-        params: [my_state.handle, channel],
+        params: [handle, channel],
         trailing: "End of /NAMES list"
       }
     ]
@@ -308,7 +283,7 @@ defmodule Exsemantica.Chat.Channel do
 
     case info do
       %Exsemantica.Repo.Aggregate{name: name, description: description} ->
-        {:ok, %{name: "#" <> name, description: description}}
+        {:ok, %{name: "##{name}" |> String.downcase(), description: description}}
 
       nil ->
         :not_found

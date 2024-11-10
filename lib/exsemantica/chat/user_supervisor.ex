@@ -5,6 +5,10 @@ defmodule Exsemantica.Chat.UserSupervisor do
   alias Exsemantica.Chat
   use DynamicSupervisor
 
+  # Maximum users who can join
+  # TODO: Make this a config variable
+  @max_users 1024
+
   def start_link(init_arg) do
     DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
   end
@@ -16,10 +20,18 @@ defmodule Exsemantica.Chat.UserSupervisor do
     DynamicSupervisor.start_child(__MODULE__, {Chat.User, handle: handle})
   end
 
+  @doc """
+  Counts how many user states are online at the moment.
+  """
+  def count_children() do
+    DynamicSupervisor.count_children(__MODULE__)
+  end
+
   @impl true
   def init(init_arg) do
     DynamicSupervisor.init(
       strategy: :one_for_one,
+      max_children: @max_users,
       extra_arguments: [init_arg]
     )
   end

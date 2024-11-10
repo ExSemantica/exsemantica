@@ -3,6 +3,6 @@ defmodule Exsemantica.Chat.HostMask do
   IRC host mask conveniences
   """
   def get(state) do
-    "#{state.handle}!#{state.user_id}@#{state.vhost}"
+    "#{state.requested_handle}!#{state.ident}@#{state.vhost}"
   end
 end
