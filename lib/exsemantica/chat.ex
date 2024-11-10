@@ -21,92 +21,20 @@ defmodule Exsemantica.Chat do
   # TODO: Make this a config variable
   @max_users 1024
 
-  defmodule SocketState do
-    @moduledoc """
-    Stored in the registry with the ThousandIsland socket as the key
-    """
-
-    defstruct [:state, :handle, :password, :user_id, :vhost, :ping_timer, :channels]
-  end
-
-  @deprecated "Use state get/put functions instead."
-  def successful_join(pid, channel, key) do
-    GenServer.cast(pid, {:successful_join, channel, key})
-  end
-
-  @deprecated "Use state get/put functions instead."
-  def successful_quit(pid, channel, key) do
-    GenServer.cast(pid, {:successful_quit, channel, key})
-  end
-
-  @doc """
-  Gets the registry state of a certain socket
-  """
-  def get_state(pid, key, reply_to) do
-    GenServer.cast(pid, {:get_state, key, reply_to})
-  end
-
-  @doc """
-  Puts a new registry state in the socket
-  """
-  def put_state(pid, key, what) do
-    GenServer.cast(pid, {:put_state, key, what})
-  end
-
   # ===========================================================================
   # Initial connection
   # ===========================================================================
   @impl ThousandIsland.Handler
   def handle_connection(socket, state) do
-    {:ok, _pid} =
-      Registry.register(__MODULE__.Registry, socket.socket, %__MODULE__.SocketState{
-        state: :authentication,
-        ping_timer: Process.send_after(self(), :ping, @ping_interval),
-        channels: MapSet.new()
-      })
-
-    {:continue, state, @timeout_auth}
-  end
-
-  # ===========================================================================
-  # Only our process can modify its own registry
-  # ===========================================================================
-  @impl GenServer
-  def handle_cast({:successful_join, channel, key}, {socket, state}) do
-    Registry.update_value(
-      __MODULE__.Registry,
-      key,
-      &%__MODULE__.SocketState{&1 | channels: MapSet.put(&1.channels, channel)}
-    )
-
-    {:noreply, {socket, state}, socket.read_timeout}
-  end
-
-  @impl GenServer
-  def handle_cast({:successful_quit, channel, key}, {socket, state}) do
-    Registry.update_value(
-      __MODULE__.Registry,
-      key,
-      &%__MODULE__.SocketState{&1 | channels: MapSet.delete(&1.channels, channel)}
-    )
-
-    {:noreply, {socket, state}, socket.read_timeout}
-  end
-
-  @impl GenServer
-  def handle_cast({:get_state, key, reply_to}, {socket, state}) do
-    [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, key)
-
-    Process.send(reply_to, {:socket_state, {key, socket_state}}, [])
-
-    {:noreply, {socket, state}, socket.read_timeout}
-  end
-
-  @impl GenServer
-  def handle_cast({:put_state, key, fun}, {socket, state}) do
-    Registry.update_value(__MODULE__.Registry, key, fun)
-
-    {:noreply, {socket, state}, socket.read_timeout}
+    {:continue,
+     %{
+       state
+       | requested_handle: nil,
+         requested_password: nil,
+         irc_state: :authentication,
+         ping_timer: nil,
+         user_data: nil
+     }, @timeout_auth}
   end
 
   # ===========================================================================
@@ -127,7 +55,7 @@ defmodule Exsemantica.Chat do
   # Receiving data
   # ===========================================================================
   @impl ThousandIsland.Handler
-  def handle_data(data, socket, state) do
+  def handle_data(data, socket, state = %{irc_state: irc_state, ping_timer: ping_timer}) do
     # Decode all receivable messages
     messages = data |> __MODULE__.Message.decode()
 
@@ -136,39 +64,33 @@ defmodule Exsemantica.Chat do
       process_state(message, socket)
     end
 
-    [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, socket.socket)
+    # What is our IRC state at the moment?
+    case irc_state do
+      :pinging ->
+        Process.cancel_timer(ping_timer)
 
-    if socket_state.state == :pinging do
-      Process.cancel_timer(socket_state.ping_timer)
+        {:continue,
+         %{
+           state
+           | irc_state: :wait_for_ping,
+             ping_timer: Process.send_after(self(), :ping, @ping_interval)
+         }, :infinity}
 
-      Registry.update_value(
-        __MODULE__.Registry,
-        socket.socket,
-        &%__MODULE__.SocketState{
-          &1
-          | state: :wait_for_ping,
-            ping_timer: Process.send_after(self(), :ping, @ping_interval)
-        }
-      )
-
-      {:continue, state, :infinity}
-    else
-      {:continue, state, socket.read_timeout}
+      _ ->
+        {:continue, state, socket.read_timeout}
     end
   end
 
   @impl ThousandIsland.Handler
-  def handle_close(socket, _state) do
-    Registry.unregister(__MODULE__.Registry, socket.socket)
+  def handle_close(socket, %{user_data: user_data}) do
+    __MODULE__.User.stop()
 
     :ok
   end
 
   @impl ThousandIsland.Handler
-  def handle_timeout(socket, _state) do
-    [{_socket, socket_state}] = Registry.lookup(__MODULE__.Registry, socket.socket)
-
-    case socket_state.state do
+  def handle_timeout(socket, %{irc_state: irc_state}) do
+    case irc_state do
       :authentication ->
         socket
         |> ThousandIsland.Socket.send(
