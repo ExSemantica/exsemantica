@@ -22,9 +22,9 @@ defmodule Exsemantica.Chat do
   # Initial connection
   # ===========================================================================
   @impl ThousandIsland.Handler
-  def handle_connection(_socket, _state) do
+  def handle_connection(_socket, state) do
     {:continue,
-     %{
+     %{state | 
        requested_handle: nil,
        requested_password: nil,
        irc_state: :authentication,
