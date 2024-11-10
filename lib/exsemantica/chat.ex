@@ -282,7 +282,7 @@ defmodule Exsemantica.Chat do
 
     case user do
       {:ok, user_data} ->
-        user_stat = __MODULE__.UserSupervisor.start_child(user_data.handle)
+        user_stat = __MODULE__.UserSupervisor.start_child(user_data.username)
 
         case user_stat do
           {:ok, user_pid} ->
