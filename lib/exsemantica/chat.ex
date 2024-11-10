@@ -58,7 +58,10 @@ defmodule Exsemantica.Chat do
     # and then iterate through them
     {socket, state} =
       messages
-      |> Enum.reduce({socket, state}, &process_state/2)
+      |> Enum.reduce({socket, state}, fn x, acc ->
+        IO.inspect acc
+        process_state(x, acc)
+      end)
 
     # What is our IRC state at the moment?
     # NOTE: we can't update the read timeout using process_state
