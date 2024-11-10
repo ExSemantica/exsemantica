@@ -15,6 +15,15 @@ if config_env() == :prod do
       You can generate once by calling: mix guardian.gen.secret
       """
 
+  chat_hostname =
+    System.get_env("CHAT_HOSTNAME") ||
+      raise """
+      environment CHAT_HOSTNAME is missing.
+      Fill it in with your hostname or IP address.
+      """
+
+  config :exsemantica, Exsemantica.ApplicationInfo, chat_hostname: chat_hostname
+
   config :exsemantica, Exsemantica.Auth.Guardian,
     issuer: "exsemantica",
     secret_key: guardian_secret
