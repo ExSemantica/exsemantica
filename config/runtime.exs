@@ -22,7 +22,9 @@ if config_env() == :prod do
       Fill it in with your hostname or IP address.
       """
 
-  config :exsemantica, Exsemantica.ApplicationInfo, chat_hostname: chat_hostname
+  config :exsemantica, Exsemantica.ApplicationInfo,
+    chat_hostname: chat_hostname,
+    commit_sha_result: :release
 
   config :exsemantica, Exsemantica.Auth.Guardian,
     issuer: "exsemantica",
