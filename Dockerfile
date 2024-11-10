@@ -26,6 +26,10 @@ RUN mix deps.get --only $MIX_ENV
 RUN mkdir config
 COPY config/config.exs config/$MIX_ENV.exs config/
 
+# Copy needed migrations
+RUN mkdir priv
+COPY priv/repo priv/repo
+
 # Compile dependencies
 RUN mix deps.compile
 
