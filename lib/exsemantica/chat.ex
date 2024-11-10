@@ -115,16 +115,14 @@ defmodule Exsemantica.Chat do
          %__MODULE__.Message{command: "NICK", params: [nick]},
          {socket,
           state = %{
-            irc_state: :authentication,
-            requested_password: requested_password,
-            requested_handle: requested_handle
+            irc_state: :authentication
           }}
        ) do
     case nick |> Constrain.into_valid_username() do
       {:ok, valid_nick} ->
         {socket, state} = {socket, %{state | requested_handle: valid_nick}}
 
-        if not is_nil(requested_password) and not is_nil(requested_handle) do
+        if not is_nil(state.requested_password) do
           {socket, state} |> try_login()
         else
           {socket, state}
@@ -141,14 +139,12 @@ defmodule Exsemantica.Chat do
          %__MODULE__.Message{command: "PASS", params: [pass]},
          {socket,
           state = %{
-            irc_state: :authentication,
-            requested_password: requested_password,
-            requested_handle: requested_handle
+            irc_state: :authentication
           }}
        ) do
     {socket, state} = {socket, %{state | requested_password: pass}}
 
-    if not is_nil(requested_password) and not is_nil(requested_handle) do
+    if not is_nil(state.requested_handle) do
       {socket, state} |> try_login()
     else
       {socket, state}
