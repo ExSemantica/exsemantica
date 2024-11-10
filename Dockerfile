@@ -1,4 +1,4 @@
-ARG MIX_ENV="dev" # The Mix environment to build
+ARG MIX_ENV="prod" # The Mix environment to build, probably should be "prod"
 
 ARG USE_ERLANG="27.1.2" # The Erlang/OTP version to use
 ARG USE_ELIXIR="1.17.3" # The Elixir version to use
