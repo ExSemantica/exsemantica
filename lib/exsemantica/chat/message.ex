@@ -108,12 +108,11 @@ defmodule Exsemantica.Chat.Message do
   defp decode_one(message) do
     # One split IRC command
     if message |> String.starts_with?(":") do
-      [prefix | tail] =
-        message |> String.trim() |> String.replace_prefix(":", "") |> String.split(" ", parts: 2)
-
+      [prefix | tail] = message |> String.replace_prefix(":", "") |> String.split(" ", parts: 2)
       decode_into_structure(tail, prefix)
     else
       decode_into_structure([message], nil)
     end
   end
 end
+

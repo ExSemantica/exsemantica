@@ -67,7 +67,7 @@ defmodule Exsemantica.Chat do
     # NOTE: we can't update the read timeout using process_state
     case irc_state do
       :pinging ->
-        Process.cancel_timer(ping_timer)
+        if not is_nil(ping_timer), do: Process.cancel_timer(ping_timer)
 
         {:continue,
          %{
@@ -290,7 +290,8 @@ defmodule Exsemantica.Chat do
                 requested_handle: handle,
                 requested_password: :ok,
                 vhost: "user/#{handle}",
-                connected?: true
+                connected?: true,
+                state: :pinging
             }
 
             # application version
