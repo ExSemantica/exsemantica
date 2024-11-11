@@ -13,10 +13,10 @@ defmodule Exsemantica.Chat do
 
   # Wait this long in milliseconds for NICK and PASS before disconnecting
   # Note that USER isn't implemented here
-  @timeout_auth 10_000
+  @timeout_auth 5_000
 
   # Ping interval in milliseconds
-  @ping_interval 60_000
+  @ping_interval 15_000
 
   # ===========================================================================
   # Initial connection
@@ -203,7 +203,7 @@ defmodule Exsemantica.Chat do
 
   # PART
   defp process_state(
-         %__MODULE__.Message{command: "PART", params: channels, trailing: reason},
+         %__MODULE__.Message{command: "PART", params: [channels], trailing: reason},
          {socket, state = %{requested_handle: requested_handle, connected?: true}}
        ) do
     channels_split = channels |> String.split(",")
