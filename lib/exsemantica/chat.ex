@@ -291,7 +291,7 @@ defmodule Exsemantica.Chat do
                 requested_password: :ok,
                 vhost: "user/#{handle}",
                 connected?: true,
-                state: :pinging
+                irc_state: :pinging
             }
 
             # application version
