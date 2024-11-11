@@ -74,7 +74,7 @@ defmodule Exsemantica.Chat.Channel do
       state = %{state | users: [{joiner_socket, user_pid} | users]}
 
       # send the join message to everyone
-      for {other_socket, _other_pid} <- users do
+      for {other_socket, _other_pid} <- state.users do
         other_socket |> on_join(state.channel, joiner_state)
       end
 
