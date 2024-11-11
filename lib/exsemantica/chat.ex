@@ -61,10 +61,7 @@ defmodule Exsemantica.Chat do
     # and then iterate through them
     {socket, state} =
       messages
-      |> Enum.reduce({socket, state}, fn x, acc ->
-        IO.inspect(acc)
-        process_state(x, acc)
-      end)
+      |> Enum.reduce({socket, state}, &process_state/2)
 
     # What is our IRC state at the moment?
     # NOTE: we can't update the read timeout using process_state
@@ -86,11 +83,7 @@ defmodule Exsemantica.Chat do
 
   @impl ThousandIsland.Handler
   def handle_close(_socket, %{user_pid: user_pid}) do
-    if not is_nil(user_pid) do
-      __MODULE__.User.stop(user_pid)
-    end
-
-    :ok
+    __MODULE__.UserSupervisor.terminate_child(user_pid)
   end
 
   @impl ThousandIsland.Handler
