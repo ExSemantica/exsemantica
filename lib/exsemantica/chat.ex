@@ -424,7 +424,7 @@ defmodule Exsemantica.Chat do
     )
 
     # Close the client socket, the handle_close callback will wipe the socket
-    # from the Registry
+    # from the User Supervisor
     socket |> ThousandIsland.Socket.close()
 
     # NOTE: Will this cause lingering states?

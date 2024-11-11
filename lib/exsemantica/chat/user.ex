@@ -35,8 +35,4 @@ defmodule Exsemantica.Chat.User do
       %{state | channels: state.channels |> MapSet.delete(channel)}
     end)
   end
-
-  def stop(pid) do
-    Agent.stop(pid)
-  end
 end
