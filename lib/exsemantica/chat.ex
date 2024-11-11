@@ -24,11 +24,14 @@ defmodule Exsemantica.Chat do
   @impl ThousandIsland.Handler
   def handle_connection(_socket, _state) do
     {:continue,
-     %{requested_handle: nil,
+     %{
+       requested_handle: nil,
        requested_password: nil,
        irc_state: :authentication,
        ping_timer: nil,
        user_pid: nil,
+       ident: "user",
+       vhost: nil,
        connected?: false
      }, @timeout_auth}
   end
@@ -59,7 +62,7 @@ defmodule Exsemantica.Chat do
     {socket, state} =
       messages
       |> Enum.reduce({socket, state}, fn x, acc ->
-        IO.inspect acc
+        IO.inspect(acc)
         process_state(x, acc)
       end)
 
@@ -293,8 +296,7 @@ defmodule Exsemantica.Chat do
               | user_pid: user_pid,
                 requested_handle: handle,
                 requested_password: :ok,
-                ident: "user",
-                vhost: "user/" <> handle,
+                vhost: "user/#{handle}",
                 connected?: true
             }
 
