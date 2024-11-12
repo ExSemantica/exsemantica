@@ -62,7 +62,7 @@ defmodule Exsemantica.Chat do
       |> __MODULE__.Message.encode()
     )
 
-    {:noreply, {socket, %{state | irc_state: :wait_for_ping}}, @ping_timeout}
+    {:noreply, {socket, %{state | irc_state: :pinging}}, @ping_timeout}
   end
 
   # ===========================================================================
@@ -81,7 +81,7 @@ defmodule Exsemantica.Chat do
     # What is our IRC state at the moment?
     # NOTE: we can't update the read timeout using process_state
     case irc_state do
-      :pinging ->
+      :ping_received ->
         if not is_nil(ping_timer), do: Process.cancel_timer(ping_timer)
 
         {:continue,
@@ -110,13 +110,9 @@ defmodule Exsemantica.Chat do
         |> quit("Authentication timeout")
 
       # Ping has timed out
-      :wait_for_ping ->
+      :pinging ->
         {socket, state}
         |> quit("Ping timeout")
-
-      # Ghost connection, TODO: do we have to cover this case?
-      :pinging ->
-        :ok
     end
 
     :ok
@@ -177,12 +173,12 @@ defmodule Exsemantica.Chat do
       |> __MODULE__.Message.encode()
     )
 
-    {socket, state}
+    {socket, %{state | irc_state: :ping_received}}
   end
 
   # PONG
   defp process_state(%__MODULE__.Message{command: "PONG"}, {socket, state}) do
-    {socket, %{state | irc_state: :pinging}}
+    {socket, %{state | irc_state: :ping_received}}
   end
 
   # JOIN
