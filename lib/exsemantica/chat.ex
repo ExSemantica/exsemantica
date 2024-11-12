@@ -101,6 +101,10 @@ defmodule Exsemantica.Chat do
       :wait_for_ping ->
         {socket, state}
         |> quit("Ping timeout")
+
+      # Ghost connection, TODO: do we have to cover this case?
+      :pinging ->
+        :ok
     end
 
     :ok
@@ -388,7 +392,8 @@ defmodule Exsemantica.Chat do
   defp quit({socket, state = %{user_pid: user_pid}}, reason) do
     # This is complicated so I will explain how this all works
     if Process.alive?(user_pid) do
-        all_users = user_pid
+      receiving_sockets =
+        user_pid
         # Get a list of channels the user is connected to
         |> __MODULE__.User.get_channels()
         # Get a list of all sockets in all channels the user is in
@@ -400,11 +405,6 @@ defmodule Exsemantica.Chat do
             other_socket
           end
         end)
-
-        IO.inspect all_users
-
-      receiving_sockets =
-        all_users
         # We need to flatten it since it's a list of lists
         |> List.flatten()
         # Remove duplicates
@@ -440,7 +440,6 @@ defmodule Exsemantica.Chat do
     # Close the client socket, the handle_close callback will wipe the socket
     # from the User Supervisor
     socket |> ThousandIsland.Socket.close()
-    
 
     # NOTE: Will this cause lingering states?
     {socket, state}
