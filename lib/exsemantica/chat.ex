@@ -16,7 +16,7 @@ defmodule Exsemantica.Chat do
   @timeout_auth 5_000
 
   # Ping interval in milliseconds
-  @ping_interval 15_000
+  @ping_interval 30_000
 
   # Ping timeout in milliseconds
   @ping_timeout 5_000
