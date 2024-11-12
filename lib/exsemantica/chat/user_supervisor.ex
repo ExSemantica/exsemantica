@@ -30,9 +30,8 @@ defmodule Exsemantica.Chat.UserSupervisor do
   @doc """
   Deletes a user.
   """
-  def terminate_and_delete_child(pid) do
-    DynamicSupervisor.terminate_child(__MODULE__, pid)
-    DynamicSupervisor.delete_child(__MODULE__, pid)
+  def terminate_child(pid) do
+    :ok = DynamicSupervisor.terminate_child(__MODULE__, pid)
   end
 
   @impl true
