@@ -16,8 +16,8 @@ defmodule Exsemantica.Chat.UserSupervisor do
   @doc """
   Starts a user state.
   """
-  def start_child(handle) do
-    DynamicSupervisor.start_child(__MODULE__, {Chat.User, handle: handle})
+  def start_child(handle, socket: socket) do
+    DynamicSupervisor.start_child(__MODULE__, {Chat.User, handle: handle, socket: socket})
   end
 
   @doc """

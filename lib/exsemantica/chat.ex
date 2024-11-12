@@ -22,6 +22,13 @@ defmodule Exsemantica.Chat do
   @ping_timeout 5_000
 
   # ===========================================================================
+  # PUBLIC CALLS
+  # ===========================================================================
+  def kill_client(pid, source, reason) do
+    GenServer.cast(pid, {:kill_client, source, reason})
+  end
+
+  # ===========================================================================
   # Initial connection
   # ===========================================================================
   @impl ThousandIsland.Handler
@@ -40,8 +47,13 @@ defmodule Exsemantica.Chat do
   end
 
   # ===========================================================================
-  # Info messages
+  # GenServer messages
   # ===========================================================================
+  @impl GenServer
+  def handle_cast({:kill_client, source, reason}, {socket, state}) do
+    {:noreply, {socket, state} |> quit("Killed (#{source} (#{reason}))"), socket.read_timeout}
+  end
+
   @impl GenServer
   def handle_info(:ping, {socket, state}) do
     socket
@@ -289,7 +301,7 @@ defmodule Exsemantica.Chat do
 
     case user do
       {:ok, user_data} ->
-        user_stat = __MODULE__.UserSupervisor.start_child(user_data.username)
+        user_stat = __MODULE__.UserSupervisor.start_child(user_data.username, self())
 
         case user_stat do
           {:ok, user_pid} ->

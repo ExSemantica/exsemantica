@@ -5,12 +5,12 @@ defmodule Exsemantica.Chat.User do
   use Agent
   alias Exsemantica.Chat
 
-  def start_link(_init_arg, handle: handle) do
+  def start_link(_init_arg, handle: handle, socket: socket) do
     where = {:via, Registry, {Chat.UserRegistry, handle}}
 
     Agent.start_link(
       fn ->
-        %{handle: handle, channels: MapSet.new()}
+        %{handle: handle, socket: socket, channels: MapSet.new()}
       end,
       name: where
     )
@@ -34,5 +34,13 @@ defmodule Exsemantica.Chat.User do
     Agent.update(pid, fn state ->
       %{state | channels: state.channels |> MapSet.delete(channel)}
     end)
+  end
+
+  def kill_connection(pid, source, reason) do
+    socket_pid = Agent.get(pid, fn state ->
+      state.socket
+    end)
+
+    Chat.kill_client(socket_pid, source, reason)
   end
 end
