@@ -384,8 +384,7 @@ defmodule Exsemantica.Chat do
   defp quit({socket, state = %{user_pid: user_pid}}, reason) do
     # This is complicated so I will explain how this all works
     if not is_nil(user_pid) do
-      receiving_sockets =
-        user_pid
+        all_users = user_pid
         # Get a list of channels the user is connected to
         |> __MODULE__.User.get_channels()
         # Get a list of all sockets in all channels the user is in
@@ -397,6 +396,11 @@ defmodule Exsemantica.Chat do
             other_socket
           end
         end)
+
+        IO.inspect all_users
+
+      receiving_sockets =
+        all_users
         # We need to flatten it since it's a list of lists
         |> List.flatten()
         # Remove duplicates
