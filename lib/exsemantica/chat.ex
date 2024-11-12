@@ -16,7 +16,7 @@ defmodule Exsemantica.Chat do
   @timeout_auth 5_000
 
   # Ping interval in milliseconds
-  @ping_interval 30_000
+  @ping_interval 15_000
 
   # Ping timeout in milliseconds
   @ping_timeout 5_000
@@ -89,7 +89,7 @@ defmodule Exsemantica.Chat do
            state
            | irc_state: :wait_for_ping,
              ping_timer: Process.send_after(self(), :ping, @ping_interval)
-         }, :infinity}
+         }}
 
       _ ->
         {:continue, state, socket.read_timeout}
@@ -113,6 +113,9 @@ defmodule Exsemantica.Chat do
       :pinging ->
         {socket, state}
         |> quit("Ping timeout")
+
+      # Ping has been received, we don't care
+
     end
 
     :ok
