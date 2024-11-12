@@ -308,9 +308,10 @@ defmodule Exsemantica.Chat do
               | user_pid: user_pid,
                 requested_handle: handle,
                 requested_password: :ok,
+                ping_timer: Process.send_after(self(), :ping, @ping_interval),
+                irc_state: :wait_for_ping,
                 vhost: "user/#{handle}",
-                connected?: true,
-                irc_state: :pinging
+                connected?: true
             }
 
             # application version
