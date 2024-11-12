@@ -27,13 +27,6 @@ defmodule Exsemantica.Chat.UserSupervisor do
     DynamicSupervisor.count_children(__MODULE__)
   end
 
-  @doc """
-  Terminates the specified user's PID.
-  """
-  def terminate_child(pid) do
-    DynamicSupervisor.terminate_child(__MODULE__, pid)
-  end
-
   @impl true
   def init(init_arg) do
     DynamicSupervisor.init(
