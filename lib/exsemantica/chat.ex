@@ -90,12 +90,6 @@ defmodule Exsemantica.Chat do
   end
 
   @impl ThousandIsland.Handler
-  def handle_error(_reason, _socket, %{user_pid: user_pid}) do
-    __MODULE__.UserSupervisor.terminate_child(user_pid)
-  end
-
-
-  @impl ThousandIsland.Handler
   def handle_timeout(socket, state = %{irc_state: irc_state}) do
     case irc_state do
       # Authentication has timed out
@@ -429,6 +423,8 @@ defmodule Exsemantica.Chat do
           |> __MODULE__.Message.encode()
         )
       end
+
+      :ok = __MODULE__.UserSupervisor.terminate_child(user_pid)
     end
 
     # Notify the client of the connection termination reason
@@ -444,6 +440,7 @@ defmodule Exsemantica.Chat do
     # Close the client socket, the handle_close callback will wipe the socket
     # from the User Supervisor
     socket |> ThousandIsland.Socket.close()
+    
 
     # NOTE: Will this cause lingering states?
     {socket, state}
