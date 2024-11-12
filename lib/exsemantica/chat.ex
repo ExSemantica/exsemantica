@@ -86,12 +86,12 @@ defmodule Exsemantica.Chat do
 
   @impl ThousandIsland.Handler
   def handle_close(_socket, %{user_pid: user_pid}) do
-    __MODULE__.User.stop(user_pid)
+    __MODULE__.UserSupervisor.terminate_and_delete_child(user_pid)
   end
 
   @impl ThousandIsland.Handler
   def handle_error(_reason, _socket, %{user_pid: user_pid}) do
-    __MODULE__.User.stop(user_pid)
+    __MODULE__.UserSupervisor.terminate_and_delete_child(user_pid)
   end
 
 
