@@ -398,7 +398,7 @@ defmodule Exsemantica.Chat do
   # ===========================================================================
   # Quit
   # ===========================================================================
-  defp quit({socket, state = %{user_pid: user_pid}}, reason) do
+  defp quit({socket, state = %{ping_timer: ping_timer, user_pid: user_pid}}, reason) do
     # This is complicated so I will explain how this all works
     if Process.alive?(user_pid) do
       receiving_sockets =
@@ -434,6 +434,9 @@ defmodule Exsemantica.Chat do
       end
 
       :ok = __MODULE__.UserSupervisor.terminate_child(user_pid)
+      
+      # Ping timer should be removed when the connection is removed
+      if not is_nil(ping_timer), do: Process.cancel_timer(ping_timer)
     end
 
     # Notify the client of the connection termination reason
