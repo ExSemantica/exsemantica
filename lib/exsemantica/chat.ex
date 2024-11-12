@@ -69,7 +69,7 @@ defmodule Exsemantica.Chat do
   # Receiving data
   # ===========================================================================
   @impl ThousandIsland.Handler
-  def handle_data(data, socket, state = %{irc_state: irc_state, ping_timer: ping_timer}) do
+  def handle_data(data, socket, state = %{ping_timer: ping_timer}) do
     # Decode all receivable messages
     messages = data |> __MODULE__.Message.decode()
 
@@ -80,7 +80,7 @@ defmodule Exsemantica.Chat do
 
     # What is our IRC state at the moment?
     # NOTE: we can't update the read timeout using process_state
-    case irc_state do
+    case state.irc_state do
       :ping_received ->
         if not is_nil(ping_timer), do: Process.cancel_timer(ping_timer)
 
@@ -113,9 +113,6 @@ defmodule Exsemantica.Chat do
       :pinging ->
         {socket, state}
         |> quit("Ping timeout")
-
-      # Ping has been received, we don't care
-
     end
 
     :ok
