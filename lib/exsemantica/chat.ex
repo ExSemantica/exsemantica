@@ -387,7 +387,7 @@ defmodule Exsemantica.Chat do
   # ===========================================================================
   defp quit({socket, state = %{user_pid: user_pid}}, reason) do
     # This is complicated so I will explain how this all works
-    if not is_nil(user_pid) do
+    if Process.alive?(user_pid) do
         all_users = user_pid
         # Get a list of channels the user is connected to
         |> __MODULE__.User.get_channels()
