@@ -262,6 +262,10 @@ defmodule Exsemantica.Chat do
     {socket, state}
   end
 
+  defp process_state(%__MODULE__.Message{command: "QUIT", trailing: reason}, {socket, state}) do
+    {socket, state} |> quit("Client Quit: #{reason}")
+  end
+
   # TODO: Add WHO command, might make HexChat happy
   # TODO: Add IRC chanop commands based on aggregate moderator listings
 
