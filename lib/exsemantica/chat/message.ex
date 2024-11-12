@@ -50,7 +50,9 @@ defmodule Exsemantica.Chat.Message do
   Decodes an incoming IRC command.
   """
   def decode(message) do
-    message |> String.split("\r\n") |> Enum.reject(&(&1 == "")) |> Enum.map(&decode_one/1)
+    result = message |> String.split("\r\n") |> Enum.reject(&(&1 == "")) |> Enum.map(&decode_one/1)
+
+    IO.inspect result
   end
 
   # ===========================================================================
