@@ -120,14 +120,14 @@ defmodule Exsemantica.Chat.Channel do
 
   @impl true
   def handle_cast(
-        {:send, {talker_socket, talker_state = %{requested_handle: user_handle, user_pid: user_pid}}, message},
+        {:send, {talker_socket, talker_state = %{user_pid: user_pid}}, message},
         state = %{users: users, channel: channel}
       ) do
     if {talker_socket, user_pid} in users do
       # we're in the channel
       for {receiver_socket, receiver_pid} <- users do
         if user_pid != receiver_pid do
-          receiver_socket |> on_talk(channel, user_handle, message)
+          receiver_socket |> on_talk(channel, talker_state, message)
         end
       end
 
