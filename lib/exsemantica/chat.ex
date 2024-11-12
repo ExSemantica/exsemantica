@@ -18,6 +18,9 @@ defmodule Exsemantica.Chat do
   # Ping interval in milliseconds
   @ping_interval 15_000
 
+  # Ping timeout in milliseconds
+  @ping_timeout 5_000
+
   # ===========================================================================
   # Initial connection
   # ===========================================================================
@@ -47,7 +50,7 @@ defmodule Exsemantica.Chat do
       |> __MODULE__.Message.encode()
     )
 
-    {:noreply, {socket, state}, 5000}
+    {:noreply, {socket, %{state | irc_state: :wait_for_ping}}, @ping_timeout}
   end
 
   # ===========================================================================
