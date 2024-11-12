@@ -83,7 +83,7 @@ defmodule Exsemantica.Chat.Channel do
       |> on_send_topic(channel, joiner_state, topic, created)
       |> on_send_names(channel, joiner_state, state.users)
 
-      Chat.User.join(user_pid, channel)
+      Chat.User.join(user_pid, self())
 
       {:noreply, state}
     end
@@ -100,7 +100,7 @@ defmodule Exsemantica.Chat.Channel do
         other_socket |> on_part(channel, leaver_state, reason)
       end
 
-      Chat.User.part(user_pid, channel)
+      Chat.User.part(user_pid, self())
 
       {:noreply, %{state | users: users |> List.delete({leaver_socket, user_pid})}}
     else
