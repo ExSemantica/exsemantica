@@ -59,7 +59,10 @@ defmodule Exsemantica.MixProject do
       {:postgrex, "~> 0.19"},
 
       # Framework for TCP-based chat service
-      {:thousand_island, "~> 1.3"}
+      {:thousand_island, "~> 1.3"},
+
+      # WebSockets should be used for incoming updates of aggregates and users
+      {:websock_adapter, "~> 0.5"}
     ]
   end
 

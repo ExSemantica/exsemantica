@@ -5,19 +5,19 @@ defmodule Exsemantica.API do
   @errors_json %{
     bad_request:
       :json.encode(%{
-        e: "BAD_REQUEST",
+        e: "BAD_REQUEST"
       }),
     bad_data_type:
       :json.encode(%{
-        e: "BAD_DATA_TYPE",
+        e: "BAD_DATA_TYPE"
       }),
     internal_server_error:
       :json.encode(%{
-        e: "INTERNAL_SERVER_ERROR",
+        e: "INTERNAL_SERVER_ERROR"
       }),
     endpoint_not_found:
       :json.encode(%{
-        e: "ENDPOINT_NOT_FOUND",
+        e: "ENDPOINT_NOT_FOUND"
       })
   }
 
@@ -38,6 +38,12 @@ defmodule Exsemantica.API do
   post("/authentication/log_in", do: conn |> __MODULE__.Authentication.LogIn.call([]))
   post("/authentication/refresh", do: conn |> __MODULE__.Authentication.Refresh.call([]))
   post("/authentication/register", do: conn |> __MODULE__.Authentication.Register.call([]))
+
+  get("/gateway/aggregate/:aggregate",
+    do: conn |> __MODULE__.Gateway.call(type: :aggregate, target: aggregate)
+  )
+
+  get("/gateway/user/:user", do: conn |> __MODULE__.Gateway.call(type: :user, target: user))
 
   match _ do
     conn
