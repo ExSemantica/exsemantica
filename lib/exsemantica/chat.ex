@@ -265,7 +265,7 @@ defmodule Exsemantica.Chat do
       [{pid, _name}] ->
         if message =~ @matcher_action do
           converted = Regex.named_captures(@matcher_action, message)
-          Logger.debug("[#{channel}] * #{requested_handle} #{converted}")
+          Logger.debug("[#{channel}] * #{requested_handle} #{converted["action"]}")
         else
           Logger.debug("[#{channel}] <#{requested_handle}> #{message}")
         end
