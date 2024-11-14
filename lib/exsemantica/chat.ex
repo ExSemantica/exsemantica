@@ -137,10 +137,10 @@ defmodule Exsemantica.Chat do
       {:ok, valid_nick} ->
         {socket, state} = {socket, %{state | requested_handle: valid_nick}}
 
-        if not is_nil(state.requested_password) do
-          {socket, state} |> try_login()
-        else
+        if is_nil(state.requested_password) do
           {socket, state}
+        else
+          {socket, state} |> try_login()
         end
 
       _error ->
@@ -159,10 +159,10 @@ defmodule Exsemantica.Chat do
        ) do
     {socket, state} = {socket, %{state | requested_password: pass}}
 
-    if not is_nil(state.requested_handle) do
-      {socket, state} |> try_login()
-    else
+    if is_nil(state.requested_handle) do
       {socket, state}
+    else
+      {socket, state} |> try_login()
     end
   end
 
@@ -269,6 +269,7 @@ defmodule Exsemantica.Chat do
         else
           Logger.debug("[#{channel}] <#{requested_handle}> #{message}")
         end
+
         __MODULE__.Channel.send(pid, {socket, state}, message)
 
       [] ->
@@ -415,7 +416,7 @@ defmodule Exsemantica.Chat do
   defp quit({socket, state = %{ping_timer: ping_timer, user_pid: user_pid}}, reason) do
     # This is complicated so I will explain how this all works
     if Process.alive?(user_pid) do
-      Logger.debug("#{user_pid |> __MODULE__.User.get_handle} disconnects (#{reason}))")
+      Logger.debug("#{user_pid |> __MODULE__.User.get_handle()} disconnects (#{reason}))")
 
       receiving_sockets =
         user_pid
@@ -450,7 +451,7 @@ defmodule Exsemantica.Chat do
       end
 
       :ok = __MODULE__.UserSupervisor.terminate_child(user_pid)
-      
+
       # Ping timer should be removed when the connection is removed
       if not is_nil(ping_timer), do: Process.cancel_timer(ping_timer)
     end

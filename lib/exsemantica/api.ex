@@ -21,6 +21,8 @@ defmodule Exsemantica.API do
       })
   }
 
+  require Logger
+
   use Plug.Router
   use Plug.ErrorHandler
 
@@ -75,8 +77,8 @@ defmodule Exsemantica.API do
   end
 
   @impl Plug.ErrorHandler
-  def handle_errors(conn, %{kind: _kind, reason: _reason, stack: _stack} = args) do
-    IO.inspect(args)
+  def handle_errors(conn, args = %{kind: _kind, reason: _reason, stack: _stack}) do
+    Logger.error("Internal Server Error: " <> inspect args)
 
     conn
     |> put_resp_content_type("application/json")

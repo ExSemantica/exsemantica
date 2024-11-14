@@ -9,7 +9,7 @@ defmodule Exsemantica.Chat.Message do
   Encodes an outgoing IRC command.
   """
   def encode(
-        %__MODULE__{prefix: _prefix, command: _command, params: nil, trailing: _trailing} = remap
+        remap = %__MODULE__{prefix: _prefix, command: _command, params: nil, trailing: _trailing}
       ) do
     encode(%__MODULE__{remap | params: []})
   end
