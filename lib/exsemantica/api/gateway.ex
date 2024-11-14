@@ -7,7 +7,7 @@ defmodule Exsemantica.API.Gateway do
 
   def call(conn, opts) do
     conn
-    |> WebSockAdapter.upgrade(__MODULE__.Socket, opts, timeout: 1_000)
+    |> WebSockAdapter.upgrade(__MODULE__.Socket, opts, timeout: 5_000)
     |> halt
   end
 end

@@ -5,6 +5,8 @@ defmodule Exsemantica.Chat do
   Users can log in with a nickname and password. There is no need for the USER
   command to be sent.
   """
+  require Logger
+
   alias Exsemantica.ApplicationInfo
   alias Exsemantica.ApplicationInfo
   alias Exsemantica.Authentication
@@ -20,6 +22,8 @@ defmodule Exsemantica.Chat do
 
   # Ping timeout in milliseconds
   @ping_timeout 5_000
+
+  @matcher_action ~r/\x01ACTION (?<action>.+)\x01/
 
   # ===========================================================================
   # PUBLIC CALLS
@@ -194,9 +198,11 @@ defmodule Exsemantica.Chat do
 
       case join_stat do
         {:ok, pid} ->
+          Logger.debug("#{requested_handle} tries to join channel #{channel}")
           __MODULE__.Channel.join(pid, {socket, state})
 
         {:error, {:already_started, pid}} ->
+          Logger.debug("#{requested_handle} tries to join channel #{channel}")
           __MODULE__.Channel.join(pid, {socket, state})
 
         {:error, :not_found} ->
@@ -226,6 +232,7 @@ defmodule Exsemantica.Chat do
     for channel <- channels_split do
       case Registry.lookup(__MODULE__.ChannelRegistry, channel) do
         [{pid, _name}] ->
+          Logger.debug("#{requested_handle} tries to part channel #{channel} (#{reason})")
           __MODULE__.Channel.part(pid, {socket, state}, reason)
 
         [] ->
@@ -256,6 +263,12 @@ defmodule Exsemantica.Chat do
            channel |> String.downcase()
          ) do
       [{pid, _name}] ->
+        if message =~ @matcher_action do
+          converted = Regex.named_captures(@matcher_action, message)
+          Logger.debug("[#{channel}] * #{requested_handle} #{converted}")
+        else
+          Logger.debug("[#{channel}] <#{requested_handle}> #{message}")
+        end
         __MODULE__.Channel.send(pid, {socket, state}, message)
 
       [] ->
@@ -302,6 +315,7 @@ defmodule Exsemantica.Chat do
         case user_stat do
           {:ok, user_pid} ->
             handle = __MODULE__.User.get_handle(user_pid)
+            Logger.debug("#{handle} connects")
 
             state = %{
               state
@@ -401,6 +415,8 @@ defmodule Exsemantica.Chat do
   defp quit({socket, state = %{ping_timer: ping_timer, user_pid: user_pid}}, reason) do
     # This is complicated so I will explain how this all works
     if Process.alive?(user_pid) do
+      Logger.debug("#{user_pid |> __MODULE__.User.get_handle} disconnects (#{reason}))")
+
       receiving_sockets =
         user_pid
         # Get a list of channels the user is connected to

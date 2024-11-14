@@ -13,13 +13,14 @@ defmodule Exsemantica.Application do
       # Starts a worker by calling: Exsemantica.Worker.start_link(arg)
       # {Exsemantica.Worker, arg}
       {Bandit, plug: Exsemantica.API},
-      {Registry, keys: :unique, name: Exsemantica.Chat.UserRegistry},
       {ThousandIsland, port: 6667, handler_module: Exsemantica.Chat},
       Exsemantica.Chat.ChannelSupervisor,
       Exsemantica.Chat.UserSupervisor,
       {Registry, keys: :unique, name: Exsemantica.Chat.ChannelRegistry},
+      {Registry, keys: :unique, name: Exsemantica.Chat.UserRegistry},
       Exsemantica.Repo,
-      Exsemantica.Cache
+      Exsemantica.Cache#,
+      #Exsemantica.PubSub
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
