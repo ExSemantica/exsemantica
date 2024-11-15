@@ -332,15 +332,15 @@ defmodule Exsemantica.Chat do
         user_pid |> __MODULE__.User.set_modes(filled_modes)
     end
 
-    filled_modes = user_pid |> __MODULE__.User.get_modes() |> Enum.join()
+    filled_modes = user_pid |> __MODULE__.User.get_modes()
 
-    if filled_modes != "" do
+    if filled_modes != [] do
       socket
       |> ThousandIsland.Socket.send(
         %__MODULE__.Message{
           prefix: ApplicationInfo.get_chat_hostname(),
           command: "221",
-          params: [handle | "+#{filled_modes}"]
+          params: [handle | "+#{filled_modes |> to_string}"]
         }
         |> __MODULE__.Message.encode()
       )
