@@ -68,13 +68,13 @@ defmodule Exsemantica.Chat do
   end
 
   @impl GenServer
-  def handle_cast({:wallops, message}, {socket, state}) do
+  def handle_cast({:wallops, message}, {socket, state = %{connected?: true, requested_handle: requested_handle}}) do
     socket
     |> ThousandIsland.Socket.send(
       %__MODULE__.Message{
-        prefix: ApplicationInfo.get_chat_hostname(),
+        prefix: "Services!bot@bot/Services",
         command: "NOTICE",
-        params: ["Services"],
+        params: [requested_handle],
         trailing: message
       }
       |> __MODULE__.Message.encode()
