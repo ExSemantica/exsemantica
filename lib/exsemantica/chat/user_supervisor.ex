@@ -34,6 +34,14 @@ defmodule Exsemantica.Chat.UserSupervisor do
     :ok = DynamicSupervisor.terminate_child(__MODULE__, pid)
   end
 
+  def broadcast_wallops(message) do
+    children = DynamicSupervisor.which_children(__MODULE__)
+    for {_, pid, _, [Chat.User]} <- children do
+      pid |> Chat.User.wall(message)
+    end
+    :ok
+  end
+
   @impl true
   def init(init_arg) do
     DynamicSupervisor.init(

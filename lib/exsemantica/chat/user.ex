@@ -10,7 +10,7 @@ defmodule Exsemantica.Chat.User do
 
     Agent.start_link(
       fn ->
-        %{handle: handle, socket: socket, channels: MapSet.new()}
+        %{handle: handle, socket: socket, channels: MapSet.new(), modes: MapSet.new()}
       end,
       name: where
     )
@@ -22,6 +22,25 @@ defmodule Exsemantica.Chat.User do
 
   def get_channels(pid) do
     Agent.get(pid, &(&1.channels |> MapSet.to_list()))
+  end
+
+  def get_modes(pid) do
+    Agent.get(pid, &(&1.modes |> MapSet.to_list()))
+  end
+
+  def set_modes(pid, modes) do
+    Agent.update(pid, fn state ->
+      modes
+      |> Enum.reduce(state, &chunk_modes/2)
+    end)
+  end
+
+  def wallops(pid, message) do
+    Agent.get(pid, fn state ->
+      if state.modes |> MapSet.member?(?w) do
+        Chat.wallops(state.socket, message)
+      end
+    end)
   end
 
   def join(pid, channel) do
@@ -37,10 +56,46 @@ defmodule Exsemantica.Chat.User do
   end
 
   def kill_connection(pid, source, reason) do
-    socket_pid = Agent.get(pid, fn state ->
-      state.socket
+    Agent.get(pid, fn state ->
+      Chat.kill_client(state.socket, source, reason)
     end)
+  end
 
-    Chat.kill_client(socket_pid, source, reason)
+  # ===========================================================================
+  # Private functions go here
+  # ===========================================================================
+  defp chunk_modes(mode_chunk, state) do
+    # Charlist so that you can iterate through each mode point
+    [chead | ctail] = mode_chunk |> String.to_charlist()
+
+    case chead do
+      # Adds usermodes
+      ?+ ->
+        ctail |> Enum.reduce(state, &add_modes/2)
+
+      # Removes usermodes
+      ?- ->
+        ctail |> Enum.reduce(state, &del_modes/2)
+
+      # Something unimplemented
+      _ ->
+        state
+    end
+  end
+
+  defp add_modes(?w, state) do
+    %{state | modes: MapSet.put(state.modes, ?w)}
+  end
+
+  defp add_modes(_mode_char, state) do
+    state
+  end
+
+  defp del_modes(?w, state) do
+    %{state | modes: MapSet.delete(state.modes, ?w)}
+  end
+
+  defp del_modes(_mode_char, state) do
+    state
   end
 end

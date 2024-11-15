@@ -8,7 +8,6 @@ defmodule Exsemantica.Chat do
   require Logger
 
   alias Exsemantica.ApplicationInfo
-  alias Exsemantica.ApplicationInfo
   alias Exsemantica.Authentication
   alias Exsemantica.Constrain
   use ThousandIsland.Handler
@@ -28,8 +27,18 @@ defmodule Exsemantica.Chat do
   # ===========================================================================
   # PUBLIC CALLS
   # ===========================================================================
+  @doc """
+  Terminates the specified PID's connection, usually by an administrator.
+  """
   def kill_client(pid, source, reason) do
     GenServer.cast(pid, {:kill_client, source, reason})
+  end
+
+  @doc """
+  Sends a wallops notice to the specified PID's connection.
+  """
+  def wallops(pid, message) do
+    GenServer.cast(pid, {:wallops, message})
   end
 
   # ===========================================================================
@@ -56,6 +65,22 @@ defmodule Exsemantica.Chat do
   @impl GenServer
   def handle_cast({:kill_client, source, reason}, {socket, state}) do
     {:noreply, {socket, state} |> quit("Killed (#{source} (#{reason}))"), socket.read_timeout}
+  end
+
+  @impl GenServer
+  def handle_cast({:wallops, message}, {socket, state}) do
+    socket
+    |> ThousandIsland.Socket.send(
+      %__MODULE__.Message{
+        prefix: ApplicationInfo.get_chat_hostname(),
+        command: "NOTICE",
+        params: ["Services"],
+        trailing: message
+      }
+      |> __MODULE__.Message.encode()
+    )
+
+    {:noreply, {socket, state}, socket.read_timeout}
   end
 
   @impl GenServer
@@ -292,6 +317,67 @@ defmodule Exsemantica.Chat do
     {socket, state} |> quit("Client Quit: #{reason}")
   end
 
+  # User modes
+  defp process_state(
+         %__MODULE__.Message{command: "MODE", params: [handle | modes]},
+         {socket,
+          state = %{requested_handle: requested_handle, connected?: true, user_pid: user_pid}}
+       )
+       when handle == requested_handle do
+    case modes do
+      [] ->
+        :ok
+
+      filled_modes ->
+        user_pid |> __MODULE__.User.set_modes(filled_modes)
+    end
+
+    filled_modes = user_pid |> __MODULE__.User.get_modes() |> Enum.join()
+
+    if filled_modes != "" do
+      socket
+      |> ThousandIsland.Socket.send(
+        %__MODULE__.Message{
+          prefix: ApplicationInfo.get_chat_hostname(),
+          command: "221",
+          params: [handle | "+#{filled_modes}"]
+        }
+        |> __MODULE__.Message.encode()
+      )
+    else
+      socket
+      |> ThousandIsland.Socket.send(
+        %__MODULE__.Message{
+          prefix: ApplicationInfo.get_chat_hostname(),
+          command: "221",
+          params: [handle]
+        }
+        |> __MODULE__.Message.encode()
+      )
+    end
+
+    {socket, state}
+  end
+
+  defp process_state(
+         %__MODULE__.Message{command: "MODE", params: [other | modes]},
+         {socket, state}
+       ) do
+    if not other |> String.starts_with?("#") do
+      socket
+      |> ThousandIsland.Socket.send(
+        %__MODULE__.Message{
+          prefix: ApplicationInfo.get_chat_hostname(),
+          command: "502",
+          trailing: "Cannot change mode for other users"
+        }
+        |> __MODULE__.Message.encode()
+      )
+    end
+
+    {socket, state}
+  end
+
   # TODO: Add WHO command, might make HexChat happy
   # TODO: Add IRC chanop commands based on aggregate moderator listings
 
@@ -328,6 +414,9 @@ defmodule Exsemantica.Chat do
                 vhost: "user/#{handle}",
                 connected?: true
             }
+
+            # we receive wallops by default
+            user_pid |> __MODULE__.User.set_modes("+w")
 
             # application version
             vsn = ApplicationInfo.get_version()
