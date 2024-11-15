@@ -328,23 +328,13 @@ defmodule Exsemantica.Chat do
       [] ->
         :ok
 
-      filled_modes ->
-        user_pid |> __MODULE__.User.set_modes(filled_modes)
+      modes0 ->
+        user_pid |> __MODULE__.User.set_modes(modes0)
     end
 
     filled_modes = user_pid |> __MODULE__.User.get_modes()
 
-    if filled_modes != [] do
-      socket
-      |> ThousandIsland.Socket.send(
-        %__MODULE__.Message{
-          prefix: ApplicationInfo.get_chat_hostname(),
-          command: "221",
-          params: [handle | "+#{filled_modes |> to_string}"]
-        }
-        |> __MODULE__.Message.encode()
-      )
-    else
+    if filled_modes == "" do
       socket
       |> ThousandIsland.Socket.send(
         %__MODULE__.Message{
@@ -354,8 +344,18 @@ defmodule Exsemantica.Chat do
         }
         |> __MODULE__.Message.encode()
       )
+    else
+      socket
+      |> ThousandIsland.Socket.send(
+        %__MODULE__.Message{
+          prefix: ApplicationInfo.get_chat_hostname(),
+          command: "221",
+          params: [handle, "+#{filled_modes}"]
+        }
+        |> __MODULE__.Message.encode()
+      )
     end
-    
+
     Logger.debug("#{requested_handle} now has user modes '#{filled_modes}'")
 
     {socket, state}

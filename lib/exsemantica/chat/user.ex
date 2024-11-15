@@ -25,7 +25,7 @@ defmodule Exsemantica.Chat.User do
   end
 
   def get_modes(pid) do
-    Agent.get(pid, &(&1.modes |> MapSet.to_list()))
+    Agent.get(pid, &(&1.modes |> MapSet.to_list() |> to_string()))
   end
 
   def set_modes(pid, modes) do
