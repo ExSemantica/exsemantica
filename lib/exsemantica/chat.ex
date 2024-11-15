@@ -355,15 +355,17 @@ defmodule Exsemantica.Chat do
         |> __MODULE__.Message.encode()
       )
     end
+    
+    Logger.debug("#{requested_handle} now has user modes '#{filled_modes}'")
 
     {socket, state}
   end
 
   defp process_state(
-         %__MODULE__.Message{command: "MODE", params: [other | modes]},
+         %__MODULE__.Message{command: "MODE", params: [other | _modes]},
          {socket, state}
        ) do
-    if not other |> String.starts_with?("#") do
+    if not String.starts_with?(other, "#") do
       socket
       |> ThousandIsland.Socket.send(
         %__MODULE__.Message{
