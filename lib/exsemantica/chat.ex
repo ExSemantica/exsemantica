@@ -72,10 +72,10 @@ defmodule Exsemantica.Chat do
     socket
     |> ThousandIsland.Socket.send(
       %__MODULE__.Message{
-        prefix: "Services!bot@bot/Services",
+        prefix: __MODULE__.HostMask.services(),
         command: "NOTICE",
         params: [requested_handle],
-        trailing: message
+        trailing: "[Network Announcement] " <> message
       }
       |> __MODULE__.Message.encode()
     )
