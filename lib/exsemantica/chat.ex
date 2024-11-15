@@ -416,7 +416,7 @@ defmodule Exsemantica.Chat do
             }
 
             # we receive wallops by default
-            user_pid |> __MODULE__.User.set_modes("+w")
+            user_pid |> __MODULE__.User.set_modes(["+w"])
 
             # application version
             vsn = ApplicationInfo.get_version()
