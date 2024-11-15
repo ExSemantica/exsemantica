@@ -246,16 +246,18 @@ defmodule Exsemantica.Chat.Channel do
 
     handles =
       everyone
-      |> Enum.map_join(" ", fn {_socket, user_pid} ->
+      |> Enum.map(fn {_socket, user_pid} ->
         Chat.User.get_handle(user_pid)
       end)
+
+    handles = ["@Services" | handles]
 
     burst = [
       %Chat.Message{
         prefix: ApplicationInfo.get_chat_hostname(),
         command: "353",
         params: [handle, "=", channel],
-        trailing: handles
+        trailing: handles |> Enum.join(" ")
       },
       %Chat.Message{
         prefix: ApplicationInfo.get_chat_hostname(),
