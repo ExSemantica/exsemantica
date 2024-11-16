@@ -5,6 +5,9 @@ defmodule Exsemantica.Chat.User do
   use Agent
   alias Exsemantica.Chat
 
+  @doc """
+  Initializes this user's state
+  """
   def start_link(_init_arg, handle: handle, socket: socket) do
     where = {:via, Registry, {Chat.UserRegistry, handle}}
 
@@ -16,18 +19,32 @@ defmodule Exsemantica.Chat.User do
     )
   end
 
+  @doc """
+  Gets this user's handle
+  """
   def get_handle(pid) do
     Agent.get(pid, & &1.handle)
   end
 
+  @doc """
+  Gets a list of the channels this user's in
+  """
   def get_channels(pid) do
     Agent.get(pid, &(&1.channels |> MapSet.to_list()))
   end
 
+  @doc """
+  Gets the usermodes this user has
+  """
   def get_modes(pid) do
     Agent.get(pid, &(&1.modes |> MapSet.to_list() |> to_string()))
   end
 
+  @doc """
+  Modifies this user's usermodes
+
+  TODO: doctest this
+  """
   def set_modes(pid, modes) do
     Agent.update(pid, fn state ->
       modes
@@ -35,6 +52,12 @@ defmodule Exsemantica.Chat.User do
     end)
   end
 
+  @doc """
+  Helper for sending wallops
+
+  This should not be called on its own
+  Please use `Exsemantica.Administration.Chat.wallops/1` for this instead.
+  """
   def wallops(pid, message) do
     Agent.get(pid, fn state ->
       if state.modes |> MapSet.member?(?w) do
@@ -43,21 +66,57 @@ defmodule Exsemantica.Chat.User do
     end)
   end
 
+  @doc """
+  Makes this user join a channel
+
+  This should not be called on its own
+  """
   def join(pid, channel) do
     Agent.update(pid, fn state ->
       %{state | channels: state.channels |> MapSet.put(channel)}
     end)
   end
 
+  @doc """
+  Makes this user part a channel
+
+  This should not be called on its own.
+  """
   def part(pid, channel) do
     Agent.update(pid, fn state ->
       %{state | channels: state.channels |> MapSet.delete(channel)}
     end)
   end
 
+  @doc """
+  Helper for forcefully disconnecting this user
+
+  This should not be called on its own
+  Please use `Exsemantica.Administration.Chat.kill_client/2` for this instead.
+  """
   def kill_connection(pid, source, reason) do
     Agent.get(pid, fn state ->
       Chat.kill_client(state.socket, source, reason)
+    end)
+  end
+
+  @doc """
+  Sends a PRIVMSG to this user
+
+  This should not be called on its own
+  """
+  def send(pid, {_talker_socket, talker_state}, message) do
+    Agent.get(pid, fn state ->
+      state.socket
+      |> ThousandIsland.Socket.send(
+        %Chat.Message{
+          prefix: talker_state |> Chat.HostMask.get(),
+          command: "PRIVMSG",
+          params: [state.handle],
+          trailing: message
+        }
+        |> Chat.Message.encode()
+      )
     end)
   end
 

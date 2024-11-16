@@ -7,6 +7,7 @@ defmodule Exsemantica.Chat do
   """
   require Logger
 
+  alias Exsemantica.Administration.User
   alias Exsemantica.ApplicationInfo
   alias Exsemantica.Authentication
   alias Exsemantica.Constrain
@@ -68,14 +69,17 @@ defmodule Exsemantica.Chat do
   end
 
   @impl GenServer
-  def handle_cast({:wallops, message}, {socket, state = %{connected?: true, requested_handle: requested_handle}}) do
+  def handle_cast(
+        {:wallops, message},
+        {socket, state = %{connected?: true, requested_handle: requested_handle}}
+      ) do
     socket
     |> ThousandIsland.Socket.send(
       %__MODULE__.Message{
         prefix: __MODULE__.HostMask.services(),
         command: "NOTICE",
         params: [requested_handle],
-        trailing: "[Network Announcement] " <> message
+        trailing: "[Announcement] " <> message
       }
       |> __MODULE__.Message.encode()
     )
@@ -223,11 +227,11 @@ defmodule Exsemantica.Chat do
 
       case join_stat do
         {:ok, pid} ->
-          Logger.debug("#{requested_handle} tries to join channel #{channel}")
+          Logger.debug("#{requested_handle} joins channel #{channel}")
           __MODULE__.Channel.join(pid, {socket, state})
 
         {:error, {:already_started, pid}} ->
-          Logger.debug("#{requested_handle} tries to join channel #{channel}")
+          Logger.debug("#{requested_handle} joins channel #{channel}")
           __MODULE__.Channel.join(pid, {socket, state})
 
         {:error, :not_found} ->
@@ -257,7 +261,7 @@ defmodule Exsemantica.Chat do
     for channel <- channels_split do
       case Registry.lookup(__MODULE__.ChannelRegistry, channel) do
         [{pid, _name}] ->
-          Logger.debug("#{requested_handle} tries to part channel #{channel} (#{reason})")
+          Logger.debug("#{requested_handle} parts channel #{channel} (#{reason})")
           __MODULE__.Channel.part(pid, {socket, state}, reason)
 
         [] ->
@@ -282,32 +286,59 @@ defmodule Exsemantica.Chat do
          %__MODULE__.Message{command: "PRIVMSG", params: [channel], trailing: message},
          {socket, state = %{requested_handle: requested_handle, connected?: true}}
        ) do
-    # TODO: Make it able to direct message users...
-    case Registry.lookup(
-           __MODULE__.ChannelRegistry,
-           channel |> String.downcase()
-         ) do
-      [{pid, _name}] ->
-        if message =~ @matcher_action do
-          converted = Regex.named_captures(@matcher_action, message)
-          Logger.debug("[#{channel}] * #{requested_handle} #{converted["action"]}")
-        else
-          Logger.debug("[#{channel}] <#{requested_handle}> #{message}")
-        end
+    if String.starts_with?(channel, "#") do
+      # PRIVMSG in channel
+      case Registry.lookup(
+             __MODULE__.ChannelRegistry,
+             channel |> String.downcase()
+           ) do
+        [{pid, _name}] ->
+          if message =~ @matcher_action do
+            converted = Regex.named_captures(@matcher_action, message)
+            Logger.debug("[#{channel}] * #{requested_handle} #{converted["action"]}")
+          else
+            Logger.debug("[#{channel}] <#{requested_handle}> #{message}")
+          end
 
-        __MODULE__.Channel.send(pid, {socket, state}, message)
+          __MODULE__.Channel.send(pid, {socket, state}, message)
 
-      [] ->
-        socket
-        |> ThousandIsland.Socket.send(
-          %__MODULE__.Message{
-            prefix: ApplicationInfo.get_chat_hostname(),
-            command: "403",
-            params: [requested_handle, channel],
-            trailing: "No such channel/aggregate"
-          }
-          |> __MODULE__.Message.encode()
-        )
+        [] ->
+          socket
+          |> ThousandIsland.Socket.send(
+            %__MODULE__.Message{
+              prefix: ApplicationInfo.get_chat_hostname(),
+              command: "403",
+              params: [requested_handle, channel],
+              trailing: "No such channel/aggregate"
+            }
+            |> __MODULE__.Message.encode()
+          )
+      end
+    else
+      # PRIVMSG to user
+      case Registry.lookup(__MODULE__.UserRegistry, channel) do
+        [{pid, _name}] ->
+          if message =~ @matcher_action do
+            converted = Regex.named_captures(@matcher_action, message)
+            Logger.debug("[#{channel}] * #{requested_handle} #{converted["action"]}")
+          else
+            Logger.debug("[#{channel}] <#{requested_handle}> #{message}")
+          end
+
+          __MODULE__.User.send(pid, {socket, state}, message)
+
+        [] ->
+          socket
+          |> ThousandIsland.Socket.send(
+            %__MODULE__.Message{
+              prefix: ApplicationInfo.get_chat_hostname(),
+              command: "401",
+              params: [requested_handle, channel],
+              trailing: "No such user"
+            }
+            |> __MODULE__.Message.encode()
+          )
+      end
     end
 
     {socket, state}

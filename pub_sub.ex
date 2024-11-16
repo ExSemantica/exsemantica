@@ -1,3 +1,0 @@
-defmodule Ex do
-  
-end
