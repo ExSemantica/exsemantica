@@ -7,7 +7,6 @@ defmodule Exsemantica.Chat do
   """
   require Logger
 
-  alias Exsemantica.Administration.User
   alias Exsemantica.ApplicationInfo
   alias Exsemantica.Authentication
   alias Exsemantica.Constrain
@@ -96,7 +95,7 @@ defmodule Exsemantica.Chat do
     socket
       |> ThousandIsland.Socket.send(
         %__MODULE__.Message{
-          prefix: talker_state |> Chat.HostMask.get(),
+          prefix: talker_state |> __MODULE__.HostMask.get(),
           command: "PRIVMSG",
           params: [state.handle],
           trailing: message
