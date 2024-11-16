@@ -95,16 +95,15 @@ defmodule Exsemantica.Chat do
   def handle_cast({:direct_message, {_talker_socket, talker_state}, message}, {socket, state}) do
     socket
       |> ThousandIsland.Socket.send(
-        %Chat.Message{
+        %__MODULE__.Message{
           prefix: talker_state |> Chat.HostMask.get(),
           command: "PRIVMSG",
           params: [state.handle],
           trailing: message
         }
-        |> Chat.Message.encode()
+        |> __MODULE__.Message.encode()
       )
     {:noreply, {socket, state}, socket.read_timeout}
-   
   end
 
   @impl GenServer
