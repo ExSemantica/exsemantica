@@ -97,7 +97,7 @@ defmodule Exsemantica.Chat do
         %__MODULE__.Message{
           prefix: talker_state |> __MODULE__.HostMask.get(),
           command: "PRIVMSG",
-          params: [state.handle],
+          params: [state.requested_handle],
           trailing: message
         }
         |> __MODULE__.Message.encode()
