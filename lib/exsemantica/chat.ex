@@ -42,6 +42,10 @@ defmodule Exsemantica.Chat do
     GenServer.cast(pid, {:wallops, message})
   end
 
+  def direct_message(pid, talker, message) do
+    GenServer.cast(pid, {:direct_message, talker, message})
+  end
+
   # ===========================================================================
   # Initial connection
   # ===========================================================================
@@ -85,6 +89,22 @@ defmodule Exsemantica.Chat do
     )
 
     {:noreply, {socket, state}, socket.read_timeout}
+  end
+
+  @impl GenServer
+  def handle_cast({:direct_message, {_talker_socket, talker_state}, message}, {socket, state}) do
+    socket
+      |> ThousandIsland.Socket.send(
+        %Chat.Message{
+          prefix: talker_state |> Chat.HostMask.get(),
+          command: "PRIVMSG",
+          params: [state.handle],
+          trailing: message
+        }
+        |> Chat.Message.encode()
+      )
+    {:noreply, {socket, state}, socket.read_timeout}
+   
   end
 
   @impl GenServer

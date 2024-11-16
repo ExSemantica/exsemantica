@@ -105,18 +105,9 @@ defmodule Exsemantica.Chat.User do
 
   This should not be called on its own
   """
-  def send(pid, {_talker_socket, talker_state}, message) do
+  def send(pid, talker, message) do
     Agent.get(pid, fn state ->
-      state.socket
-      |> ThousandIsland.Socket.send(
-        %Chat.Message{
-          prefix: talker_state |> Chat.HostMask.get(),
-          command: "PRIVMSG",
-          params: [state.handle],
-          trailing: message
-        }
-        |> Chat.Message.encode()
-      )
+      Chat.direct_message(state.socket, talker, message)
     end)
   end
 
