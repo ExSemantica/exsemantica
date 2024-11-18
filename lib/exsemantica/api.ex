@@ -21,11 +21,16 @@ defmodule Exsemantica.API do
       })
   }
 
+
   require Logger
 
   use Plug.Router
   use Plug.ErrorHandler
 
+  defmodule JSON do
+    def encode!(input, _opts), do: :json.encode(input)
+    def decode(input), do: {:ok, :json.decode(input)}
+  end
 
   plug(Plug.Parsers,
     parsers: [:urlencoded, {:json, json_decoder: {:json, :decode, []}}, Absinthe.Plug.Parser]
@@ -34,7 +39,7 @@ defmodule Exsemantica.API do
   plug(:match)
   plug(:dispatch)
 
-  forward("/graphql", to: Absinthe.Plug, init_opts: [schema: Exsemantica.Schema])
+  forward("/graphql", to: Absinthe.Plug, init_opts: [schema: Exsemantica.Schema, json_codec: __MODULE__.JSON])
 
   get("/.well-known/exsemantica/application",
     do: conn |> __MODULE__.WellKnown.Application.call([])
