@@ -18,9 +18,10 @@ defmodule Exsemantica.Application do
       Exsemantica.Chat.UserSupervisor,
       {Registry, keys: :unique, name: Exsemantica.Chat.ChannelRegistry},
       {Registry, keys: :unique, name: Exsemantica.Chat.UserRegistry},
+      {Registry, keys: :unique, name: Exsemantica.PubSub.ServerRegistry},
       Exsemantica.Repo,
-      Exsemantica.Cache#,
-      #Exsemantica.PubSub
+      Exsemantica.Cache,
+      Exsemantica.PubSub
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

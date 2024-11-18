@@ -62,7 +62,13 @@ defmodule Exsemantica.MixProject do
       {:thousand_island, "~> 1.3"},
 
       # WebSockets should be used for incoming updates of aggregates and users
-      {:websock_adapter, "~> 0.5"}
+      {:websock_adapter, "~> 0.5"},
+
+      # GraphQL source
+      {:absinthe, "~> 1.7"},
+
+      # GraphQL via HTTP
+      {:absinthe_plug, "~> 1.5"},
     ]
   end
 

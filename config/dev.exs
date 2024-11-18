@@ -4,8 +4,8 @@ import Config
 config :exsemantica, Exsemantica.Repo,
   username: "postgres",
   password: "postgres",
-  hostname: "172.17.0.1",
-  database: "exsemantica_dev",
+  hostname: "192.168.88.25",
+  database: "exsemantica",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
@@ -24,7 +24,7 @@ commit_sha_result = System.cmd("git", ["rev-parse", "--short", "HEAD"])
 
 config :exsemantica, Exsemantica.ApplicationInfo,
   commit_sha_result: commit_sha_result,
-  chat_hostname: "192.168.88.25"
+  chat_hostname: "127.0.0.1"
 
 # 5 minutes per user token
 config :exsemantica, Exsemantica.Authentication, minutes_grace: 5

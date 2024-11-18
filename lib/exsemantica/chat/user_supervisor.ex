@@ -34,11 +34,17 @@ defmodule Exsemantica.Chat.UserSupervisor do
     :ok = DynamicSupervisor.terminate_child(__MODULE__, pid)
   end
 
+  @doc """
+  Helper for broadcasting wallops.
+
+  Please use `Exsemantica.Administration.Chat.wallops/1` instead.
+  """
   def broadcast_wallops(message) do
     children = DynamicSupervisor.which_children(__MODULE__)
     for {_, pid, _, [Chat.User]} <- children do
       pid |> Chat.User.wallops(message)
     end
+
     :ok
   end
 

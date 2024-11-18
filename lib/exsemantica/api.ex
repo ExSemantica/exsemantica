@@ -26,12 +26,15 @@ defmodule Exsemantica.API do
   use Plug.Router
   use Plug.ErrorHandler
 
+
   plug(Plug.Parsers,
-    parsers: [:urlencoded, {:json, json_decoder: {:json, :decode, []}}]
+    parsers: [:urlencoded, {:json, json_decoder: {:json, :decode, []}}, Absinthe.Plug.Parser]
   )
 
   plug(:match)
   plug(:dispatch)
+
+  forward("/graphql", to: Absinthe.Plug, init_opts: [schema: Exsemantica.Schema])
 
   get("/.well-known/exsemantica/application",
     do: conn |> __MODULE__.WellKnown.Application.call([])
@@ -40,12 +43,6 @@ defmodule Exsemantica.API do
   post("/authentication/log_in", do: conn |> __MODULE__.Authentication.LogIn.call([]))
   post("/authentication/refresh", do: conn |> __MODULE__.Authentication.Refresh.call([]))
   post("/authentication/register", do: conn |> __MODULE__.Authentication.Register.call([]))
-
-  get("/gateway/aggregate/:aggregate",
-    do: conn |> __MODULE__.Gateway.call(type: :aggregate, target: aggregate)
-  )
-
-  get("/gateway/user/:user", do: conn |> __MODULE__.Gateway.call(type: :user, target: user))
 
   match _ do
     conn
@@ -78,7 +75,7 @@ defmodule Exsemantica.API do
 
   @impl Plug.ErrorHandler
   def handle_errors(conn, args = %{kind: _kind, reason: _reason, stack: _stack}) do
-    Logger.error("Internal Server Error: " <> inspect args)
+    Logger.error("Internal Server Error: " <> inspect(args))
 
     conn
     |> put_resp_content_type("application/json")
