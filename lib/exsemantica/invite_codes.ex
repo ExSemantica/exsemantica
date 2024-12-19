@@ -30,11 +30,11 @@ defmodule Exsemantica.InviteCodes do
     {:ok, digest |> Base.url_encode64()}
   end
 
-  @spec is_valid(binary()) :: boolean()
+  @spec valid?(binary()) :: boolean()
   @doc """
   Returns true if the Base64-encoded invite code is valid.
   """
-  def is_valid(code) do
+  def valid?(code) do
     case Base.url_decode64(code) do
       {:ok, digest} ->
         Exsemantica.Repo.one(
@@ -46,11 +46,11 @@ defmodule Exsemantica.InviteCodes do
     end
   end
 
-  @spec use(binary()) :: :error | :ok
+  @spec use_code(binary()) :: :error | :ok
   @doc """
   Tries to invalidate the Base64-encoded invite code.
   """
-  def use(code) do
+  def use_code(code) do
     case Base.url_decode64(code) do
       {:ok, digest} ->
         case Exsemantica.Repo.one(

@@ -5,7 +5,7 @@ defmodule Exsemantica.MixProject do
     [
       app: :exsemantica,
       version: "0.10.0",
-      elixir: "~> 1.17",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -35,7 +35,7 @@ defmodule Exsemantica.MixProject do
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
 
       # Create documentation for ExSemantica
-      {:ex_doc, "~> 0.34", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.35", only: :dev, runtime: false},
 
       # Helps auto-constrain information to ASCII
       {:unidecode, "~> 1.0"},
@@ -47,7 +47,7 @@ defmodule Exsemantica.MixProject do
       {:argon2_elixir, "~> 4.1"},
 
       # Web service
-      {:bandit, "~> 1.5"},
+      {:bandit, "~> 1.6"},
 
       # Database adapter framework
       {:ecto, "~> 3.12"},
